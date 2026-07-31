@@ -1,0 +1,26 @@
+# Python virtualenv that happens to live in this folder — unrelated to this project
+.venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Browser smoke-test output
+.smoke/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Scratch
+dist/
+coverage/
+tmp/
+*.local

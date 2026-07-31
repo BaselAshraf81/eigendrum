@@ -1,0 +1,33 @@
+{
+  "name": "eigendrum",
+  "version": "1.0.0",
+  "description": "Draw any shape and hear the sound it would actually make. Real finite-element solution of the Laplacian eigenproblem, synthesised in the browser.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "keywords": [
+    "spectral-geometry",
+    "eigenvalues",
+    "finite-element",
+    "modal-synthesis",
+    "web-audio",
+    "no-dependencies"
+  ],
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.mjs\"",
+    "serve": "node tools/serve.mjs",
+    "dev": "node tools/serve.mjs",
+    "bench": "node tools/bench.mjs",
+    "isospectral": "node tools/isospectral.mjs",
+    "smoke": "node tools/smoke.mjs",
+    "mobile": "node tools/mobile.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "comment": "The shipped app has zero runtime dependencies. Puppeteer is used only by the browser smoke tests in tools/ and never loads in the browser.",
+  "dependencies": {},
+  "devDependencies": {
+    "puppeteer": "^25.4.0"
+  }
+}

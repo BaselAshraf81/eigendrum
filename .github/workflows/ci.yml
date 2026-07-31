@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # The app itself has no dependencies; this only pulls in the headless
+      # browser used by the smoke tests.
+      - run: npm install
+
+      - name: Unit and accuracy tests
+        run: npm test
+
+      - name: Solver accuracy report
+        run: npm run bench
+
+      - name: Verify the isospectral pair
+        run: npm run isospectral
+
+      - name: Browser smoke test
+        run: |
+          npm run serve &
+          npx wait-on http://localhost:8080 || sleep 5
+          npm run smoke
+          npm run mobile
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-screenshots
+          path: .smoke/
+          if-no-files-found: ignore
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      # No build step: the source *is* the site.
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deploy
+        uses: actions/deploy-pages@v4

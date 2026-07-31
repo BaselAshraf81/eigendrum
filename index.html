@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Eigendrum — draw a shape, hear the sound it would actually make</title>
+    <meta
+      name="description"
+      content="Draw any shape and hear it as a drum. Eigendrum solves the Laplacian eigenvalue problem on the shape you draw with real finite elements, so every frequency you hear is computed physics, not a preset."
+    />
+    <meta name="color-scheme" content="dark" />
+    <link rel="stylesheet" href="styles/app.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%23ffac4e' stroke-width='2.5'/%3E%3Cpath d='M3 16h26' stroke='%2360baec' stroke-width='2'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <a class="skip" href="#panel">Skip to controls</a>
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-text">
+          <strong>Eigendrum</strong>
+          <span class="brand-sub">Draw a shape. Hear what it sounds like.</span>
+        </span>
+      </div>
+      <div class="topbar-actions">
+        <button type="button" id="btn-mute" class="ghost" aria-pressed="false">
+          Sound on
+        </button>
+        <button type="button" id="btn-about" class="ghost">How it works</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="stage" aria-label="The drum">
+        <div class="stage-inner">
+          <canvas
+            id="board"
+            tabindex="0"
+            role="application"
+            aria-describedby="board-help"
+          ></canvas>
+          <p id="board-help" class="visually-hidden">
+            An interactive drumhead. Press Enter or Space to strike it at the marked point. Use
+            the arrow keys to move the strike point. When drawing is enabled, drag with a pointer
+            to draw a new outline.
+          </p>
+          <div class="stage-overlay" id="stage-hint">Tap the drum to strike it</div>
+          <div class="stage-busy" id="stage-busy" hidden>
+            <span class="spinner" aria-hidden="true"></span>
+            <span id="busy-text">Solving…</span>
+          </div>
+        </div>
+        <p class="stage-readout" id="readout" aria-live="polite"></p>
+      </section>
+
+      <aside class="panel" id="panel" aria-label="Controls">
+        <section class="block">
+          <h2>Shapes</h2>
+          <div class="chips" id="presets"></div>
+          <div class="row">
+            <button type="button" id="btn-draw" class="primary" aria-pressed="false">
+              Draw your own
+            </button>
+          </div>
+          <p class="hint" id="draw-hint" hidden>
+            Drag on the drum to trace an outline. Release to hear it.
+          </p>
+        </section>
+
+        <section class="block" id="kac-callout" hidden>
+          <h2>Can one hear the shape of a drum?</h2>
+          <p class="prose" id="kac-text"></p>
+          <div class="row">
+            <button type="button" id="btn-kac-swap" class="primary">Switch to the other drum</button>
+          </div>
+        </section>
+
+        <section class="block">
+          <h2>Modes</h2>
+          <p class="hint">
+            The frequencies are computed from the shape. Click one to watch it vibrate.
+          </p>
+          <div id="spectrum" class="spectrum"></div>
+        </section>
+
+        <section class="block">
+          <h2>Sound</h2>
+          <div class="control">
+            <label for="ctl-pitch">Pitch of the lowest mode</label>
+            <input type="range" id="ctl-pitch" min="60" max="330" step="1" value="130" />
+            <output id="out-pitch">130 Hz</output>
+          </div>
+          <div class="control">
+            <label for="ctl-bright">Ring-out</label>
+            <input type="range" id="ctl-bright" min="0" max="100" step="1" value="50" />
+            <output id="out-bright">balanced</output>
+          </div>
+          <div class="control">
+            <label for="ctl-mallet">Mallet size</label>
+            <input type="range" id="ctl-mallet" min="2" max="30" step="1" value="9" />
+            <output id="out-mallet">medium</output>
+          </div>
+          <p class="hint">
+            Pitch and ring-out are the only things you can change by hand, because they come from
+            size, tension and material — not from the outline. Every overtone <em>ratio</em> is
+            computed from the shape and cannot be adjusted.
+          </p>
+        </section>
+
+        <section class="block">
+          <h2>Show</h2>
+          <div class="row wrap">
+            <label class="toggle">
+              <input type="checkbox" id="ctl-mesh" />
+              <span>Finite element mesh</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="block">
+          <h2>Under the hood</h2>
+          <dl class="facts" id="facts"></dl>
+        </section>
+
+        <section class="block">
+          <h2>Take it with you</h2>
+          <div class="row wrap">
+            <button type="button" id="btn-share" class="ghost">Copy link</button>
+            <button type="button" id="btn-wav" class="ghost">Download sound</button>
+            <button type="button" id="btn-png" class="ghost">Download image</button>
+          </div>
+          <p class="hint" id="share-status" aria-live="polite"></p>
+        </section>
+      </aside>
+    </main>
+
+    <dialog id="dlg-about">
+      <article class="prose">
+        <h2>How it works</h2>
+        <p>
+          A drumhead clamped at its rim can only vibrate in certain shapes, at certain
+          frequencies. Those shapes and frequencies are the solutions of
+        </p>
+        <p class="equation">−∇²u = λu &nbsp;inside the shape,&nbsp; u = 0 on the edge</p>
+        <p>
+          Each solution <em>u</em> is a mode — a standing wave — and each λ gives a frequency
+          proportional to&nbsp;√λ. This is an eigenvalue problem, and for almost every shape it has
+          no formula. So Eigendrum solves it numerically: it covers your shape with a mesh of
+          triangles, builds the finite element stiffness and mass matrices, and finds the smallest
+          eigenvalues of <span class="equation-inline">Kφ = λMφ</span>.
+        </p>
+        <h3>Why you can trust the numbers</h3>
+        <p>
+          A handful of shapes have spectra that can be written down exactly, and the solver is
+          tested against them on every change. A circle's frequencies are the zeros of Bessel
+          functions; a rectangle's are
+          <span class="equation-inline">π²(m²/a² + n²/b²)</span>. The solver reproduces both to
+          better than a tenth of a percent, and — because a conforming finite element method
+          minimises energy over a restricted space — its answers are guaranteed to be slight
+          <em>over</em>estimates, never under. You can see the measured accuracy in
+          “Under the hood”.
+        </p>
+        <h3>Where you strike it matters</h3>
+        <p>
+          Striking a spot drives each mode in proportion to how much that mode moves there. Hit a
+          line where a mode stands still and you cannot excite it at all. That is not a rule that
+          was programmed in; it falls out of projecting the mallet onto the modes.
+        </p>
+        <h3>Can one hear the shape of a drum?</h3>
+        <p>
+          Mark Kac asked exactly that in 1966. In 1992 Carolyn Gordon, David Webb and Scott
+          Wolpert answered <strong>no</strong>, by building two different shapes with identical
+          spectra. Both are in the shape list as Kac drum I and II. Each is made from the same
+          seven triangles, they enclose the same area and the same perimeter, and every frequency
+          matches. Switch between them and listen: the outlines are plainly different and the
+          sound is not.
+        </p>
+        <h3>What is a modelling choice</h3>
+        <p>
+          The frequency <em>ratios</em> and the mode shapes are physics, determined entirely by
+          the outline. The absolute pitch depends on size and tension, and how fast each overtone
+          fades depends on the material and the air, so those are exposed as sliders instead of
+          being invented silently. Shapes are scaled to equal area before solving, so that what
+          you hear is shape rather than size.
+        </p>
+      </article>
+      <form method="dialog">
+        <button class="primary" value="close">Close</button>
+      </form>
+    </dialog>
+
+    <script type="module" src="src/app/main.js"></script>
+  </body>
+</html>
