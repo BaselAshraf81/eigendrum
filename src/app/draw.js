@@ -8,7 +8,7 @@
  * rather than producing nonsense.
  */
 
-import { area, dedupe, ensureCCW, isSimple, simplify } from '../geom/polygon.js';
+import { area, dedupe, ensureCCW, isSimple, simplifyClosed } from '../geom/polygon.js';
 
 const MAX_VERTICES = 220;
 
@@ -18,11 +18,7 @@ export function strokeToPolygon(points, { tolerance = 0.006, minArea = 0.004 } =
   }
 
   let poly = dedupe(points, 1e-6);
-  poly = simplify(poly, tolerance);
-
-  // Simplification keeps the endpoints, which for a closed loop leaves two
-  // nearly coincident vertices at the join.
-  poly = dedupe(poly, tolerance * 0.9);
+  poly = dedupe(simplifyClosed(poly, tolerance), tolerance * 0.5);
 
   if (poly.length < 3) {
     return { ok: false, error: 'That stroke is too simple to be a drum.' };
@@ -32,7 +28,7 @@ export function strokeToPolygon(points, { tolerance = 0.006, minArea = 0.004 } =
   let tol = tolerance;
   while (poly.length > MAX_VERTICES && tol < 0.2) {
     tol *= 1.6;
-    poly = dedupe(simplify(poly, tol), tol * 0.9);
+    poly = dedupe(simplifyClosed(poly, tol), tol * 0.5);
   }
 
   if (area(poly) < minArea) {

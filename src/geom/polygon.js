@@ -215,3 +215,64 @@ export function isSimple(poly) {
   }
   return true;
 }
+
+/**
+ * Douglas-Peucker for a *closed* curve.
+ *
+ * Running the open-polyline version on a loop is subtly wrong: it always keeps
+ * the first and last points, which privileges wherever the stroke happened to
+ * start and preserves any wobble there as a permanent corner. Splitting the loop
+ * into two chains at two well-separated points removes that bias — the retained
+ * split points are genuine extremes of the shape rather than an artefact of when
+ * the pointer went down.
+ */
+export function simplifyClosed(points, epsilon) {
+  const n = points.length;
+  if (n < 4) return points.slice();
+
+  let cx = 0;
+  let cy = 0;
+  for (const p of points) {
+    cx += p.x;
+    cy += p.y;
+  }
+  cx /= n;
+  cy /= n;
+
+  // Farthest point from the centroid, then farthest point from that.
+  let iA = 0;
+  let bestA = -1;
+  for (let i = 0; i < n; i++) {
+    const d = (points[i].x - cx) ** 2 + (points[i].y - cy) ** 2;
+    if (d > bestA) {
+      bestA = d;
+      iA = i;
+    }
+  }
+  let iB = iA;
+  let bestB = -1;
+  for (let i = 0; i < n; i++) {
+    const d = (points[i].x - points[iA].x) ** 2 + (points[i].y - points[iA].y) ** 2;
+    if (d > bestB) {
+      bestB = d;
+      iB = i;
+    }
+  }
+  if (iA === iB) return simplify(points, epsilon);
+
+  const chain = (from, to) => {
+    const out = [];
+    let i = from;
+    for (;;) {
+      out.push(points[i]);
+      if (i === to) break;
+      i = (i + 1) % n;
+    }
+    return out;
+  };
+
+  const first = simplify(chain(iA, iB), epsilon);
+  const second = simplify(chain(iB, iA), epsilon);
+  // Both chains include their shared endpoints, so drop the duplicates.
+  return first.concat(second.slice(1, -1));
+}

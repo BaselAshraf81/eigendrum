@@ -144,7 +144,7 @@ export function renderStrike({
   gain = 3.2,
 }) {
   const longest = taus.length ? Math.max(...taus) : 0.3;
-  const seconds = Math.min(6, Math.max(0.25, duration ?? longest * 3.2));
+  const seconds = Math.min(4.5, Math.max(0.25, duration ?? longest * 2.9));
   const length = Math.max(1, Math.floor(seconds * sampleRate));
   const out = new Float32Array(length);
 
@@ -154,13 +154,33 @@ export function renderStrike({
     if (!(f > 0) || f >= nyquist) continue; // never alias
     const a = amps[k] * gain;
     if (Math.abs(a) < 1e-6) continue;
-    const omega = 2 * Math.PI * f;
-    const decay = -1 / taus[k];
-    // Recurrences would drift over tens of thousands of samples; at 20 modes the
-    // direct evaluation is cheap enough to stay exact.
-    for (let n = 0; n < length; n++) {
-      const t = n / sampleRate;
-      out[n] += a * Math.sin(omega * t) * Math.exp(decay * t);
+    const tau = taus[k];
+
+    // Evaluate by recurrence rather than calling sin and exp per sample. Two
+    // Math calls per sample across sixteen modes and a quarter of a million
+    // samples is on the order of four million transcendental evaluations, which
+    // is enough main-thread work to visibly stall the animation when strikes come
+    // quickly. Rotating a unit vector and scaling an envelope is a handful of
+    // multiplies instead, and the drift over a few hundred thousand steps is
+    // around 1e-10 relative — far below the 16-bit floor we render to.
+    const w = (2 * Math.PI * f) / sampleRate;
+    const cosw = Math.cos(w);
+    const sinw = Math.sin(w);
+    const decay = Math.exp(-1 / (tau * sampleRate));
+
+    // Stop once this mode is inaudible instead of grinding out silence.
+    const audibleSamples = Math.ceil(6.9 * tau * sampleRate); // exp(-6.9) ~ 1e-3
+    const nEnd = Math.min(length, audibleSamples);
+
+    let sin = 0;
+    let cos = 1;
+    let env = 1;
+    for (let n = 0; n < nEnd; n++) {
+      out[n] += a * sin * env;
+      const nextSin = sin * cosw + cos * sinw;
+      cos = cos * cosw - sin * sinw;
+      sin = nextSin;
+      env *= decay;
     }
   }
 

@@ -24,7 +24,7 @@ import { freqToNote, harmonicity, ratios } from '../src/audio/notes.js';
 import { decodeShape, encodeShape } from '../src/app/share.js';
 import { strokeToPolygon } from '../src/app/draw.js';
 import { normalizeShape, PRESETS } from '../src/app/presets.js';
-import { area } from '../src/geom/polygon.js';
+import { area, simplifyClosed } from '../src/geom/polygon.js';
 
 const circle = () => solveDrum(regularPolygon(256, 1), { modes: 6, targetNodes: 2600 });
 
@@ -117,6 +117,42 @@ test('a rendered strike is finite, audible, and never clips', () => {
   assert.ok(Math.abs(samples[0]) < 1e-6, 'a struck membrane starts at rest, so no click');
 });
 
+test('the fast recurrence renders exactly what the direct formula would', () => {
+  // renderStrike evaluates decaying sinusoids by rotating a unit vector instead
+  // of calling Math.sin and Math.exp per sample, because the direct version was
+  // slow enough to stall the animation. This pins the two together so the
+  // optimisation cannot quietly change the sound.
+  const sampleRate = 16000;
+  const gain = 3.2;
+  const freqs = Float64Array.from([131.3, 209.7, 288.1, 460.5]);
+  const amps = Float64Array.from([0.42, -0.19, 0.08, -0.03]);
+  const taus = Float64Array.from([1.1, 0.7, 0.45, 0.2]);
+
+  const longest = Math.max(...taus);
+  const seconds = Math.min(4.5, Math.max(0.25, longest * 2.9));
+  const length = Math.max(1, Math.floor(seconds * sampleRate));
+  const expected = new Float32Array(length);
+  for (let k = 0; k < freqs.length; k++) {
+    const a = amps[k] * gain;
+    const tau = taus[k];
+    const nEnd = Math.min(length, Math.ceil(6.9 * tau * sampleRate));
+    for (let n = 0; n < nEnd; n++) {
+      const t = n / sampleRate;
+      expected[n] += a * Math.sin(2 * Math.PI * freqs[k] * t) * Math.exp(-t / tau);
+    }
+  }
+  for (let n = 0; n < length; n++) expected[n] = Math.tanh(expected[n]);
+  const fade = Math.min(length, Math.floor(0.012 * sampleRate));
+  for (let i = 0; i < fade; i++) expected[length - fade + i] *= 1 - i / fade;
+
+  const got = renderStrike({ freqs, amps, taus, sampleRate, gain });
+  assert.equal(got.length, expected.length);
+
+  let worst = 0;
+  for (let n = 0; n < length; n++) worst = Math.max(worst, Math.abs(got[n] - expected[n]));
+  assert.ok(worst < 2e-5, `recurrence drifted from the direct formula by ${worst}`);
+});
+
 test('modes above the Nyquist frequency are dropped rather than aliased', () => {
   const freqs = Float64Array.from([200, 40000]);
   const amps = Float64Array.from([0.5, 0.5]);
@@ -203,6 +239,46 @@ test('normalising a shape gives it unit area and keeps the lattice pitch consist
       assert.ok(align > 0, `${preset.id} should keep an aligned lattice pitch`);
     }
   }
+});
+
+test('closed-curve simplification does not depend on where the stroke started', () => {
+  // The open-polyline version always keeps the first and last points, so the
+  // result depended on where the pointer happened to go down and any wobble
+  // there became a permanent corner. Splitting at geometric extremes instead
+  // makes the outcome a property of the shape.
+  const ellipse = (offset) => {
+    const pts = [];
+    for (let i = 0; i < 200; i++) {
+      const a = (2 * Math.PI * ((i + offset) % 200)) / 200;
+      pts.push({ x: 0.7 * Math.cos(a), y: 0.42 * Math.sin(a) });
+    }
+    return pts;
+  };
+  const key = (poly) =>
+    poly
+      .map((p) => `${p.x.toFixed(6)},${p.y.toFixed(6)}`)
+      .sort()
+      .join('|');
+
+  const fromStart = simplifyClosed(ellipse(0), 0.004);
+  const fromMiddle = simplifyClosed(ellipse(57), 0.004);
+  assert.equal(key(fromStart), key(fromMiddle), 'seam position changed the result');
+  assert.ok(fromStart.length > 8 && fromStart.length < 90, `got ${fromStart.length} vertices`);
+
+  // And a smooth curve should not acquire a spike anywhere.
+  const n = fromStart.length;
+  let sharpest = 180;
+  for (let i = 0; i < n; i++) {
+    const a = fromStart[(i - 1 + n) % n];
+    const b = fromStart[i];
+    const c = fromStart[(i + 1) % n];
+    const v1 = Math.atan2(b.y - a.y, b.x - a.x);
+    const v2 = Math.atan2(c.y - b.y, c.x - b.x);
+    let turn = Math.abs(v2 - v1);
+    if (turn > Math.PI) turn = 2 * Math.PI - turn;
+    sharpest = Math.min(sharpest, 180 - (turn * 180) / Math.PI);
+  }
+  assert.ok(sharpest > 120, `a smooth ellipse grew a ${sharpest.toFixed(1)} degree corner`);
 });
 
 test('freehand strokes are cleaned up, and bad ones are rejected', () => {

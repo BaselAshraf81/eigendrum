@@ -32,6 +32,7 @@ const MODES = 16;
 // finer than the ear can hear, and it keeps the solve fast enough that drawing a
 // shape feels immediate.
 const TARGET_NODES = 2200;
+const MAX_VOICES = 6;
 
 const el = (id) => document.getElementById(id);
 const els = {
@@ -85,6 +86,7 @@ const state = {
   muted: false,
   lastWav: null,
   requestId: 0,
+  voices: [],
 };
 
 // --------------------------------------------------------------------- worker
@@ -247,6 +249,24 @@ function strike(x, y) {
   const gain = ctx.createGain();
   gain.gain.value = 0.85;
   src.connect(gain).connect(ctx.destination);
+
+  // Overlapping strikes are natural — a real drum does not mute itself when you
+  // hit it again — but the pile-up has to be bounded. Retire the oldest voice
+  // once too many are ringing at once.
+  src.addEventListener('ended', () => {
+    const i = state.voices.indexOf(src);
+    if (i >= 0) state.voices.splice(i, 1);
+  });
+  state.voices.push(src);
+  while (state.voices.length > MAX_VOICES) {
+    const oldest = state.voices.shift();
+    try {
+      oldest.stop();
+    } catch {
+      /* already finished */
+    }
+  }
+
   src.start();
 }
 
@@ -265,10 +285,13 @@ function frame(now) {
   if (state.drum) {
     const { drum } = state;
 
+    let refAmp = 1;
+
     if (state.view === 'struck' && state.strike) {
       const t = (now - state.strike.t0) / 1000;
       fieldAtTime(drum.modes, state.strike.amps, state.freqs, state.strike.taus, t, state.fieldBuf);
-      board.drawField(state.fieldBuf, state.strike.refAmp);
+      refAmp = state.strike.refAmp;
+      board.drawField(state.fieldBuf, refAmp, true);
       if (t > state.strike.maxTau * 3.2) {
         state.view = 'mode';
         els.hint.hidden = false;
@@ -284,10 +307,13 @@ function frame(now) {
         osc = (s < 0 ? -1 : 1) * (0.34 + 0.66 * Math.abs(s));
       }
       for (let i = 0; i < phi.length; i++) state.fieldBuf[i] = phi[i] * osc;
-      board.drawField(state.fieldBuf, 1);
+      board.drawField(state.fieldBuf, 1, true);
     }
 
-    if (els.mesh.checked) board.drawMesh();
+    // The mesh rides the same displacement field, so the elements visibly flex.
+    if (els.mesh.checked) {
+      board.drawMesh('rgba(255,255,255,0.16)', state.fieldBuf, refAmp, true);
+    }
     board.drawOutline();
 
     if (state.strike && state.view === 'struck') {

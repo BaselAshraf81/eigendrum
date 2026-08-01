@@ -34,6 +34,8 @@ function buildRamp() {
 
 const RAMP = buildRamp();
 
+const clampUnit = (v) => (v > 1 ? 1 : v < -1 ? -1 : v);
+
 export class Board {
   constructor(canvas) {
     this.canvas = canvas;
@@ -48,6 +50,18 @@ export class Board {
     this.fieldCanvas = document.createElement('canvas');
     this.fieldCtx = this.fieldCanvas.getContext('2d');
     this.fieldMax = 460;
+
+    // How far a fully-displaced point is pushed on screen, as a fraction of the
+    // canvas. Offsetting screen-y by the displacement is an oblique projection of
+    // the real 3D surface (x, y, u) -> (x, y - k*u), so it is a faithful view
+    // rather than a decoration. The rim is clamped at u = 0, so the outline stays
+    // exactly where it is and you watch the membrane move inside a fixed edge.
+    this.displaceFactor = 0.075;
+  }
+
+  displacePixels(enabled) {
+    if (!enabled) return 0;
+    return this.displaceFactor * Math.min(this.canvas.width, this.canvas.height);
   }
 
   resize() {
@@ -129,7 +143,7 @@ export class Board {
    * Rasterises `values` (one per mesh node) into the offscreen buffer using
    * barycentric interpolation, then blits it scaled to the visible canvas.
    */
-  drawField(values, amplitude = 1) {
+  drawField(values, amplitude = 1, displace = false) {
     const { drum } = this;
     if (!drum) return;
     const { nodes, triangles, triangleCount } = drum.mesh;
@@ -152,22 +166,23 @@ export class Board {
     const oy = t.oy * q;
 
     const inv = amplitude > 1e-12 ? 1 / amplitude : 0;
+    const dScale = this.displacePixels(displace) * q;
 
     for (let tri = 0; tri < triangleCount; tri++) {
       const ia = triangles[tri * 3];
       const ib = triangles[tri * 3 + 1];
       const ic = triangles[tri * 3 + 2];
 
-      const ax = nodes[ia * 2] * scale + ox;
-      const ay = oy - nodes[ia * 2 + 1] * scale;
-      const bx = nodes[ib * 2] * scale + ox;
-      const by = oy - nodes[ib * 2 + 1] * scale;
-      const cx = nodes[ic * 2] * scale + ox;
-      const cy = oy - nodes[ic * 2 + 1] * scale;
-
       const va = values[ia];
       const vb = values[ib];
       const vc = values[ic];
+
+      const ax = nodes[ia * 2] * scale + ox;
+      const ay = oy - nodes[ia * 2 + 1] * scale - clampUnit(va * inv) * dScale;
+      const bx = nodes[ib * 2] * scale + ox;
+      const by = oy - nodes[ib * 2 + 1] * scale - clampUnit(vb * inv) * dScale;
+      const cx = nodes[ic * 2] * scale + ox;
+      const cy = oy - nodes[ic * 2 + 1] * scale - clampUnit(vc * inv) * dScale;
 
       const denom = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy);
       if (Math.abs(denom) < 1e-12) continue;
@@ -241,23 +256,35 @@ export class Board {
     ctx.stroke();
   }
 
-  drawMesh(color = 'rgba(255,255,255,0.10)') {
+  /**
+   * The finite element mesh. When `values` are supplied the nodes ride the
+   * displacement field, so you watch the actual elements flex — and because
+   * boundary nodes are clamped to zero, the rim stays still on its own.
+   */
+  drawMesh(color = 'rgba(255,255,255,0.14)', values = null, amplitude = 1, displace = false) {
     const { ctx, drum } = this;
     if (!drum) return;
     const { nodes, triangles, triangleCount } = drum.mesh;
+    const dScale = values ? this.displacePixels(displace) : 0;
+    const inv = amplitude > 1e-12 ? 1 / amplitude : 0;
+
+    const py = (i) => {
+      const base = this.transform.oy - nodes[i * 2 + 1] * this.transform.scale;
+      return dScale ? base - clampUnit(values[i] * inv) * dScale : base;
+    };
+    const px = (i) => nodes[i * 2] * this.transform.scale + this.transform.ox;
+
     ctx.beginPath();
     for (let tri = 0; tri < triangleCount; tri++) {
       for (let e = 0; e < 3; e++) {
         const i = triangles[tri * 3 + e];
         const j = triangles[tri * 3 + ((e + 1) % 3)];
-        const a = this.toPixel(nodes[i * 2], nodes[i * 2 + 1]);
-        const b = this.toPixel(nodes[j * 2], nodes[j * 2 + 1]);
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
+        ctx.moveTo(px(i), py(i));
+        ctx.lineTo(px(j), py(j));
       }
     }
     ctx.strokeStyle = color;
-    ctx.lineWidth = Math.max(0.5, 0.5 * this.dpr);
+    ctx.lineWidth = Math.max(0.5, 0.6 * this.dpr);
     ctx.stroke();
   }
 
