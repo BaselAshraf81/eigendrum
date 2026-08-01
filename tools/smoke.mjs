@@ -103,6 +103,28 @@ async function main() {
     });
   };
 
+  // At rest the drum must be completely still. Nothing is vibrating, so nothing
+  // may move or change colour until it is struck. (Earlier the idle view
+  // oscillated the selected mode, which flipped the whole shape between blue and
+  // amber forever and displaced the mesh with no hit behind it.)
+  const restSample = () =>
+    page.evaluate(() => {
+      const c = document.querySelector('#board');
+      const s = 160;
+      return c
+        .getContext('2d')
+        .getImageData((c.width - s) / 2, (c.height - s) / 2, s, s)
+        .data.join();
+    });
+  const rest1 = await restSample();
+  await sleep(400);
+  const rest2 = await restSample();
+  console.log('\n-- at rest --');
+  console.log('canvas identical across 400ms:', rest1 === rest2);
+  if (rest1 !== rest2) {
+    problems.push('the drum animates at rest, with nothing struck');
+  }
+
   // Strike it.
   let box = await boardBox();
   await page.mouse.click(box.x + box.w * 0.42, box.y + box.h * 0.45);

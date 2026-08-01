@@ -286,33 +286,38 @@ function frame(now) {
     const { drum } = state;
 
     let refAmp = 1;
+    let ringing = false;
 
     if (state.view === 'struck' && state.strike) {
-      const t = (now - state.strike.t0) / 1000;
+      const elapsed = (now - state.strike.t0) / 1000;
+      // Under prefers-reduced-motion, hold the peak displacement instead of
+      // animating the ring-out. The information survives; the movement does not.
+      const t = reducedMotion
+        ? Math.min(elapsed, 1 / (4 * state.freqs[0]))
+        : elapsed;
       fieldAtTime(drum.modes, state.strike.amps, state.freqs, state.strike.taus, t, state.fieldBuf);
       refAmp = state.strike.refAmp;
-      board.drawField(state.fieldBuf, refAmp, true);
-      if (t > state.strike.maxTau * 3.2) {
+      ringing = true;
+      board.drawField(state.fieldBuf, refAmp);
+      if (elapsed > state.strike.maxTau * 3.2) {
         state.view = 'mode';
         els.hint.hidden = false;
       }
     } else {
-      const phi = drum.modes[state.selectedMode] || drum.modes[0];
-      // A real standing wave passes through flat twice a cycle, which would leave
-      // the drum invisible half the time. Keep the sign inversion — that is the
-      // interesting part — but floor the magnitude so the shape always reads.
-      let osc = 0.85;
-      if (!reducedMotion) {
-        const s = Math.sin(2 * Math.PI * 0.5 * (now / 1000));
-        osc = (s < 0 ? -1 : 1) * (0.34 + 0.66 * Math.abs(s));
-      }
-      for (let i = 0; i < phi.length; i++) state.fieldBuf[i] = phi[i] * osc;
-      board.drawField(state.fieldBuf, 1, true);
+      // At rest. Nothing is vibrating, so nothing may move or change colour: show
+      // the selected mode as a still pattern, the way a Chladni figure is drawn.
+      state.fieldBuf.set(drum.modes[state.selectedMode] || drum.modes[0]);
+      board.drawField(state.fieldBuf, 1);
     }
 
-    // The mesh rides the same displacement field, so the elements visibly flex.
+    // The mesh flexes only while the drum is actually ringing.
     if (els.mesh.checked) {
-      board.drawMesh('rgba(255,255,255,0.16)', state.fieldBuf, refAmp, true);
+      board.drawMesh(
+        'rgba(255,255,255,0.16)',
+        ringing ? state.fieldBuf : null,
+        refAmp,
+        ringing,
+      );
     }
     board.drawOutline();
 

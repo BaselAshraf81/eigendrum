@@ -143,7 +143,14 @@ export class Board {
    * Rasterises `values` (one per mesh node) into the offscreen buffer using
    * barycentric interpolation, then blits it scaled to the visible canvas.
    */
-  drawField(values, amplitude = 1, displace = false) {
+  /**
+   * The colour field is drawn flat, deliberately. Displacing the raster as well
+   * as the mesh made triangles overlap in projection with no depth order, which
+   * showed up as spurious line crossings and hard blue/amber seams on shapes with
+   * spikes or re-entrant corners. Colour already encodes displacement; geometry
+   * on top of it bought artefacts and no information.
+   */
+  drawField(values, amplitude = 1) {
     const { drum } = this;
     if (!drum) return;
     const { nodes, triangles, triangleCount } = drum.mesh;
@@ -166,7 +173,6 @@ export class Board {
     const oy = t.oy * q;
 
     const inv = amplitude > 1e-12 ? 1 / amplitude : 0;
-    const dScale = this.displacePixels(displace) * q;
 
     for (let tri = 0; tri < triangleCount; tri++) {
       const ia = triangles[tri * 3];
@@ -178,11 +184,11 @@ export class Board {
       const vc = values[ic];
 
       const ax = nodes[ia * 2] * scale + ox;
-      const ay = oy - nodes[ia * 2 + 1] * scale - clampUnit(va * inv) * dScale;
+      const ay = oy - nodes[ia * 2 + 1] * scale;
       const bx = nodes[ib * 2] * scale + ox;
-      const by = oy - nodes[ib * 2 + 1] * scale - clampUnit(vb * inv) * dScale;
+      const by = oy - nodes[ib * 2 + 1] * scale;
       const cx = nodes[ic * 2] * scale + ox;
-      const cy = oy - nodes[ic * 2 + 1] * scale - clampUnit(vc * inv) * dScale;
+      const cy = oy - nodes[ic * 2 + 1] * scale;
 
       const denom = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy);
       if (Math.abs(denom) < 1e-12) continue;
