@@ -62,7 +62,7 @@ for (const [name, width, height] of [
   });
   await page.mouse.click(box.x + box.w / 2, box.y + box.h / 2);
   await sleep(600);
-  const struck = await page.$eval('#stage-hint', (n) => n.hidden);
+  const struck = await page.$eval('#prompt', (n) => n.hidden);
   if (!struck) problems.push(`${name}: tapping the drum did nothing`);
 
   await page.screenshot({ path: `${OUT}mobile-${name}.png`, fullPage: false });

@@ -14,19 +14,49 @@ import { pointInPolygon } from '../geom/polygon.js';
 
 const RAMP_SIZE = 512;
 
-/** Diverging ramp: cool for negative, warm for positive, near-black at zero. */
+export const PLATE = [232, 227, 214]; // plaster
+export const INK = [20, 18, 15];
+const POS = [216, 50, 28]; // vermilion
+const NEG = [27, 57, 168]; // ultramarine
+
+const mix = (a, b, t) => [
+  a[0] + (b[0] - a[0]) * t,
+  a[1] + (b[1] - a[1]) * t,
+  a[2] + (b[2] - a[2]) * t,
+];
+
+/**
+ * Displacement posterised into contour bands rather than a smooth gradient.
+ *
+ * Two reasons, and the second is the better one. The world is flat colour, so a
+ * gradient would be foreign to it. And banding is simply better information
+ * design: discrete steps put the amplitude levels and the zero crossing exactly
+ * where the eye can read them, instead of smearing them into a wash.
+ *
+ * The zero band is left as bare plaster, which is also how the real thing looks:
+ * Chladni's figures are sand collecting along the lines that do not move, so the
+ * nodal lines read light against the vibrating field. Magnitude then darkens
+ * monotonically outward, so the pattern survives being seen in greyscale or by
+ * someone who cannot separate red from blue.
+ */
 function buildRamp() {
   const ramp = new Uint8ClampedArray(RAMP_SIZE * 4);
-  const NEG = [96, 186, 236];
-  const POS = [255, 172, 78];
-  const ZERO = [10, 12, 20];
+  // Deliberately narrow first band: the zero crossing should read as a drawn
+  // line, not a zone.
+  const EDGES = [0.05, 0.28, 0.55, 0.8];
   for (let i = 0; i < RAMP_SIZE; i++) {
-    const t = (i / (RAMP_SIZE - 1)) * 2 - 1; // -1 .. 1
-    const a = Math.pow(Math.abs(t), 0.62);
-    const target = t >= 0 ? POS : NEG;
-    ramp[i * 4] = ZERO[0] + (target[0] - ZERO[0]) * a;
-    ramp[i * 4 + 1] = ZERO[1] + (target[1] - ZERO[1]) * a;
-    ramp[i * 4 + 2] = ZERO[2] + (target[2] - ZERO[2]) * a;
+    const v = (i / (RAMP_SIZE - 1)) * 2 - 1; // -1 .. 1
+    const a = Math.abs(v);
+    const base = v >= 0 ? POS : NEG;
+    let c;
+    if (a < EDGES[0]) c = PLATE;
+    else if (a < EDGES[1]) c = mix(PLATE, base, 0.42);
+    else if (a < EDGES[2]) c = mix(PLATE, base, 0.71);
+    else if (a < EDGES[3]) c = base;
+    else c = mix(base, INK, 0.24);
+    ramp[i * 4] = c[0];
+    ramp[i * 4 + 1] = c[1];
+    ramp[i * 4 + 2] = c[2];
     ramp[i * 4 + 3] = 255;
   }
   return ramp;
@@ -231,16 +261,6 @@ export class Board {
     ctx.drawImage(this.fieldCanvas, 0, 0, this.canvas.width, this.canvas.height);
   }
 
-  /** Flat fill, used when we are showing the shape rather than a mode. */
-  fillShape(color) {
-    const { ctx, drum } = this;
-    if (!drum) return;
-    ctx.beginPath();
-    this.tracePolygon(drum.mesh.polygon);
-    ctx.fillStyle = color;
-    ctx.fill();
-  }
-
   tracePolygon(poly) {
     const ctx = this.ctx;
     poly.forEach((p, i) => {
@@ -251,7 +271,7 @@ export class Board {
     ctx.closePath();
   }
 
-  drawOutline(color = 'rgba(255,255,255,0.92)', width = 2) {
+  drawOutline(color = '#14120f', width = 2) {
     const { ctx, drum } = this;
     if (!drum) return;
     ctx.beginPath();
@@ -267,7 +287,7 @@ export class Board {
    * displacement field, so you watch the actual elements flex — and because
    * boundary nodes are clamped to zero, the rim stays still on its own.
    */
-  drawMesh(color = 'rgba(255,255,255,0.14)', values = null, amplitude = 1, displace = false) {
+  drawMesh(color = 'rgba(20,18,15,0.24)', values = null, amplitude = 1, displace = false) {
     const { ctx, drum } = this;
     if (!drum) return;
     const { nodes, triangles, triangleCount } = drum.mesh;
@@ -298,12 +318,13 @@ export class Board {
   drawStrikeMarker(x, y, age) {
     const { ctx } = this;
     const p = this.toPixel(x, y);
-    const r = (6 + age * 90) * this.dpr;
-    const alpha = Math.max(0, 1 - age * 2.2);
+    const r = (5 + age * 95) * this.dpr;
+    const alpha = Math.max(0, 1 - age * 2.4);
     if (alpha <= 0) return;
+    // A hard-edged ring, no glow: this world has no soft light in it.
     ctx.beginPath();
     ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.55})`;
+    ctx.strokeStyle = `rgba(20,18,15,${alpha * 0.8})`;
     ctx.lineWidth = 2 * this.dpr;
     ctx.stroke();
   }
@@ -342,7 +363,7 @@ export class Board {
       else ctx.lineTo(q.x, q.y);
     });
     if (closed) ctx.closePath();
-    ctx.strokeStyle = 'rgba(255,172,78,0.95)';
+    ctx.strokeStyle = '#c62d1a';
     ctx.lineWidth = 2.5 * this.dpr;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';

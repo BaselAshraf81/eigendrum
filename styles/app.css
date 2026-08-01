@@ -1,50 +1,76 @@
-/* Eigendrum — all styling. Palette matches the field colour ramp in canvas.js:
-   warm amber for positive displacement, cool blue for negative, near-black at
-   the nodal lines. */
+/* Eigendrum — Bauhaus preliminary-course study sheet.
+ *
+ * Plaster ground, hard fields of vermilion / ultramarine / chrome yellow, 3px
+ * black rules, one geometric sans set lowercase. No cards, no shadows, no
+ * gradients, no rounded corners: the composition is made of fields and rules.
+ *
+ * The colour plan gives every primary a job, and each owns a whole region rather
+ * than accenting one:
+ *   vermilion  = the bench, where you act
+ *   ultramarine = the ledger, where the measurements are
+ *   chrome yellow = the remarkable thing, and whatever is selected
+ *   plaster + ink = the study itself
+ */
 
 :root {
-  --bg: #07080e;
-  --bg-raised: #10131d;
-  --bg-sunk: #0a0c14;
-  --line: #232838;
-  --line-strong: #333a50;
-  --text: #e8ecf6;
-  --text-dim: #98a1bb;
-  --text-faint: #6b7590;
-  --warm: #ffac4e;
-  --cool: #60baec;
-  --focus: #ffd79a;
-  --radius: 12px;
-  --radius-sm: 8px;
-  --panel-width: 27rem;
+  --plaster: #f0ede6;
+  --plate: #e8e3d6;
+  --ink: #14120f;
+  --ink-soft: #55504a;
+  --vermilion: #c62d1a;
+  --vermilion-bright: #d8321c;
+  --ultramarine: #1b39a8;
+  --ultramarine-tint: #c9d2f5;
+  --chrome: #f2c300;
+
+  --rule: 3px;
+  --hair: 1px;
+
+  --font: 'Jost', 'Futura', 'Century Gothic', 'Avenir Next', system-ui, sans-serif;
+  --font-tex: ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+  --masthead-h: 4.75rem;
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family:
-    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 1.55;
-  -webkit-font-smoothing: antialiased;
-  min-height: 100vh;
-}
-
-/* A class selector that sets `display` beats the UA stylesheet's
-   `[hidden] { display: none }`, which silently leaves "hidden" overlays on top
-   of the page swallowing pointer events. Make the attribute win, always. */
+/* A class selector that sets `display` outranks the UA stylesheet's
+   `[hidden] { display: none }`, which once left an invisible overlay on top of
+   the page swallowing every pointer event. Make the attribute win, always. */
 [hidden] {
   display: none !important;
+}
+
+html {
+  background: var(--plaster);
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--plaster);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
 
 .visually-hidden {
@@ -63,277 +89,324 @@ body {
   position: absolute;
   left: -9999px;
   top: 0;
-  z-index: 100;
-  background: var(--warm);
-  color: #1a1204;
-  padding: 0.6rem 1rem;
-  border-radius: 0 0 var(--radius-sm) 0;
-  font-weight: 650;
+  z-index: 40;
+  background: var(--chrome);
+  color: var(--ink);
+  padding: 0.7rem 1.1rem;
+  font-weight: 600;
+  text-decoration: none;
 }
 .skip:focus {
   left: 0;
 }
 
 :focus-visible {
-  outline: 2px solid var(--focus);
+  outline: var(--rule) solid var(--ink);
   outline-offset: 2px;
 }
-
-/* ---------------------------------------------------------------- top bar */
-
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.85rem 1.25rem;
-  border-bottom: 1px solid var(--line);
-  background: linear-gradient(180deg, #0d1018, var(--bg));
-  flex-wrap: wrap;
+.bench :focus-visible,
+.ledger :focus-visible {
+  outline-color: #fff;
 }
 
-.brand {
+/* ---------------------------------------------------------------- masthead */
+
+.masthead {
+  flex: none;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  min-width: 0;
+  gap: 0.9rem;
+  padding: 0.85rem 1.5rem;
+  min-height: var(--masthead-h);
 }
 
-.brand-mark {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 2px solid var(--warm);
-  position: relative;
+.mark {
+  width: 2.35rem;
+  height: 2.35rem;
   flex: none;
 }
-.brand-mark::after {
-  content: '';
-  position: absolute;
-  left: -3px;
-  right: -3px;
-  top: 50%;
-  height: 2px;
-  background: var(--cool);
-  transform: translateY(-1px);
-}
 
-.brand-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.25;
+.masthead-titles {
   min-width: 0;
 }
-.brand-text strong {
-  font-size: 1.06rem;
-  letter-spacing: 0.01em;
-}
-.brand-sub {
-  color: var(--text-dim);
-  font-size: 0.83rem;
+
+.masthead-titles h1 {
+  font-size: clamp(1.45rem, 2.4vw, 2rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  font-weight: 600;
 }
 
-.topbar-actions {
+.masthead-titles p {
+  margin: 0.15rem 0 0;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+}
+
+.masthead-actions {
+  margin-left: auto;
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-/* ---------------------------------------------------------------- layout */
+/* ------------------------------------------------------------------- chips */
 
-main {
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding: 0.4rem 0.75rem;
+  border: var(--hair) solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color 110ms linear, color 110ms linear;
+}
+.chip:hover {
+  background: var(--ink);
+  color: var(--plaster);
+}
+.chip svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: none;
+}
+.chip[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--plaster);
+}
+
+.chip-solid {
+  background: var(--ink);
+  color: var(--plaster);
+}
+.chip-solid:hover {
+  background: var(--vermilion);
+  color: #fff;
+}
+
+/* On the saturated fields the chip inverts: white keyline, white text. */
+.chip-invert {
+  border-color: #fff;
+  color: #fff;
+}
+.chip-invert:hover {
+  background: #fff;
+  color: var(--ink);
+}
+
+/* ------------------------------------------------------------------ sheet */
+
+/* A bounded app shell: the first row takes whatever height is left after the
+   masthead and the bench, so the mode index scrolls inside itself rather than
+   pushing the vermilion band off the bottom of the screen. */
+.sheet {
+  flex: 1 1 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--panel-width);
-  gap: 1.25rem;
-  padding: 1.25rem;
-  align-items: start;
-  max-width: 1600px;
-  margin: 0 auto;
+  grid-template-columns: minmax(0, 1fr) 21.5rem;
+  grid-template-rows: minmax(0, 1fr) auto;
+  border-top: var(--rule) solid var(--ink);
+  min-height: 0;
 }
 
-@media (max-width: 1080px) {
-  main {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  :root {
-    --panel-width: auto;
+/* On a wide screen this is an instrument, not a document: pin it to the viewport
+   so the drum, the index and the bench are all present at once, and let the
+   columns scroll inside themselves. Below the breakpoint the page stacks and
+   scrolls normally. */
+@media (min-width: 62.0625rem) {
+  body {
+    height: 100svh;
+    overflow: hidden;
   }
 }
 
-/* ---------------------------------------------------------------- stage */
+/* -------------------------------------------------------------- the study */
 
-.stage {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+/* Big square plate flush left, text column beside it. Two things fall out: the
+   drum fills its plate instead of floating in a wide box, and the readout and the
+   form list cost no vertical space, which is what keeps the vermilion bench
+   inside the first viewport. */
+.study {
+  grid-row: 1;
+  display: grid;
+  /* A definite track, not `auto`. With an auto track, the plate's own
+     `min(..., 100%)` width would depend on a column width that depends on the
+     plate, and the whole thing collapses to zero. */
+  grid-template-columns: min(56vh, 600px) minmax(0, 1fr);
+  gap: 1.1rem 1.75rem;
+  align-content: start;
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1.15rem 1.5rem 1.25rem;
+  border-right: var(--rule) solid var(--ink);
 }
 
-.stage-inner {
+/* Square, sized from the viewport rather than from the grid, so nothing can
+   stretch it out of shape. Explicit width and height beat aspect-ratio here:
+   a stretched grid item silently overrides aspect-ratio. */
+.plate {
   position: relative;
-  background:
-    radial-gradient(120% 100% at 50% 0%, #141926 0%, var(--bg-sunk) 70%);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;
+  width: 100%;
+  height: min(56vh, 600px);
+  background: var(--plate);
+  border: var(--hair) solid var(--ink);
+}
+
+/* Anchored to the bottom of the column, so its baseline lines up with the foot of
+   the plate. That turns the leftover space into a deliberate interval instead of
+   a hole in the middle of the sheet. */
+.forms {
+  margin-top: auto;
+  padding-top: 1.25rem;
 }
 
 #board {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
-  aspect-ratio: 1 / 1;
-  max-height: min(72vh, 760px);
+  height: 100%;
   touch-action: none;
   cursor: crosshair;
 }
-
-.stage-overlay {
-  position: absolute;
-  left: 50%;
-  bottom: 0.9rem;
-  transform: translateX(-50%);
-  background: rgba(8, 10, 16, 0.82);
-  border: 1px solid var(--line);
-  color: var(--text-dim);
-  font-size: 0.82rem;
-  padding: 0.32rem 0.7rem;
-  border-radius: 999px;
-  pointer-events: none;
-  transition: opacity 0.35s ease;
-  white-space: nowrap;
-}
-.stage-overlay[hidden] {
-  display: none;
+/* Inset, so the focus ring does not read as a second border on the plate. */
+#board:focus-visible {
+  outline-offset: -4px;
 }
 
-.stage-busy {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  background: rgba(7, 8, 14, 0.72);
-  color: var(--text-dim);
-  font-size: 0.9rem;
-  backdrop-filter: blur(2px);
-}
-
-.spinner {
-  width: 15px;
-  height: 15px;
-  border: 2px solid var(--line-strong);
-  border-top-color: var(--warm);
-  border-radius: 50%;
-  animation: spin 0.75s linear infinite;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.stage-readout {
-  margin: 0;
-  min-height: 1.5rem;
-  color: var(--text-dim);
-  font-size: 0.9rem;
-}
-.stage-readout strong {
-  color: var(--text);
-}
-.stage-readout .warn {
-  color: var(--warm);
-}
-
-/* ---------------------------------------------------------------- panel */
-
-.panel {
+.study-side {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.9rem;
   min-width: 0;
 }
 
-.block {
-  background: var(--bg-raised);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 0.95rem 1rem 1.05rem;
+/* A vertical study-sheet annotation rather than a floating pill. */
+.prompt {
+  position: absolute;
+  left: 0.55rem;
+  bottom: 0.9rem;
+  margin: 0;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  color: var(--ink-soft);
+  pointer-events: none;
 }
 
-.block h2 {
-  margin: 0 0 0.6rem;
-  font-size: 0.76rem;
-  font-weight: 650;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-
-.hint {
-  margin: 0.55rem 0 0;
-  color: var(--text-faint);
-  font-size: 0.81rem;
-  line-height: 1.5;
-}
-.hint em {
-  color: var(--text-dim);
-  font-style: italic;
-}
-
-.row {
+.solving {
+  position: absolute;
+  inset: 0;
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: var(--plate);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  color: var(--ink-soft);
 }
-.row.wrap {
-  flex-wrap: wrap;
+.solving-rule {
+  display: block;
+  width: min(52%, 18rem);
+  height: var(--rule);
+  background: var(--ink);
+  transform-origin: left center;
+  animation: sweep 1.15s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
-
-/* ---------------------------------------------------------------- buttons */
-
-button {
-  font: inherit;
-  font-size: 0.87rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--line-strong);
-  background: #1a1f2e;
-  color: var(--text);
-  padding: 0.44rem 0.8rem;
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-}
-button:hover {
-  background: #222839;
-  border-color: #454e69;
-}
-
-button.primary {
-  background: var(--warm);
-  border-color: var(--warm);
-  color: #1c1304;
-  font-weight: 640;
-}
-button.primary:hover {
-  background: #ffbd6f;
-  border-color: #ffbd6f;
-}
-button.primary[aria-pressed='true'] {
-  background: #2b2113;
-  color: var(--warm);
+@keyframes sweep {
+  0% {
+    transform: scaleX(0);
+  }
+  55% {
+    transform: scaleX(1);
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
 }
 
-button.ghost {
-  background: transparent;
-}
-button.ghost:hover {
-  background: #1a1f2e;
+.notice {
+  margin: 0.9rem 0 0;
+  padding: 0.6rem 0.85rem;
+  background: var(--chrome);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
-/* ---------------------------------------------------------------- chips */
+.readout {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.45;
+  max-width: 40ch;
+  min-height: 4.4rem;
+  color: var(--ink);
+}
+.readout b {
+  font-weight: 600;
+}
+.readout .note {
+  color: var(--ink-soft);
+}
+
+.key {
+  list-style: none;
+  margin: 0;
+  padding: 0.7rem 0 0;
+  border-top: var(--hair) solid rgba(20, 18, 15, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+  color: var(--ink-soft);
+}
+.key li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.sw {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: none;
+}
+.sw-pos {
+  background: var(--vermilion-bright);
+}
+.sw-neg {
+  background: var(--ultramarine);
+}
+.sw-nodal {
+  background: var(--plate);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.forms h2 {
+  margin-bottom: 0.5rem;
+}
+
+h2 {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--ink-soft);
+  margin-bottom: 0.6rem;
+}
 
 .chips {
   display: flex;
@@ -341,219 +414,514 @@ button.ghost:hover {
   gap: 0.4rem;
 }
 
-.chip {
-  border: 1px solid var(--line-strong);
-  background: #161b28;
-  color: var(--text-dim);
-  border-radius: 999px;
-  padding: 0.33rem 0.75rem;
-  font-size: 0.83rem;
+/* Preset buttons carry a drawn glyph of the form itself. */
+.form-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.32rem 0.7rem 0.32rem 0.4rem;
+  border: var(--hair) solid var(--ink);
+  background: transparent;
+  color: var(--ink);
   cursor: pointer;
+  transition: background-color 110ms linear, color 110ms linear;
 }
-.chip:hover {
-  color: var(--text);
-  border-color: #4a5470;
+.form-chip svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: none;
 }
-.chip[aria-pressed='true'] {
-  background: #2b2113;
-  border-color: var(--warm);
-  color: var(--warm);
+.form-chip:hover {
+  background: var(--ink);
+  color: var(--plaster);
+}
+.form-chip:hover svg [data-fill] {
+  fill: var(--plaster);
+}
+.form-chip[aria-pressed='true'] {
+  background: var(--chrome);
+  border-color: var(--ink);
+  color: var(--ink);
+  font-weight: 600;
+}
+/* Solid, because on this surface drawing your own is the real invitation. */
+.form-chip-draw {
+  background: var(--ink);
+  color: var(--plaster);
+}
+.form-chip-draw:hover {
+  background: var(--vermilion);
+  border-color: var(--vermilion);
+  color: #fff;
+}
+.form-chip-draw[aria-pressed='true'] {
+  background: var(--chrome);
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+/* -------------------------------------------------------------- the index */
+
+/* One scroll region for the whole right column. Two nested scrollers (a list
+   inside a panel) is worse than one, and this stays predictable on short
+   viewports where the ledger would otherwise be clipped out of reach. */
+.index {
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.modes {
+  padding: 1.25rem 1.25rem 1rem;
+  flex: none;
+}
+.modes h2 {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+#modes-count {
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+
+.spectrum {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: var(--hair) solid var(--ink);
+}
+
+.mode-row {
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 1fr) 4.4rem;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.3rem 0.35rem;
+  border: 0;
+  border-bottom: var(--hair) solid rgba(20, 18, 15, 0.22);
+  background: transparent;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 110ms linear;
+}
+.mode-row:hover {
+  background: rgba(20, 18, 15, 0.07);
+}
+.mode-row[aria-pressed='true'] {
+  background: var(--chrome);
   font-weight: 600;
 }
 
-/* ---------------------------------------------------------------- controls */
+.mode-n {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.74rem;
+  color: var(--ink-soft);
+}
+.mode-row[aria-pressed='true'] .mode-n {
+  color: var(--ink);
+}
 
-.control {
+.mode-bar {
+  height: 0.5rem;
+  background: var(--ink);
+  min-width: 2px;
+}
+
+.mode-hz {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Chrome-yellow field: the theorem. It sits at the top of the column, because
+   when it applies it is the most interesting thing on the page and its action
+   must not be pushed below the fold. */
+.kac {
+  flex: none;
+  background: var(--chrome);
+  color: var(--ink);
+  padding: 1.1rem 1.25rem 1.25rem;
+  border-bottom: var(--rule) solid var(--ink);
+}
+.kac h2 {
+  color: var(--ink);
+  letter-spacing: 0.12em;
+}
+.kac p {
+  margin: 0 0 0.85rem;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+.kac .chip-invert {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.kac .chip-invert:hover {
+  background: var(--ink);
+  color: var(--chrome);
+}
+
+/* Ultramarine field: the measurements. */
+/* Pinned to the foot of the scrolling column: the measurements are the honesty of
+   this thing, so they stay in view while the mode list scrolls behind them. */
+.ledger {
+  flex: none;
+  margin-top: auto;
+  position: sticky;
+  bottom: 0;
+  background: var(--ultramarine);
+  color: #fff;
+  padding: 1.1rem 1.25rem 1.3rem;
+  border-top: var(--rule) solid var(--ink);
+}
+.ledger h2 {
+  color: var(--ultramarine-tint);
+}
+.ledger dl {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.15rem 0.6rem;
-  align-items: center;
-  margin-bottom: 0.6rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.28rem 0.9rem;
+  margin: 0;
+  font-size: 0.82rem;
 }
-.control label {
-  font-size: 0.85rem;
-  color: var(--text-dim);
+.ledger dt {
+  color: var(--ultramarine-tint);
 }
-.control output {
+.ledger dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.ledger dd.flag {
+  color: var(--chrome);
+  font-weight: 600;
+}
+
+/* -------------------------------------------------------------- the bench */
+
+.bench {
+  grid-row: 2;
+  grid-column: 1 / -1;
+  background: var(--vermilion);
+  color: #fff;
+  border-top: var(--rule) solid var(--ink);
+  padding: 1.05rem 1.5rem 1.15rem;
+  display: grid;
+  grid-template-columns: minmax(0, 17rem) minmax(0, 1fr) auto;
+  gap: 0.9rem 2.25rem;
+  align-items: start;
+}
+
+.bench h2 {
+  color: #fff;
+  opacity: 0.85;
+}
+.bench-head p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  max-width: 46ch;
+}
+.bench-head em {
+  font-style: normal;
+  font-weight: 600;
+  border-bottom: 2px solid #fff;
+}
+
+.dials {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1rem 1.75rem;
+}
+
+.dial {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.1rem 0.6rem;
+}
+.dial label {
   font-size: 0.8rem;
-  color: var(--warm);
+  letter-spacing: 0.08em;
+}
+.dial output {
+  font-size: 0.8rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
-.control input[type='range'] {
+
+/* Ruled track, square handle. */
+input[type='range'] {
   grid-column: 1 / -1;
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
-  accent-color: var(--warm);
-  margin: 0.1rem 0 0;
+  height: 1.25rem;
+  margin: 0.15rem 0 0;
+  background: transparent;
+  cursor: pointer;
+}
+input[type='range']::-webkit-slider-runnable-track {
+  height: 2px;
+  background: rgba(255, 255, 255, 0.55);
+}
+input[type='range']::-moz-range-track {
+  height: 2px;
+  background: rgba(255, 255, 255, 0.55);
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  margin-top: -0.44rem;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+}
+input[type='range']::-moz-range-thumb {
+  width: 1rem;
+  height: 1rem;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+}
+
+.bench-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.55rem;
 }
 
 .toggle {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.5rem;
   font-size: 0.85rem;
-  color: var(--text-dim);
   cursor: pointer;
 }
 .toggle input {
-  accent-color: var(--warm);
-  width: 1rem;
-  height: 1rem;
-}
-
-/* ---------------------------------------------------------------- spectrum */
-
-.spectrum {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-top: 0.5rem;
-}
-
-.mode-row {
-  display: grid;
-  grid-template-columns: 2.1rem 1fr 5.4rem;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.28rem 0.4rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  background: none;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.05rem;
+  height: 1.05rem;
+  margin: 0;
+  border: 2px solid #fff;
+  background: transparent;
   cursor: pointer;
-  text-align: left;
-  font-size: 0.82rem;
-  color: var(--text-dim);
 }
-.mode-row:hover {
-  background: #171c29;
-  border-color: var(--line);
-}
-.mode-row[aria-pressed='true'] {
-  background: #221a10;
-  border-color: var(--warm);
-  color: var(--text);
+.toggle input:checked {
+  background: #fff;
+  box-shadow: inset 0 0 0 3px var(--vermilion);
 }
 
-.mode-index {
-  color: var(--text-faint);
-  font-variant-numeric: tabular-nums;
-  font-size: 0.78rem;
-}
-.mode-row[aria-pressed='true'] .mode-index {
-  color: var(--warm);
+.takeaways {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
-.mode-bar {
-  height: 7px;
-  border-radius: 999px;
-  background: #1c2231;
-  overflow: hidden;
-}
-.mode-bar span {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--cool), var(--warm));
-}
-
-.mode-freq {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  font-size: 0.78rem;
-  white-space: nowrap;
-}
-
-/* ---------------------------------------------------------------- facts */
-
-.facts {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.3rem 0.8rem;
+.bench-status {
   margin: 0;
-  font-size: 0.82rem;
-}
-.facts dt {
-  color: var(--text-faint);
-}
-.facts dd {
-  margin: 0;
-  color: var(--text-dim);
-  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+  min-height: 1.1rem;
   text-align: right;
 }
-.facts dd.good {
-  color: #7fd6a2;
-}
-.facts dd.warn {
-  color: var(--warm);
-}
 
-/* ---------------------------------------------------------------- dialog */
+/* ------------------------------------------------------------------ about */
 
 dialog {
-  border: 1px solid var(--line-strong);
-  background: var(--bg-raised);
-  color: var(--text);
-  border-radius: var(--radius);
-  padding: 1.4rem 1.5rem 1.1rem;
-  max-width: 44rem;
+  border: var(--rule) solid var(--ink);
+  background: var(--plaster);
+  color: var(--ink);
+  padding: 0;
+  max-width: 46rem;
   width: calc(100% - 2rem);
-  max-height: 84vh;
+  max-height: 86svh;
   overflow: auto;
 }
 dialog::backdrop {
-  background: rgba(4, 5, 9, 0.72);
+  background: rgba(20, 18, 15, 0.62);
 }
 
-.prose h2 {
-  margin: 0 0 0.7rem;
-  font-size: 1.28rem;
-  letter-spacing: -0.01em;
+.sheet-prose {
+  padding: 1.6rem 1.75rem 0.5rem;
 }
-.prose h3 {
-  margin: 1.4rem 0 0.4rem;
-  font-size: 0.98rem;
-  color: var(--warm);
+.sheet-prose h2 {
+  font-size: 1.6rem;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  margin-bottom: 1rem;
 }
-.prose p {
-  margin: 0 0 0.75rem;
-  color: #c9d1e3;
-  font-size: 0.93rem;
+.sheet-prose h3 {
+  margin: 1.75rem 0 0.4rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--vermilion);
 }
-.prose strong {
-  color: var(--text);
+.sheet-prose p {
+  margin: 0 0 0.8rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  max-width: 68ch;
+}
+.sheet-prose em {
+  font-style: italic;
+}
+.sheet-prose strong {
+  font-weight: 600;
 }
 
-.equation,
-.equation-inline {
-  font-family: ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, Consolas, monospace;
-}
 .equation {
+  background: var(--ink);
+  color: var(--plaster);
+  font-family: var(--font-tex);
+  font-size: 0.95rem !important;
   text-align: center;
-  background: var(--bg-sunk);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: 0.7rem 0.5rem;
-  color: var(--text) !important;
-  font-size: 0.92rem !important;
+  padding: 0.9rem 0.75rem;
+  max-width: none !important;
 }
-.equation-inline {
-  color: var(--cool);
+.tex {
+  font-family: var(--font-tex);
   font-size: 0.9em;
+  color: var(--ultramarine);
 }
 
 dialog form {
   display: flex;
   justify-content: flex-end;
-  margin-top: 1rem;
+  padding: 0 1.75rem 1.6rem;
 }
 
-/* ---------------------------------------------------------------- motion */
+/* ------------------------------------------------------------ responsive */
+
+@media (max-width: 62rem) {
+  /* Stacked and free-flowing: the page scrolls, so nothing is bounded or clipped. */
+  .sheet {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+  }
+  .study {
+    grid-row: auto;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.1rem;
+    overflow: visible;
+    border-right: 0;
+    padding-bottom: 1.25rem;
+  }
+  .index {
+    grid-row: auto;
+    overflow: visible;
+  }
+  .bench {
+    grid-row: auto;
+  }
+  .plate {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+  .readout {
+    max-width: 60ch;
+    min-height: 0;
+  }
+  .key {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.3rem 1.2rem;
+  }
+  .index {
+    border-top: var(--rule) solid var(--ink);
+  }
+  .modes {
+    padding: 1.1rem 1.25rem 1rem;
+  }
+  /* No nested scrollers on touch, and nothing pinned: the page itself scrolls, so
+     a sticky ledger would just paint over the mode list. */
+  .spectrum {
+    max-height: none;
+  }
+  .ledger {
+    position: static;
+    margin-top: 0;
+  }
+  .kac {
+    border-top: var(--rule) solid var(--ink);
+  }
+  .bench {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.1rem;
+  }
+}
+
+@media (max-width: 34rem) {
+  :root {
+    --masthead-h: auto;
+  }
+  .masthead {
+    padding: 0.8rem 1rem;
+    gap: 0.7rem;
+  }
+  .masthead-titles p {
+    display: none;
+  }
+  .masthead-actions .chip span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .study,
+  .modes,
+  .kac,
+  .ledger {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .bench {
+    padding: 1.1rem 1rem 1.35rem;
+  }
+  .readout {
+    font-size: 0.95rem;
+  }
+  .bench-status {
+    text-align: left;
+  }
+  .sheet-prose {
+    padding: 1.25rem 1.15rem 0.5rem;
+  }
+  dialog form {
+    padding: 0 1.15rem 1.25rem;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+  .solving-rule {
+    animation: none;
+    transform: scaleX(1);
   }
 }

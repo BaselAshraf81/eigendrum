@@ -67,7 +67,7 @@ async function main() {
       dt.textContent,
       document.querySelectorAll('#facts dd')[i].textContent,
     ]),
-    busyHidden: document.querySelector('#stage-busy').hidden,
+    busyHidden: document.querySelector('#solving').hidden,
   }));
   console.log('\n-- initial load (circle) --');
   console.log('readout :', first.readout);
@@ -130,7 +130,7 @@ async function main() {
   await page.mouse.click(box.x + box.w * 0.42, box.y + box.h * 0.45);
   await sleep(700);
   const struck = await page.evaluate(() => ({
-    hintHidden: document.querySelector('#stage-hint').hidden,
+    hintHidden: document.querySelector('#prompt').hidden,
   }));
   console.log('\n-- after strike --');
   console.log('hint hidden (means struck):', struck.hintHidden);
@@ -148,20 +148,20 @@ async function main() {
   // The isospectral pair: switch to Kac drum I, record its spectrum, switch to
   // II, and compare in the browser.
   await page.evaluate(() => {
-    [...document.querySelectorAll('#presets .chip')].find((c) => c.dataset.id === 'gww-a').click();
+    [...document.querySelectorAll('#presets .form-chip')].find((c) => c.dataset.id === 'gww-a').click();
   });
   await page.waitForFunction(
-    () => document.querySelector('#stage-busy').hidden && document.querySelector('#kac-callout') && !document.querySelector('#kac-callout').hidden,
+    () => document.querySelector('#solving').hidden && document.querySelector('#kac') && !document.querySelector('#kac').hidden,
     { timeout: 30000 },
   );
   await sleep(300);
-  const specA = await page.$$eval('#spectrum .mode-freq', (n) => n.map((x) => x.textContent));
+  const specA = await page.$$eval('#spectrum .mode-hz', (n) => n.map((x) => x.textContent));
   await shot(page, 'kac-a');
 
   await page.click('#btn-kac-swap');
-  await page.waitForFunction(() => document.querySelector('#stage-busy').hidden, { timeout: 30000 });
+  await page.waitForFunction(() => document.querySelector('#solving').hidden, { timeout: 30000 });
   await sleep(500);
-  const specB = await page.$$eval('#spectrum .mode-freq', (n) => n.map((x) => x.textContent));
+  const specB = await page.$$eval('#spectrum .mode-hz', (n) => n.map((x) => x.textContent));
   await shot(page, 'kac-b');
 
   console.log('\n-- isospectral pair, as displayed in the browser --');
@@ -189,7 +189,7 @@ async function main() {
   }
   await page.mouse.up();
   await page.waitForFunction(
-    () => document.querySelector('#facts')?.children.length > 0 && document.querySelector('#stage-busy').hidden,
+    () => document.querySelector('#facts')?.children.length > 0 && document.querySelector('#solving').hidden,
     { timeout: 30000 },
   );
   await sleep(500);

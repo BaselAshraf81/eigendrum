@@ -28,25 +28,28 @@ import {
 } from '../math/analytic.js';
 
 const MODES = 16;
-// Accuracy against the exact answers is around half a percent here, which is far
-// finer than the ear can hear, and it keeps the solve fast enough that drawing a
-// shape feels immediate.
+// Accuracy against the exact answers is around half a percent here, far finer
+// than the ear can hear, and it keeps the solve fast enough that drawing a shape
+// feels immediate.
 const TARGET_NODES = 2200;
 const MAX_VOICES = 6;
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
 const el = (id) => document.getElementById(id);
 const els = {
   board: el('board'),
-  hint: el('stage-hint'),
-  busy: el('stage-busy'),
-  busyText: el('busy-text'),
+  prompt: el('prompt'),
+  solving: el('solving'),
+  solvingText: el('solving-text'),
+  notice: el('notice'),
   readout: el('readout'),
   presets: el('presets'),
   spectrum: el('spectrum'),
+  modesCount: el('modes-count'),
   facts: el('facts'),
   drawBtn: el('btn-draw'),
-  drawHint: el('draw-hint'),
-  kac: el('kac-callout'),
+  drawLabel: el('draw-label'),
+  kac: el('kac'),
   kacText: el('kac-text'),
   kacSwap: el('btn-kac-swap'),
   pitch: el('ctl-pitch'),
@@ -56,7 +59,9 @@ const els = {
   mallet: el('ctl-mallet'),
   malletOut: el('out-mallet'),
   mesh: el('ctl-mesh'),
-  mute: el('btn-mute'),
+  sound: el('btn-sound'),
+  soundLabel: el('sound-label'),
+  soundCut: el('sound-cut'),
   about: el('btn-about'),
   dlgAbout: el('dlg-about'),
   share: el('btn-share'),
@@ -66,13 +71,13 @@ const els = {
 };
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
 const board = new Board(els.board);
 
 const state = {
   source: { kind: 'preset', id: 'circle' },
   presetId: 'circle',
   drum: null,
+  diagnostics: null,
   weights: null,
   freqs: null,
   view: 'mode',
@@ -95,30 +100,27 @@ const worker = new Worker(new URL('../worker/solver.worker.js', import.meta.url)
   type: 'module',
 });
 
+const STAGES = {
+  meshing: 'building the mesh',
+  assembling: 'assembling the matrices',
+  factorising: 'factorising',
+  solving: 'finding the modes',
+};
+
 worker.onmessage = (event) => {
   const msg = event.data;
   if (msg.id !== state.requestId) return; // a newer request superseded this one
 
   if (msg.type === 'progress') {
-    const label =
-      msg.stage === 'meshing'
-        ? 'Building the mesh…'
-        : msg.stage === 'assembling'
-          ? 'Assembling the matrices…'
-          : msg.stage === 'factorising'
-            ? 'Factorising…'
-            : 'Finding the modes…';
-    els.busyText.textContent = label;
+    els.solvingText.textContent = STAGES[msg.stage] || 'solving';
     return;
   }
-
   if (msg.type === 'error') {
-    setBusy(false);
-    els.readout.innerHTML = `<span class="warn">${escapeHtml(msg.message)}</span>`;
+    setSolving(false);
+    showNotice(msg.message);
     return;
   }
-
-  setBusy(false);
+  setSolving(false);
   onSolved(msg);
 };
 
@@ -132,9 +134,10 @@ function solve(source) {
   state.source = source;
   state.presetId = preset ? preset.id : null;
   state.requestId += 1;
-  setBusy(true, 'Building the mesh…');
+  clearNotice();
+  setSolving(true);
   updatePresetChips();
-  updateKacCallout(preset);
+  updateKac(preset);
 
   worker.postMessage({
     id: state.requestId,
@@ -163,12 +166,10 @@ function onSolved(msg) {
   recomputeFrequencies();
   board.setDrum(state.drum);
   renderSpectrum(els.spectrum, Array.from(state.freqs), state.selectedMode, selectMode);
+  els.modesCount.textContent = `${state.freqs.length} computed`;
   renderFacts();
   renderReadout();
-  els.hint.hidden = false;
-  els.hint.textContent = state.drawMode
-    ? 'Drag to draw an outline'
-    : 'Tap the drum to strike it';
+  showPrompt();
 }
 
 function recomputeFrequencies() {
@@ -190,15 +191,8 @@ function ensureAudio() {
   return audioCtx;
 }
 
-function malletRadius() {
-  // Slider is a percentage of the drum's typical dimension (area is 1, so a
-  // characteristic length is about 1).
-  return Number(els.mallet.value) / 100;
-}
-
-function brightness() {
-  return Number(els.bright.value) / 100;
-}
+const malletRadius = () => Number(els.mallet.value) / 100;
+const brightness = () => Number(els.bright.value) / 100;
 
 function strike(x, y) {
   const { drum } = state;
@@ -208,7 +202,7 @@ function strike(x, y) {
   const freqs = state.freqs;
   const taus = decayTimes(freqs, 1.7, brightness());
 
-  // Reference amplitude for the colour scale: peak displacement near the moment
+  // Reference amplitude for the colour bands: peak displacement near the moment
   // the fundamental first reaches full swing.
   const probe = new Float64Array(drum.mesh.nodeCount);
   fieldAtTime(drum.modes, amps, freqs, taus, 1 / (4 * freqs[0]), probe);
@@ -228,18 +222,13 @@ function strike(x, y) {
     maxTau: Math.max(...taus),
   };
   state.view = 'struck';
-  els.hint.hidden = true;
+  els.prompt.hidden = true;
 
   if (state.muted) return;
   const ctx = ensureAudio();
   if (!ctx) return;
 
-  const samples = renderStrike({
-    freqs,
-    amps,
-    taus,
-    sampleRate: ctx.sampleRate,
-  });
+  const samples = renderStrike({ freqs, amps, taus, sampleRate: ctx.sampleRate });
   state.lastWav = { samples, sampleRate: ctx.sampleRate };
 
   const buffer = ctx.createBuffer(1, samples.length, ctx.sampleRate);
@@ -251,8 +240,7 @@ function strike(x, y) {
   src.connect(gain).connect(ctx.destination);
 
   // Overlapping strikes are natural — a real drum does not mute itself when you
-  // hit it again — but the pile-up has to be bounded. Retire the oldest voice
-  // once too many are ringing at once.
+  // hit it again — but the pile-up has to be bounded.
   src.addEventListener('ended', () => {
     const i = state.voices.indexOf(src);
     if (i >= 0) state.voices.splice(i, 1);
@@ -266,11 +254,10 @@ function strike(x, y) {
       /* already finished */
     }
   }
-
   src.start();
 }
 
-// -------------------------------------------------------------------- rendering
+// ------------------------------------------------------------------ rendering
 
 function frame(now) {
   board.resize();
@@ -284,7 +271,6 @@ function frame(now) {
 
   if (state.drum) {
     const { drum } = state;
-
     let refAmp = 1;
     let ringing = false;
 
@@ -292,41 +278,29 @@ function frame(now) {
       const elapsed = (now - state.strike.t0) / 1000;
       // Under prefers-reduced-motion, hold the peak displacement instead of
       // animating the ring-out. The information survives; the movement does not.
-      const t = reducedMotion
-        ? Math.min(elapsed, 1 / (4 * state.freqs[0]))
-        : elapsed;
+      const t = reducedMotion ? Math.min(elapsed, 1 / (4 * state.freqs[0])) : elapsed;
       fieldAtTime(drum.modes, state.strike.amps, state.freqs, state.strike.taus, t, state.fieldBuf);
       refAmp = state.strike.refAmp;
       ringing = true;
       board.drawField(state.fieldBuf, refAmp);
       if (elapsed > state.strike.maxTau * 3.2) {
         state.view = 'mode';
-        els.hint.hidden = false;
+        showPrompt();
       }
     } else {
-      // At rest. Nothing is vibrating, so nothing may move or change colour: show
-      // the selected mode as a still pattern, the way a Chladni figure is drawn.
+      // At rest. Nothing is vibrating, so nothing may move or change colour: the
+      // resting view is the selected mode as a still figure.
       state.fieldBuf.set(drum.modes[state.selectedMode] || drum.modes[0]);
       board.drawField(state.fieldBuf, 1);
     }
 
-    // The mesh flexes only while the drum is actually ringing.
     if (els.mesh.checked) {
-      board.drawMesh(
-        'rgba(255,255,255,0.16)',
-        ringing ? state.fieldBuf : null,
-        refAmp,
-        ringing,
-      );
+      board.drawMesh(undefined, ringing ? state.fieldBuf : null, refAmp, ringing);
     }
     board.drawOutline();
 
-    if (state.strike && state.view === 'struck') {
-      board.drawStrikeMarker(
-        state.strike.x,
-        state.strike.y,
-        (now - state.strike.t0) / 1000,
-      );
+    if (ringing) {
+      board.drawStrikeMarker(state.strike.x, state.strike.y, (now - state.strike.t0) / 1000);
     }
 
     if (document.activeElement === els.board && !state.drawMode) {
@@ -334,7 +308,7 @@ function frame(now) {
       const ctx = board.ctx;
       ctx.beginPath();
       ctx.arc(p.x, p.y, 7 * board.dpr, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+      ctx.strokeStyle = '#14120f';
       ctx.lineWidth = 2 * board.dpr;
       ctx.stroke();
     }
@@ -348,16 +322,33 @@ function renderReadout() {
   const f0 = state.freqs[0];
   const note = freqToNote(f0);
   const harm = harmonicity(Array.from(state.freqs));
-  const r1 = state.freqs[1] / f0;
-  els.readout.innerHTML =
-    `Lowest mode <strong>${f0.toFixed(1)} Hz</strong> (${note.label}). ` +
-    `Second mode is <strong>${r1.toFixed(3)}\u00D7</strong> the first — ` +
-    `${escapeHtml(harm.verdict)}.`;
+  const ratio = state.freqs[1] / f0;
+  els.readout.replaceChildren(
+    text('Lowest mode '),
+    strong(`${f0.toFixed(1)} Hz`),
+    text(` (${note.label}). The second sits at `),
+    strong(`${ratio.toFixed(3)}×`),
+    text(' the first — '),
+    span('note', `${harm.verdict}.`),
+  );
+}
+
+const text = (s) => document.createTextNode(s);
+function strong(s) {
+  const b = document.createElement('b');
+  b.textContent = s;
+  return b;
+}
+function span(cls, s) {
+  const n = document.createElement('span');
+  n.className = cls;
+  n.textContent = s;
+  return n;
 }
 
 function fmtPercent(v) {
-  if (v === 0) return 'exact';
-  if (v < 0.0001) return '< 0.01%';
+  if (v < 1e-12) return 'exact';
+  if (v < 0.0001) return '<0.01%';
   return `${(v * 100).toFixed(v < 0.01 ? 3 : 2)}%`;
 }
 
@@ -386,80 +377,122 @@ function renderFacts() {
   if (exact) {
     let worst = 0;
     for (let k = 0; k < exact.length; k++) {
-      worst = Math.max(
-        worst,
-        Math.abs(state.drum.eigenvalues[k] - exact[k]) / exact[k],
-      );
+      worst = Math.max(worst, Math.abs(state.drum.eigenvalues[k] - exact[k]) / exact[k]);
     }
-    rows.push([
-      'Error vs exact answer',
-      fmtPercent(worst),
-      worst < 0.01 ? 'good' : 'warn',
-    ]);
+    rows.push(['error against exact answer', fmtPercent(worst), true]);
   } else {
-    rows.push(['Exact answer', 'no formula exists', '']);
+    rows.push(['exact answer', 'no formula exists', false]);
   }
 
-  rows.push(['Unknowns solved', d.unknowns.toLocaleString(), '']);
-  rows.push(['Triangles', d.triangleCount.toLocaleString(), '']);
-  rows.push(['Smallest angle', `${d.minAngleDeg.toFixed(1)}\u00B0`, '']);
-  rows.push([
-    'Shape reproduced to',
-    d.areaError < 1e-12 ? 'exact' : fmtPercent(d.areaError),
-    d.areaError < 1e-12 ? 'good' : '',
-  ]);
-  rows.push(['Eigen residual', d.maxResidual.toExponential(1), '']);
-  rows.push(['Solve time', `${d.solveMs} ms`, '']);
+  rows.push(['unknowns solved', d.unknowns.toLocaleString(), false]);
+  rows.push(['triangles', d.triangleCount.toLocaleString(), false]);
+  rows.push(['smallest angle', `${d.minAngleDeg.toFixed(1)}°`, false]);
+  rows.push(['outline reproduced to', fmtPercent(d.areaError), d.areaError < 1e-12]);
+  rows.push(['eigen residual', d.maxResidual.toExponential(1), false]);
+  rows.push(['solve time', `${d.solveMs} ms`, false]);
 
-  els.facts.textContent = '';
-  for (const [label, value, cls] of rows) {
+  els.facts.replaceChildren();
+  for (const [label, value, flag] of rows) {
     const dt = document.createElement('dt');
     dt.textContent = label;
     const dd = document.createElement('dd');
     dd.textContent = value;
-    if (cls) dd.className = cls;
+    if (flag) dd.className = 'flag';
     els.facts.append(dt, dd);
   }
 }
 
-function setBusy(on, text = 'Solving…') {
-  els.busy.hidden = !on;
-  if (on) els.busyText.textContent = text;
+function setSolving(on) {
+  els.solving.hidden = !on;
+  if (on) els.solvingText.textContent = 'building the mesh';
 }
 
-function escapeHtml(s) {
-  return String(s).replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
-  );
+function showNotice(message) {
+  els.notice.textContent = message;
+  els.notice.hidden = false;
+}
+function clearNotice() {
+  els.notice.hidden = true;
+  els.notice.textContent = '';
 }
 
-// ---------------------------------------------------------------------- chips
+function showPrompt() {
+  els.prompt.hidden = false;
+  els.prompt.textContent = state.drawMode ? 'drag to trace' : 'tap the drum';
+}
 
-function updatePresetChips() {
-  [...els.presets.children].forEach((chip) => {
-    chip.setAttribute('aria-pressed', String(chip.dataset.id === state.presetId));
+// ------------------------------------------------------------------- presets
+
+/**
+ * Draws the preset's own outline as its glyph, so the button shows the thing it
+ * selects rather than a stand-in icon.
+ */
+function formGlyph(polygon) {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const p of polygon) {
+    if (p.x < minX) minX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y > maxY) maxY = p.y;
+  }
+  const w = maxX - minX || 1;
+  const h = maxY - minY || 1;
+  const s = 19 / Math.max(w, h);
+  const ox = 12 - ((minX + maxX) / 2) * s;
+  const oy = 12 + ((minY + maxY) / 2) * s;
+
+  let d = '';
+  polygon.forEach((p, i) => {
+    const x = (p.x * s + ox).toFixed(2);
+    const y = (oy - p.y * s).toFixed(2);
+    d += `${i === 0 ? 'M' : 'L'}${x} ${y}`;
   });
+  d += 'Z';
+
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', d);
+  path.setAttribute('fill', '#14120f');
+  path.setAttribute('data-fill', '');
+  svg.append(path);
+  return svg;
 }
 
 function buildPresetChips() {
   for (const preset of PRESETS) {
     const chip = document.createElement('button');
     chip.type = 'button';
-    chip.className = 'chip';
+    chip.className = 'form-chip';
     chip.dataset.id = preset.id;
-    chip.textContent = preset.name;
     chip.title = preset.blurb;
     chip.setAttribute('aria-pressed', 'false');
+    const label = document.createElement('span');
+    label.textContent = preset.name.toLowerCase();
+    chip.append(formGlyph(preset.polygon), label);
     chip.addEventListener('click', () => {
       setDrawMode(false);
       solve({ kind: 'preset', id: preset.id });
     });
-    els.presets.appendChild(chip);
+    // The draw button shares this row and lives at its end.
+    els.presets.insertBefore(chip, els.drawBtn);
   }
 }
 
-function updateKacCallout(preset) {
+function updatePresetChips() {
+  for (const chip of els.presets.children) {
+    // Skip the draw button, which owns its own pressed state.
+    if (!chip.dataset.id) continue;
+    chip.setAttribute('aria-pressed', String(chip.dataset.id === state.presetId));
+  }
+}
+
+function updateKac(preset) {
   if (preset && preset.pairedWith) {
     els.kac.hidden = false;
     els.kacText.textContent = preset.blurb;
@@ -476,9 +509,15 @@ function selectMode(i) {
   setSelected(els.spectrum, i);
   const f = state.freqs[i];
   const note = freqToNote(f);
-  els.readout.innerHTML =
-    `Mode <strong>${i + 1}</strong> at <strong>${f.toFixed(1)} Hz</strong> (${note.label}). ` +
-    'Dark curves are nodal lines, where the surface never moves.';
+  els.readout.replaceChildren(
+    text('Mode '),
+    strong(String(i + 1)),
+    text(' at '),
+    strong(`${f.toFixed(1)} Hz`),
+    text(` (${note.label}). `),
+    span('note', 'The pale channels are nodal lines, where the surface never moves.'),
+  );
+  showPrompt();
 }
 
 // ---------------------------------------------------------------------- input
@@ -488,11 +527,9 @@ function setDrawMode(on) {
   state.stroke = [];
   state.drawing = false;
   els.drawBtn.setAttribute('aria-pressed', String(on));
-  els.drawBtn.textContent = on ? 'Cancel drawing' : 'Draw your own';
-  els.drawHint.hidden = !on;
-  els.hint.hidden = false;
-  els.hint.textContent = on ? 'Drag to draw an outline' : 'Tap the drum to strike it';
+  els.drawLabel.textContent = on ? 'cancel drawing' : 'draw your own';
   els.board.style.cursor = on ? 'cell' : 'crosshair';
+  showPrompt();
 }
 
 els.board.addEventListener('pointerdown', (e) => {
@@ -523,7 +560,7 @@ function finishStroke() {
   const result = strokeToPolygon(state.stroke);
   state.stroke = [];
   if (!result.ok) {
-    els.readout.innerHTML = `<span class="warn">${escapeHtml(result.error)}</span>`;
+    showNotice(result.error);
     return;
   }
   setDrawMode(false);
@@ -565,10 +602,10 @@ els.board.addEventListener('keydown', (e) => {
   if (handled) e.preventDefault();
 });
 
-// -------------------------------------------------------------------- controls
+// ------------------------------------------------------------------ controls
 
 els.pitch.addEventListener('input', () => {
-  els.pitchOut.textContent = `${els.pitch.value} Hz`;
+  els.pitchOut.textContent = `${els.pitch.value} hz`;
   recomputeFrequencies();
   if (state.freqs) {
     renderSpectrum(els.spectrum, Array.from(state.freqs), state.selectedMode, selectMode);
@@ -586,8 +623,6 @@ els.mallet.addEventListener('input', () => {
   els.malletOut.textContent = v < 7 ? 'hard stick' : v > 20 ? 'soft beater' : 'medium';
 });
 
-els.mesh.addEventListener('change', () => {});
-
 els.drawBtn.addEventListener('click', () => setDrawMode(!state.drawMode));
 
 els.kacSwap.addEventListener('click', () => {
@@ -595,11 +630,13 @@ els.kacSwap.addEventListener('click', () => {
   if (target) solve({ kind: 'preset', id: target });
 });
 
-els.mute.addEventListener('click', () => {
+els.sound.addEventListener('click', () => {
   state.muted = !state.muted;
-  els.mute.setAttribute('aria-pressed', String(state.muted));
-  els.mute.textContent = state.muted ? 'Sound off' : 'Sound on';
+  els.sound.setAttribute('aria-pressed', String(state.muted));
+  els.soundLabel.textContent = state.muted ? 'sound off' : 'sound on';
+  els.soundCut.style.display = state.muted ? '' : 'none';
 });
+els.soundCut.style.display = 'none';
 
 els.about.addEventListener('click', () => els.dlgAbout.showModal());
 
@@ -611,7 +648,7 @@ els.share.addEventListener('click', async () => {
   );
   try {
     await navigator.clipboard.writeText(url);
-    els.shareStatus.textContent = 'Link copied.';
+    els.shareStatus.textContent = 'link copied';
   } catch {
     els.shareStatus.textContent = url;
   }
@@ -619,18 +656,20 @@ els.share.addEventListener('click', async () => {
 
 els.wav.addEventListener('click', () => {
   if (!state.lastWav) {
-    els.shareStatus.textContent = 'Strike the drum first, then download its sound.';
+    els.shareStatus.textContent = 'strike the drum first, then save its sound';
     return;
   }
-  const blob = encodeWav(state.lastWav.samples, state.lastWav.sampleRate);
-  download(blob, `eigendrum-${state.presetId || 'custom'}.wav`);
-  els.shareStatus.textContent = 'Sound saved.';
+  download(
+    encodeWav(state.lastWav.samples, state.lastWav.sampleRate),
+    `eigendrum-${state.presetId || 'custom'}.wav`,
+  );
+  els.shareStatus.textContent = 'sound saved';
 });
 
 els.png.addEventListener('click', () => {
   els.board.toBlob((blob) => {
     if (blob) download(blob, `eigendrum-${state.presetId || 'custom'}.png`);
-    els.shareStatus.textContent = 'Image saved.';
+    els.shareStatus.textContent = 'image saved';
   });
 });
 
@@ -645,7 +684,7 @@ function download(blob, filename) {
 
 window.addEventListener('resize', () => board.resize());
 
-// ------------------------------------------------------------------- start up
+// -------------------------------------------------------------------- startup
 
 buildPresetChips();
 board.resize();

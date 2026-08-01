@@ -6,190 +6,252 @@
     <title>Eigendrum — draw a shape, hear the sound it would actually make</title>
     <meta
       name="description"
-      content="Draw any shape and hear it as a drum. Eigendrum solves the Laplacian eigenvalue problem on the shape you draw with real finite elements, so every frequency you hear is computed physics, not a preset."
+      content="Draw any shape and hear it as a drum. Eigendrum solves the Laplacian eigenvalue problem on the shape you drew with real finite elements, so every frequency you hear was computed, not sampled."
     />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f0ede6" />
+    <link rel="stylesheet" href="styles/font.css" />
     <link rel="stylesheet" href="styles/app.css" />
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%23ffac4e' stroke-width='2.5'/%3E%3Cpath d='M3 16h26' stroke='%2360baec' stroke-width='2'/%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f0ede6'/%3E%3Ccircle cx='16' cy='16' r='10' fill='%23d8321c'/%3E%3Cpath d='M0 16h32' stroke='%2314120f' stroke-width='3'/%3E%3C/svg%3E"
     />
   </head>
   <body>
-    <a class="skip" href="#panel">Skip to controls</a>
+    <!--
+      THESIS: A vibrating membrane is Kandinsky's own subject, point and line and
+      plane, so this is a Bauhaus preliminary-course study sheet. It refuses the
+      dark canvas-plus-slider-stack dashboard every physics toy ships.
+      OWN-WORLD: Plaster ground. Hard fields of vermilion, ultramarine and chrome
+      yellow. 3px black rules. Jost geometric sans, set lowercase. No cards, no
+      shadows, no gradients. Displacement posterised into contour bands: red one
+      way, blue the other, black along the nodal lines.
+      STORY: A visitor meets one enormous drum, taps it, hears computed physics,
+      learns which parts the shape decides, then draws their own.
+      FIRST VIEWPORT: Wordmark and a full-width rule on top; the drum fills a
+      plaster plate on the left; a numbered mode index rules the right column;
+      the controls own a full-width vermilion band beneath.
+      FORM: Bauhaus Vorkurs / point-line-plane. Candidate 4. Seed cd3b44f2.
+      FINISH: unreviewed and undocumented is unfinished; this build ends with the
+      finish review, the verdict, and DESIGN.md
+    -->
+    <a class="skip" href="#bench">Skip to the controls</a>
 
-    <header class="topbar">
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <span class="brand-text">
-          <strong>Eigendrum</strong>
-          <span class="brand-sub">Draw a shape. Hear what it sounds like.</span>
-        </span>
+    <header class="masthead">
+      <svg class="mark" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+        <circle cx="20" cy="20" r="13" fill="#d8321c" />
+        <path d="M0 20h40" stroke="#14120f" stroke-width="3" />
+        <rect x="17" y="17" width="6" height="6" fill="#14120f" />
+      </svg>
+      <div class="masthead-titles">
+        <h1>eigendrum</h1>
+        <p>a study of the vibrating plane</p>
       </div>
-      <div class="topbar-actions">
-        <button type="button" id="btn-mute" class="ghost" aria-pressed="false">
-          Sound on
+      <div class="masthead-actions">
+        <button type="button" id="btn-sound" class="chip" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <rect x="3" y="9" width="6" height="6" fill="currentColor" />
+            <path d="M13 6v12M18 3v18" stroke="currentColor" stroke-width="2" fill="none" />
+            <path id="sound-cut" d="M4 20L20 4" stroke="currentColor" stroke-width="2" fill="none" />
+          </svg>
+          <span id="sound-label">sound on</span>
         </button>
-        <button type="button" id="btn-about" class="ghost">How it works</button>
+        <button type="button" id="btn-about" class="chip">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none" />
+            <rect x="11" y="10" width="2" height="7" fill="currentColor" />
+            <rect x="11" y="6" width="2" height="2" fill="currentColor" />
+          </svg>
+          <span>how it works</span>
+        </button>
       </div>
     </header>
 
-    <main>
-      <section class="stage" aria-label="The drum">
-        <div class="stage-inner">
-          <canvas
-            id="board"
-            tabindex="0"
-            role="application"
-            aria-describedby="board-help"
-          ></canvas>
+    <main class="sheet">
+      <section class="study" aria-label="The drum">
+        <div class="plate">
+          <canvas id="board" tabindex="0" role="application" aria-describedby="board-help"></canvas>
           <p id="board-help" class="visually-hidden">
-            An interactive drumhead. Press Enter or Space to strike it at the marked point. Use
-            the arrow keys to move the strike point. When drawing is enabled, drag with a pointer
-            to draw a new outline.
+            An interactive drumhead. Press Enter or Space to strike it at the marked point, and use
+            the arrow keys to move that point. While drawing is switched on, drag with a pointer to
+            trace a new outline.
           </p>
-          <div class="stage-overlay" id="stage-hint">Tap the drum to strike it</div>
-          <div class="stage-busy" id="stage-busy" hidden>
-            <span class="spinner" aria-hidden="true"></span>
-            <span id="busy-text">Solving…</span>
+          <p class="prompt" id="prompt">tap the drum</p>
+          <div class="solving" id="solving" hidden>
+            <span class="solving-rule" aria-hidden="true"></span>
+            <span id="solving-text">building the mesh</span>
           </div>
         </div>
-        <p class="stage-readout" id="readout" aria-live="polite"></p>
+
+        <div class="study-side">
+          <p class="notice" id="notice" hidden></p>
+          <p class="readout" id="readout" aria-live="polite"></p>
+
+          <ul class="key">
+            <li><i class="sw sw-pos"></i>pushed one way</li>
+            <li><i class="sw sw-nodal"></i>nodal line, never moves</li>
+            <li><i class="sw sw-neg"></i>pushed the other way</li>
+          </ul>
+
+          <div class="forms">
+            <h2>forms</h2>
+            <div class="chips" id="presets">
+              <button type="button" id="btn-draw" class="form-chip form-chip-draw" aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M4 20L17 7" stroke="currentColor" stroke-width="2" fill="none" />
+                  <rect x="15" y="3" width="6" height="6" fill="currentColor" />
+                </svg>
+                <span id="draw-label">draw your own</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <aside class="panel" id="panel" aria-label="Controls">
-        <section class="block">
-          <h2>Shapes</h2>
-          <div class="chips" id="presets"></div>
-          <div class="row">
-            <button type="button" id="btn-draw" class="primary" aria-pressed="false">
-              Draw your own
-            </button>
-          </div>
-          <p class="hint" id="draw-hint" hidden>
-            Drag on the drum to trace an outline. Release to hear it.
+      <aside class="index" aria-label="Modes and measurements">
+        <section class="kac" id="kac" hidden>
+          <h2>can one hear the shape of a drum?</h2>
+          <p id="kac-text"></p>
+          <button type="button" id="btn-kac-swap" class="chip chip-invert">
+            hear the other one
+          </button>
+        </section>
+
+        <section class="modes">
+          <h2>modes<span id="modes-count"></span></h2>
+          <ol id="spectrum" class="spectrum"></ol>
+        </section>
+
+        <section class="ledger">
+          <h2>the numbers</h2>
+          <dl id="facts"></dl>
+        </section>
+      </aside>
+
+      <section class="bench" id="bench" aria-label="Controls">
+        <div class="bench-head">
+          <h2>what the shape does not decide</h2>
+          <p>
+            Pitch is size and tension; fade is material and air. Neither is in the outline, so both
+            are yours. Every overtone <em>ratio</em> is computed and fixed.
           </p>
-        </section>
+        </div>
 
-        <section class="block" id="kac-callout" hidden>
-          <h2>Can one hear the shape of a drum?</h2>
-          <p class="prose" id="kac-text"></p>
-          <div class="row">
-            <button type="button" id="btn-kac-swap" class="primary">Switch to the other drum</button>
-          </div>
-        </section>
-
-        <section class="block">
-          <h2>Modes</h2>
-          <p class="hint">
-            The frequencies are computed from the shape. Click one to watch it vibrate.
-          </p>
-          <div id="spectrum" class="spectrum"></div>
-        </section>
-
-        <section class="block">
-          <h2>Sound</h2>
-          <div class="control">
-            <label for="ctl-pitch">Pitch of the lowest mode</label>
+        <div class="dials">
+          <div class="dial">
+            <label for="ctl-pitch">lowest mode</label>
             <input type="range" id="ctl-pitch" min="60" max="330" step="1" value="130" />
-            <output id="out-pitch">130 Hz</output>
+            <output id="out-pitch">130 hz</output>
           </div>
-          <div class="control">
-            <label for="ctl-bright">Ring-out</label>
+          <div class="dial">
+            <label for="ctl-bright">ring-out</label>
             <input type="range" id="ctl-bright" min="0" max="100" step="1" value="50" />
             <output id="out-bright">balanced</output>
           </div>
-          <div class="control">
-            <label for="ctl-mallet">Mallet size</label>
+          <div class="dial">
+            <label for="ctl-mallet">mallet</label>
             <input type="range" id="ctl-mallet" min="2" max="30" step="1" value="9" />
             <output id="out-mallet">medium</output>
           </div>
-          <p class="hint">
-            Pitch and ring-out are the only things you can change by hand, because they come from
-            size, tension and material — not from the outline. Every overtone <em>ratio</em> is
-            computed from the shape and cannot be adjusted.
-          </p>
-        </section>
+        </div>
 
-        <section class="block">
-          <h2>Show</h2>
-          <div class="row wrap">
-            <label class="toggle">
-              <input type="checkbox" id="ctl-mesh" />
-              <span>Finite element mesh</span>
-            </label>
+        <div class="bench-side">
+          <label class="toggle">
+            <input type="checkbox" id="ctl-mesh" />
+            <span>show the mesh</span>
+          </label>
+          <div class="takeaways">
+            <button type="button" id="btn-share" class="chip chip-invert">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <rect x="3" y="3" width="7" height="7" fill="currentColor" />
+                <rect x="14" y="14" width="7" height="7" fill="currentColor" />
+                <path d="M10 6.5h7v7" stroke="currentColor" stroke-width="2" fill="none" />
+              </svg>
+              <span>copy link</span>
+            </button>
+            <button type="button" id="btn-wav" class="chip chip-invert">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 3v13M6 12l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" />
+                <rect x="3" y="20" width="18" height="2" fill="currentColor" />
+              </svg>
+              <span>sound</span>
+            </button>
+            <button type="button" id="btn-png" class="chip chip-invert">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <rect x="3" y="4" width="18" height="14" stroke="currentColor" stroke-width="2" fill="none" />
+                <circle cx="9" cy="10" r="2.5" fill="currentColor" />
+                <path d="M3 18l6-5 4 3 3-2 5 4" stroke="currentColor" stroke-width="2" fill="none" />
+              </svg>
+              <span>image</span>
+            </button>
           </div>
-        </section>
-
-        <section class="block">
-          <h2>Under the hood</h2>
-          <dl class="facts" id="facts"></dl>
-        </section>
-
-        <section class="block">
-          <h2>Take it with you</h2>
-          <div class="row wrap">
-            <button type="button" id="btn-share" class="ghost">Copy link</button>
-            <button type="button" id="btn-wav" class="ghost">Download sound</button>
-            <button type="button" id="btn-png" class="ghost">Download image</button>
-          </div>
-          <p class="hint" id="share-status" aria-live="polite"></p>
-        </section>
-      </aside>
+          <p class="bench-status" id="share-status" aria-live="polite"></p>
+        </div>
+      </section>
     </main>
 
-    <dialog id="dlg-about">
-      <article class="prose">
-        <h2>How it works</h2>
+    <dialog id="dlg-about" aria-labelledby="about-title">
+      <article class="sheet-prose">
+        <h2 id="about-title">how it works</h2>
+
         <p>
-          A drumhead clamped at its rim can only vibrate in certain shapes, at certain
-          frequencies. Those shapes and frequencies are the solutions of
+          A drumhead clamped at its rim can only vibrate in certain shapes, at certain frequencies.
+          Those shapes and frequencies are the solutions of
         </p>
         <p class="equation">−∇²u = λu &nbsp;inside the shape,&nbsp; u = 0 on the edge</p>
         <p>
-          Each solution <em>u</em> is a mode — a standing wave — and each λ gives a frequency
-          proportional to&nbsp;√λ. This is an eigenvalue problem, and for almost every shape it has
-          no formula. So Eigendrum solves it numerically: it covers your shape with a mesh of
+          Each solution <em>u</em> is a mode, a standing wave, and each λ gives a frequency
+          proportional to √λ. This is an eigenvalue problem, and for almost every shape it has no
+          formula. So Eigendrum solves it numerically: it covers your shape with a mesh of
           triangles, builds the finite element stiffness and mass matrices, and finds the smallest
-          eigenvalues of <span class="equation-inline">Kφ = λMφ</span>.
+          eigenvalues of <span class="tex">Kφ = λMφ</span>.
         </p>
-        <h3>Why you can trust the numbers</h3>
+
+        <h3>why you can trust the numbers</h3>
         <p>
-          A handful of shapes have spectra that can be written down exactly, and the solver is
-          tested against them on every change. A circle's frequencies are the zeros of Bessel
-          functions; a rectangle's are
-          <span class="equation-inline">π²(m²/a² + n²/b²)</span>. The solver reproduces both to
-          better than a tenth of a percent, and — because a conforming finite element method
-          minimises energy over a restricted space — its answers are guaranteed to be slight
-          <em>over</em>estimates, never under. You can see the measured accuracy in
-          “Under the hood”.
+          A few shapes have spectra that can be written down exactly, and the solver is tested
+          against them on every change. A circle's frequencies are the zeros of Bessel functions; a
+          rectangle's are <span class="tex">π²(m²/a² + n²/b²)</span>. The solver reproduces both to
+          better than a tenth of a percent, and because a conforming finite element method minimises
+          energy over a restricted space, its answers are guaranteed slight
+          <em>over</em>estimates, never under. The measured error is in “the numbers”.
         </p>
-        <h3>Where you strike it matters</h3>
+
+        <h3>where you strike it matters</h3>
         <p>
           Striking a spot drives each mode in proportion to how much that mode moves there. Hit a
-          line where a mode stands still and you cannot excite it at all. That is not a rule that
-          was programmed in; it falls out of projecting the mallet onto the modes.
+          line where a mode stands still and you cannot excite it at all. That was not programmed
+          in; it falls out of projecting the mallet onto the modes.
         </p>
-        <h3>Can one hear the shape of a drum?</h3>
+
+        <h3>can one hear the shape of a drum?</h3>
         <p>
-          Mark Kac asked exactly that in 1966. In 1992 Carolyn Gordon, David Webb and Scott
-          Wolpert answered <strong>no</strong>, by building two different shapes with identical
-          spectra. Both are in the shape list as Kac drum I and II. Each is made from the same
-          seven triangles, they enclose the same area and the same perimeter, and every frequency
-          matches. Switch between them and listen: the outlines are plainly different and the
-          sound is not.
+          Mark Kac asked exactly that in 1966. In 1992 Carolyn Gordon, David Webb and Scott Wolpert
+          answered <strong>no</strong>, by building two different shapes with identical spectra.
+          Both are in the form list as Kac drum I and II. Each is made from the same seven
+          triangles, rearranged. They enclose the same area and the same perimeter, and every
+          frequency matches. Switch between them and listen: the outlines are plainly different and
+          the sound is not.
         </p>
-        <h3>What is a modelling choice</h3>
+
+        <h3>what is a modelling choice</h3>
         <p>
-          The frequency <em>ratios</em> and the mode shapes are physics, determined entirely by
-          the outline. The absolute pitch depends on size and tension, and how fast each overtone
-          fades depends on the material and the air, so those are exposed as sliders instead of
-          being invented silently. Shapes are scaled to equal area before solving, so that what
-          you hear is shape rather than size.
+          The frequency ratios and the mode shapes are physics, fixed entirely by the outline. The
+          absolute pitch depends on size and tension, and how fast each overtone fades depends on
+          the material and the air, so those are sliders rather than silent assumptions. Every shape
+          is scaled to the same area before solving, so what you hear is shape and not size.
+        </p>
+
+        <h3>colophon</h3>
+        <p>
+          No dependencies, no build step, no backend, nothing sent anywhere. Set in Jost* by
+          indestructible type*. After Kac, <em>Can One Hear the Shape of a Drum?</em> (1966);
+          Gordon, Webb and Wolpert (1992); and Driscoll, <em>Eigenmodes of Isospectral Drums</em>
+          (1997), whose coordinates the two Kac drums use.
         </p>
       </article>
       <form method="dialog">
-        <button class="primary" value="close">Close</button>
+        <button class="chip chip-solid" value="close">close</button>
       </form>
     </dialog>
 
