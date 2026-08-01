@@ -79,8 +79,13 @@ const boardBox = async (page) => {
   await page.evaluate(() => {
     [...document.querySelectorAll('#presets .form-chip')].find((c) => c.dataset.id === 'gww-a').click();
   });
-  await page.waitForFunction(() => document.querySelector('#solving').hidden, { timeout: 30000 });
-  await sleep(500);
+  // Wait for the background partner solve, which is what puts the measured match
+  // line and the overlaid comb on screen.
+  await page.waitForFunction(
+    () => document.querySelector('#solving').hidden && document.querySelector('#kac .kac-match'),
+    { timeout: 40000 },
+  );
+  await sleep(400);
   await shot(page, '05-desktop-kac');
 
   // A shape with spikes, the case that used to show seams.

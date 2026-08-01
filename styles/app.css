@@ -27,7 +27,6 @@
   --hair: 1px;
 
   --font: 'Jost', 'Futura', 'Century Gothic', 'Avenir Next', system-ui, sans-serif;
-  --font-tex: ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, Consolas, monospace;
 
   --masthead-h: 4.75rem;
 }
@@ -339,11 +338,14 @@ h3 {
   }
 }
 
+/* An ink field, not a yellow one. Chrome yellow already means "selected" and
+   "the remarkable thing" here, and rendering a failure in the celebration colour
+   is a lie about what happened. */
 .notice {
-  margin: 0.9rem 0 0;
+  margin: 0;
   padding: 0.6rem 0.85rem;
-  background: var(--chrome);
-  color: var(--ink);
+  background: var(--ink);
+  color: var(--plaster);
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -360,6 +362,72 @@ h3 {
   font-weight: 600;
 }
 .readout .note {
+  color: var(--ink-soft);
+}
+
+/* The spectrum as a comb on a log-frequency axis. Bars measured from zero cannot
+   show interval, and interval is the whole character of a drum: this shows the
+   overtones crowding together as they climb. For the isospectral pair the
+   partner's spectrum is drawn above the same axis, so its coincidence is
+   something you see rather than something we assert. */
+.comb {
+  margin: 0;
+  padding-top: 0.8rem;
+  border-top: var(--hair) solid rgba(20, 18, 15, 0.25);
+}
+.comb figcaption {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--ink-soft);
+}
+.comb-axis {
+  position: relative;
+  height: 3rem;
+  margin-top: 0.6rem;
+}
+.comb-axis::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  background: var(--ink);
+}
+.comb-tick {
+  position: absolute;
+  top: 50%;
+  width: 2px;
+  height: 0.8rem;
+  margin-left: -1px;
+  background: var(--ink);
+}
+.comb-tick.is-selected {
+  width: 4px;
+  margin-left: -2px;
+  top: 20%;
+  height: 1.9rem;
+}
+.comb-tick.is-partner {
+  top: auto;
+  bottom: 50%;
+  background: var(--ultramarine);
+}
+.comb-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.aside-note {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  max-width: 44ch;
   color: var(--ink-soft);
 }
 
@@ -498,6 +566,15 @@ h2 {
   border-top: var(--hair) solid var(--ink);
 }
 
+.stale-note {
+  margin: 0 0 0.5rem;
+  padding: 0.3rem 0.5rem;
+  background: var(--ink);
+  color: var(--plaster);
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+}
+
 .mode-row {
   display: grid;
   grid-template-columns: 1.6rem minmax(0, 1fr) 4.4rem;
@@ -532,10 +609,16 @@ h2 {
   color: var(--ink);
 }
 
-.mode-bar {
-  height: 0.5rem;
-  background: var(--ink);
-  min-width: 2px;
+/* The ratio to the fundamental, which is the number that actually characterises a
+   drum. A bar measured from zero looked like information and was not: at these
+   frequencies eight consecutive rows differ by a few percent of their length. */
+.mode-ratio {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+}
+.mode-row[aria-pressed='true'] .mode-ratio {
+  color: var(--ink);
 }
 
 .mode-hz {
@@ -562,6 +645,11 @@ h2 {
   margin: 0 0 0.85rem;
   font-size: 0.86rem;
   line-height: 1.45;
+}
+.kac .kac-match {
+  font-weight: 600;
+  border-top: var(--hair) solid rgba(20, 18, 15, 0.4);
+  padding-top: 0.6rem;
 }
 .kac .chip-invert {
   border-color: var(--ink);
@@ -624,9 +712,10 @@ h2 {
   align-items: start;
 }
 
+/* Full white, no opacity: this is the heading that names the honesty boundary, and
+   at 0.85 it fell to 4.37:1 against the vermilion. */
 .bench h2 {
   color: #fff;
-  opacity: 0.85;
 }
 .bench-head p {
   margin: 0;
@@ -674,13 +763,15 @@ input[type='range'] {
   background: transparent;
   cursor: pointer;
 }
+/* 0.9 rather than 0.55: the track is the only mark showing a slider's extent, so
+   it is a UI component and owes 3:1. At 0.55 it was 2.24:1. */
 input[type='range']::-webkit-slider-runnable-track {
   height: 2px;
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.9);
 }
 input[type='range']::-moz-range-track {
   height: 2px;
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.9);
 }
 input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -780,25 +871,35 @@ dialog::backdrop {
   line-height: 1.6;
   max-width: 68ch;
 }
+/* The embedded face ships upright only, so italic would be a synthesised oblique.
+   Emphasis comes from weight instead. */
 .sheet-prose em {
-  font-style: italic;
+  font-style: normal;
+  font-weight: 600;
 }
 .sheet-prose strong {
   font-weight: 600;
 }
 
+/* Notation set in the page's own face, tracked out, with lining figures. A system
+   monospace here would be the one voice on the page that was not chosen — and a
+   geometric sans is the right register for this world anyway: the Bauhaus set its
+   own mathematics this way. */
 .equation {
   background: var(--ink);
   color: var(--plaster);
-  font-family: var(--font-tex);
-  font-size: 0.95rem !important;
+  font-size: 1.05rem !important;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  font-variant-numeric: tabular-nums lining-nums;
   text-align: center;
-  padding: 0.9rem 0.75rem;
+  padding: 0.95rem 0.75rem;
   max-width: none !important;
 }
 .tex {
-  font-family: var(--font-tex);
-  font-size: 0.9em;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums lining-nums;
   color: var(--ultramarine);
 }
 
@@ -880,13 +981,18 @@ dialog form {
   .masthead-titles p {
     display: none;
   }
-  .masthead-actions .chip span {
+  /* Only the explainer loses its label. The sound button keeps its words, because
+     a 2px diagonal inside a 17px glyph is not a visible mute. */
+  #btn-about span {
     position: absolute;
     width: 1px;
     height: 1px;
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;
+  }
+  #btn-sound {
+    font-size: 0.8rem;
   }
   .study,
   .modes,

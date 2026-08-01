@@ -150,12 +150,35 @@ async function main() {
   await page.evaluate(() => {
     [...document.querySelectorAll('#presets .form-chip')].find((c) => c.dataset.id === 'gww-a').click();
   });
+  // The partner drum is solved in the background, so wait for the measured match
+  // line rather than for the main solve alone.
   await page.waitForFunction(
-    () => document.querySelector('#solving').hidden && document.querySelector('#kac') && !document.querySelector('#kac').hidden,
-    { timeout: 30000 },
+    () =>
+      document.querySelector('#solving').hidden &&
+      !document.querySelector('#kac').hidden &&
+      document.querySelector('#kac .kac-match'),
+    { timeout: 40000 },
   );
   await sleep(300);
   const specA = await page.$$eval('#spectrum .mode-hz', (n) => n.map((x) => x.textContent));
+
+  const kacProof = await page.evaluate(() => ({
+    match: document.querySelector('#kac .kac-match')?.textContent || '',
+    ownTicks: document.querySelectorAll('#comb-axis .comb-tick:not(.is-partner)').length,
+    partnerTicks: document.querySelectorAll('#comb-axis .comb-tick.is-partner').length,
+    caption: document.querySelector('#comb-caption').textContent,
+  }));
+  console.log('\n-- isospectral proof shown in the UI --');
+  console.log('match line   :', kacProof.match);
+  console.log('comb ticks   :', kacProof.ownTicks, 'own +', kacProof.partnerTicks, 'partner');
+  if (!/agree/.test(kacProof.match)) {
+    problems.push('the Kac callout did not state a measured agreement');
+  }
+  if (kacProof.partnerTicks !== kacProof.ownTicks) {
+    problems.push(
+      `comb should overlay the partner spectrum: ${kacProof.ownTicks} own vs ${kacProof.partnerTicks} partner`,
+    );
+  }
   await shot(page, 'kac-a');
 
   await page.click('#btn-kac-swap');

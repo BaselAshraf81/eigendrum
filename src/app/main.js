@@ -8,7 +8,7 @@
 
 import { Board } from './canvas.js';
 import { PRESETS, PRESETS_BY_ID, normalizeShape } from './presets.js';
-import { renderSpectrum, setSelected } from './spectrum.js';
+import { renderComb, renderSpectrum, setSelected } from './spectrum.js';
 import { strokeToPolygon } from './draw.js';
 import { readHash, shareUrl, writeHash } from './share.js';
 import { freqToNote, harmonicity } from '../audio/notes.js';
@@ -46,7 +46,9 @@ const els = {
   presets: el('presets'),
   spectrum: el('spectrum'),
   modesCount: el('modes-count'),
+  staleNote: el('stale-note'),
   facts: el('facts'),
+  aboutBody: el('about-body'),
   drawBtn: el('btn-draw'),
   drawLabel: el('draw-label'),
   kac: el('kac'),
@@ -68,6 +70,13 @@ const els = {
   wav: el('btn-wav'),
   png: el('btn-png'),
   shareStatus: el('share-status'),
+};
+
+const combEls = {
+  axis: el('comb-axis'),
+  lo: el('comb-lo'),
+  hi: el('comb-hi'),
+  caption: el('comb-caption'),
 };
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -92,6 +101,11 @@ const state = {
   lastWav: null,
   requestId: 0,
   voices: [],
+  // The other half of the isospectral pair, solved in the background so the comb
+  // can draw its spectrum against this one and the match can be measured rather
+  // than asserted.
+  partner: null,
+  partnerReqId: 0,
 };
 
 // --------------------------------------------------------------------- worker
@@ -109,6 +123,17 @@ const STAGES = {
 
 worker.onmessage = (event) => {
   const msg = event.data;
+
+  // The background solve of the paired Kac drum, on its own request lane.
+  if (msg.id === state.partnerReqId) {
+    if (msg.type === 'done') {
+      state.partner = { eigenvalues: msg.eigenvalues };
+      refreshComb();
+      updateKacMatch();
+    }
+    return;
+  }
+
   if (msg.id !== state.requestId) return; // a newer request superseded this one
 
   if (msg.type === 'progress') {
@@ -147,6 +172,25 @@ function solve(source) {
     targetNodes: TARGET_NODES,
   });
 
+  // For a Kac drum, solve its partner too. The pair's whole claim is that the two
+  // spectra are the same, and that is only worth showing if we have both.
+  state.partner = null;
+  const pairedId = preset?.pairedWith;
+  if (pairedId && PRESETS_BY_ID.has(pairedId)) {
+    const other = PRESETS_BY_ID.get(pairedId);
+    const otherShape = normalizeShape(other.polygon, other.latticePitch || 0);
+    state.partnerReqId = state.requestId + 100000;
+    worker.postMessage({
+      id: state.partnerReqId,
+      polygon: otherShape.polygon,
+      align: otherShape.align,
+      modes: MODES,
+      targetNodes: TARGET_NODES,
+    });
+  } else {
+    state.partnerReqId = 0;
+  }
+
   writeHash(
     source.kind === 'preset' ? { kind: 'preset', id: source.id } : { kind: 'custom', polygon },
   );
@@ -167,9 +211,49 @@ function onSolved(msg) {
   board.setDrum(state.drum);
   renderSpectrum(els.spectrum, Array.from(state.freqs), state.selectedMode, selectMode);
   els.modesCount.textContent = `${state.freqs.length} computed`;
+  refreshComb();
   renderFacts();
   renderReadout();
+  updateKacMatch();
   showPrompt();
+}
+
+function partnerFreqs() {
+  if (!state.partner) return null;
+  return Array.from(frequencies(state.partner.eigenvalues, Number(els.pitch.value)));
+}
+
+function refreshComb() {
+  if (!state.freqs) return;
+  // No tick is highlighted while the drum is ringing, because then you are
+  // looking at every mode at once rather than one of them.
+  const selected = state.view === 'struck' ? -1 : state.selectedMode;
+  renderComb(combEls, Array.from(state.freqs), selected, partnerFreqs());
+}
+
+/** States the measured agreement between the two Kac drums, rather than claiming it. */
+function updateKacMatch() {
+  const existing = els.kac.querySelector('.kac-match');
+  if (els.kac.hidden || !state.partner || !state.drum) {
+    if (existing) existing.remove();
+    return;
+  }
+  const a = state.drum.eigenvalues;
+  const b = state.partner.eigenvalues;
+  const n = Math.min(a.length, b.length);
+  let worst = 0;
+  for (let k = 0; k < n; k++) {
+    worst = Math.max(worst, Math.abs(a[k] - b[k]) / ((a[k] + b[k]) / 2));
+  }
+
+  const line = document.createElement('p');
+  line.className = 'kac-match';
+  line.textContent =
+    worst < 1e-9
+      ? `Solved both just now: all ${n} frequencies agree to every digit computed.`
+      : `Solved both just now: all ${n} frequencies agree to within ${(worst * 100).toPrecision(2)}%.`;
+  if (existing) existing.replaceWith(line);
+  else els.kacText.after(line);
 }
 
 function recomputeFrequencies() {
@@ -223,6 +307,11 @@ function strike(x, y) {
   };
   state.view = 'struck';
   els.prompt.hidden = true;
+  // Say what is actually on screen. Leaving the readout on "Mode 8" while sixteen
+  // modes ring together would be the interface lying about the physics.
+  showStruckReadout();
+  setSelected(els.spectrum, -1);
+  refreshComb();
 
   if (state.muted) return;
   const ctx = ensureAudio();
@@ -285,6 +374,7 @@ function frame(now) {
       board.drawField(state.fieldBuf, refAmp);
       if (elapsed > state.strike.maxTau * 3.2) {
         state.view = 'mode';
+        restoreModeView();
         showPrompt();
       }
     } else {
@@ -331,6 +421,40 @@ function renderReadout() {
     text(' the first — '),
     span('note', `${harm.verdict}.`),
   );
+}
+
+function showModeReadout(i) {
+  const f = state.freqs[i];
+  const note = freqToNote(f);
+  const parts = [text('Mode '), strong(String(i + 1)), text(' at '), strong(`${f.toFixed(1)} Hz`)];
+  if (i === 0) {
+    parts.push(text(` (${note.label}), the lowest this outline allows. `));
+  } else {
+    parts.push(
+      text(` (${note.label}), `),
+      strong(`\u00D7${(f / state.freqs[0]).toFixed(3)}`),
+      text(' the lowest. '),
+    );
+  }
+  parts.push(span('note', 'The pale channels are nodal lines, where the surface never moves.'));
+  els.readout.replaceChildren(...parts);
+}
+
+function showStruckReadout() {
+  els.readout.replaceChildren(
+    strong('Struck.'),
+    text(` All ${state.freqs.length} modes are ringing together, so what you see is their sum and not any one of them. `),
+    span('note', 'Modes with a nodal line under the mallet were never excited at all.'),
+  );
+}
+
+/** Back to rest: mode 1 shows the whole drum, any other shows itself. */
+function restoreModeView() {
+  if (!state.freqs) return;
+  setSelected(els.spectrum, state.selectedMode);
+  if (state.selectedMode === 0) renderReadout();
+  else showModeReadout(state.selectedMode);
+  refreshComb();
 }
 
 const text = (s) => document.createTextNode(s);
@@ -500,6 +624,8 @@ function updateKac(preset) {
   } else {
     els.kac.hidden = true;
   }
+  const stale = els.kac.querySelector('.kac-match');
+  if (stale) stale.remove();
 }
 
 function selectMode(i) {
@@ -507,16 +633,8 @@ function selectMode(i) {
   state.view = 'mode';
   state.strike = null;
   setSelected(els.spectrum, i);
-  const f = state.freqs[i];
-  const note = freqToNote(f);
-  els.readout.replaceChildren(
-    text('Mode '),
-    strong(String(i + 1)),
-    text(' at '),
-    strong(`${f.toFixed(1)} Hz`),
-    text(` (${note.label}). `),
-    span('note', 'The pale channels are nodal lines, where the surface never moves.'),
-  );
+  showModeReadout(i);
+  refreshComb();
   showPrompt();
 }
 
@@ -529,6 +647,18 @@ function setDrawMode(on) {
   els.drawBtn.setAttribute('aria-pressed', String(on));
   els.drawLabel.textContent = on ? 'cancel drawing' : 'draw your own';
   els.board.style.cursor = on ? 'cell' : 'crosshair';
+  // While you are tracing, every number on the right still belongs to the drum
+  // that is no longer on screen. Say so rather than letting them read as current.
+  els.staleNote.hidden = !on;
+  if (on) {
+    els.readout.replaceChildren(
+      strong('Trace an outline'),
+      text(' on the plate. Release to solve it. '),
+      span('note', 'It has to be a single loop that does not cross itself.'),
+    );
+  } else if (state.drum) {
+    restoreModeView();
+  }
   showPrompt();
 }
 
@@ -609,7 +739,8 @@ els.pitch.addEventListener('input', () => {
   recomputeFrequencies();
   if (state.freqs) {
     renderSpectrum(els.spectrum, Array.from(state.freqs), state.selectedMode, selectMode);
-    renderReadout();
+    refreshComb();
+    if (state.view !== 'struck') restoreModeView();
   }
 });
 
@@ -638,7 +769,14 @@ els.sound.addEventListener('click', () => {
 });
 els.soundCut.style.display = 'none';
 
-els.about.addEventListener('click', () => els.dlgAbout.showModal());
+els.about.addEventListener('click', () => {
+  els.dlgAbout.showModal();
+  // Without this the dialog opens scrolled to its own close button, hiding the
+  // title, the equation and the accuracy section.
+  els.dlgAbout.scrollTop = 0;
+  els.aboutBody.scrollTop = 0;
+  els.aboutBody.focus({ preventScroll: true });
+});
 
 els.share.addEventListener('click', async () => {
   const url = shareUrl(

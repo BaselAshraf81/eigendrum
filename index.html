@@ -87,11 +87,23 @@
           <p class="notice" id="notice" hidden></p>
           <p class="readout" id="readout" aria-live="polite"></p>
 
+          <figure class="comb" id="comb">
+            <figcaption id="comb-caption">where the overtones fall</figcaption>
+            <div class="comb-axis" id="comb-axis"></div>
+            <div class="comb-ends"><span id="comb-lo"></span><span id="comb-hi"></span></div>
+          </figure>
+
           <ul class="key">
             <li><i class="sw sw-pos"></i>pushed one way</li>
             <li><i class="sw sw-nodal"></i>nodal line, never moves</li>
             <li><i class="sw sw-neg"></i>pushed the other way</li>
           </ul>
+
+          <p class="aside-note">
+            Every mode is a standing wave this outline permits, and no other. Tap anywhere: the
+            modes with a nodal line under the mallet stay silent, which is why the same drum sounds
+            different depending on where you hit it.
+          </p>
 
           <div class="forms">
             <h2>forms</h2>
@@ -119,6 +131,7 @@
 
         <section class="modes">
           <h2>modes<span id="modes-count"></span></h2>
+          <p class="stale-note" id="stale-note" hidden>still showing the previous drum</p>
           <ol id="spectrum" class="spectrum"></ol>
         </section>
 
@@ -191,7 +204,7 @@
     </main>
 
     <dialog id="dlg-about" aria-labelledby="about-title">
-      <article class="sheet-prose">
+      <article class="sheet-prose" id="about-body" tabindex="-1" autofocus>
         <h2 id="about-title">how it works</h2>
 
         <p>
