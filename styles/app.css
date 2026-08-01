@@ -25,10 +25,9 @@
 
   --rule: 3px;
   --hair: 1px;
+  --masthead-h: 4.75rem;
 
   --font: 'Jost', 'Futura', 'Century Gothic', 'Avenir Next', system-ui, sans-serif;
-
-  --masthead-h: 4.75rem;
 }
 
 *,
@@ -138,7 +137,7 @@ h3 {
 
 .masthead-titles p {
   margin: 0.15rem 0 0;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   letter-spacing: 0.02em;
   color: var(--ink-soft);
 }
@@ -168,9 +167,10 @@ h3 {
   cursor: pointer;
   transition: background-color 110ms linear, color 110ms linear;
 }
+/* Hover tints, pressed fills. They used to render identically, which made a
+   pressed chip indistinguishable from a hovered unpressed one. */
 .chip:hover {
-  background: var(--ink);
-  color: var(--plaster);
+  background: rgba(20, 18, 15, 0.09);
 }
 .chip svg {
   width: 1.05rem;
@@ -181,6 +181,7 @@ h3 {
   background: var(--ink);
   color: var(--plaster);
 }
+
 
 .chip-solid {
   background: var(--ink);
@@ -346,7 +347,7 @@ h3 {
   padding: 0.6rem 0.85rem;
   background: var(--ink);
   color: var(--plaster);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 500;
 }
 
@@ -439,7 +440,7 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   letter-spacing: 0.03em;
   color: var(--ink-soft);
 }
@@ -621,7 +622,7 @@ h2 {
 .mode-ratio {
   font-variant-numeric: tabular-nums;
   color: var(--ink-soft);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
 }
 .mode-row[aria-pressed='true'] .mode-ratio {
   color: var(--ink);
@@ -962,7 +963,6 @@ dialog form {
      a sticky ledger would just paint over the mode list. Bound the measure too,
      or a full-width row leaves the ratio and the frequency half a screen apart. */
   .spectrum {
-    max-height: none;
     max-width: 26rem;
   }
   .ledger dl,

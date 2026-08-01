@@ -767,7 +767,9 @@ els.kacSwap.addEventListener('click', () => {
 
 els.sound.addEventListener('click', () => {
   state.muted = !state.muted;
-  els.sound.setAttribute('aria-pressed', String(state.muted));
+  // Pressed means sound is on, which is what the visible label says. Setting it
+  // from `muted` made the two contradict each other for a screen reader.
+  els.sound.setAttribute('aria-pressed', String(!state.muted));
   els.soundLabel.textContent = state.muted ? 'sound off' : 'sound on';
   els.soundCut.style.display = state.muted ? '' : 'none';
 });

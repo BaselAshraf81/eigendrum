@@ -14,10 +14,18 @@ import { pointInPolygon } from '../geom/polygon.js';
 
 const RAMP_SIZE = 512;
 
-export const PLATE = [232, 227, 214]; // plaster
+/**
+ * These mirror four custom properties in styles/app.css and must be kept in step
+ * with them by hand. There is no build step to share them, and the canvas needs
+ * numeric channels rather than CSS strings because the ramp is interpolated.
+ *
+ *   PLATE -> --plate            INK -> --ink
+ *   POS   -> --vermilion-bright NEG -> --ultramarine
+ */
+export const PLATE = [232, 227, 214];
 export const INK = [20, 18, 15];
-const POS = [216, 50, 28]; // vermilion
-const NEG = [27, 57, 168]; // ultramarine
+const POS = [216, 50, 28];
+const NEG = [27, 57, 168];
 
 const mix = (a, b, t) => [
   a[0] + (b[0] - a[0]) * t,
