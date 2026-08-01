@@ -2,6 +2,8 @@
 
 **Draw a shape. Hear the sound it would actually make.**
 
+![The Eigendrum interface: a circular drum ringing after a strike, with the mixture of modes it excited listed beside it and the solver's own measurements below](docs/hero.png)
+
 Eigendrum treats whatever you draw as an ideal drumhead clamped at its rim, solves
 the Laplacian eigenvalue problem on that exact region with real finite elements,
 and synthesises the frequencies it finds. Nothing is sampled and no overtone is
@@ -12,16 +14,48 @@ Then it lets you hit it. Strike different places and the timbre changes, because
 striking a spot drives each mode in proportion to how much that mode moves
 there. Hit a line where a mode stands still and you cannot excite it at all.
 
-You can also watch it: the real vibration modes ripple across the shape, with the
-dark curves where the surface never moves. Those are nodal lines - the
+You can also watch it: the real vibration modes ripple across the shape, with pale
+channels along the curves where the surface never moves. Those are nodal lines, the
 mathematical ancestors of the sand figures Ernst Chladni was drawing in 1787.
 
-No dependencies, no build step, no backend. It runs from `file://`.
+<p align="center">
+  <img src="docs/nodal-lines.png" width="46%" alt="The ninth mode of a five-pointed star: six lobes pushed alternately up and down, separated by pale nodal lines" />
+  <img src="docs/freehand.png" width="46%" alt="A freehand blob ringing after a strike, its displacement drawn in contour bands" />
+</p>
+
+<p align="center"><em>Left: mode 9 of a star. Right: something drawn by hand, struck once.<br />Neither has a closed-form spectrum. Both were solved from the outline alone.</em></p>
+
+No dependencies, no build step, no backend. Clone it and open `index.html`, or:
 
 ```bash
 npm run serve     # http://localhost:8080
-npm test          # 33 tests, including the accuracy proofs below
+npm test          # 35 tests, including the accuracy proofs below
 ```
+
+## What you can do with it
+
+- **Strike it anywhere.** Click or tap the plate. Where you hit changes the timbre,
+  and the readout names the loudest mode along with any that stayed silent because
+  the mallet landed on their nodal line.
+- **Hear one mode by itself.** Press any row in the mode list. No mallet can do that,
+  since a real strike always wakes many modes at once, but it is the only way to hear
+  what a single eigenvalue sounds like, and it is what makes the mixture legible
+  afterwards.
+- **Draw your own outline**, or pick from eleven built-in forms, including both halves
+  of the isospectral pair.
+- **Retune what the shape does not decide.** Absolute pitch and ring-out are yours.
+  Mallet width changes how sharply the strike is localised, and so which modes it can
+  reach. The overtone *ratios* are never adjustable, because those belong to the
+  outline.
+- **See the mesh** the solver actually used, flexing with the membrane.
+- **Take it with you.** Copy a link that encodes the shape in the URL fragment, save
+  the strike as a `.wav`, or the plate as a `.png`.
+- **Keyboard throughout.** Tab to the plate and press Enter or Space to strike it at
+  the marked point. Every form, mode and control is reachable and labelled, contrast
+  meets WCAG AA, and `prefers-reduced-motion` holds the peak displacement instead of
+  animating.
+
+Nothing is uploaded, stored or tracked. There is no backend to upload it to.
 
 ## Can one hear the shape of a drum?
 
@@ -34,6 +68,12 @@ Eigendrum as *Kac drum I* and *Kac drum II*. Each is made from the same seven
 right-isosceles triangles, rearranged. One looks like a hook and the other like an
 arrow. They enclose the same area and the same perimeter, and **every single
 frequency matches**.
+
+![Kac drum I selected. A panel reports that both drums were solved just now and all 16 frequencies agree to within 1.0e-7 percent, and the frequency comb shows the partner drum's ticks above the axis landing on top of this drum's below it](docs/kac-pair.png)
+
+Both drums are solved, and the app reports the agreement it measured rather than
+asserting the theorem. The partner drum's spectrum is drawn above the same axis as
+this one, so you can see the ticks coincide.
 
 Switch between them and listen. This is not an approximation that happens to come
 out close:
@@ -129,6 +169,8 @@ scaled to equal area before solving, so what you hear is shape rather than size.
 ## Layout
 
 ```
+index.html    the whole page: shell markup and the About dialog, no logic
+styles/       all styling, plus the typeface as a base64 data URI
 src/math/     linalg, sparse CSR, banded Cholesky + RCM, eigensolver, Bessel,
               closed-form spectra
 src/geom/     polygon utilities, the mesher
@@ -138,10 +180,37 @@ src/app/      DOM, canvas rendering, input, presets, sharing
 src/worker/   runs the mesher and solver off the main thread
 tools/        dev server, accuracy bench, isospectral check, browser smoke tests
 tests/        node --test
+docs/         the images this README embeds
 ```
 
 `src/math`, `src/geom` and `src/fem` never touch the DOM, which is why they can be
-tested in Node and run in a worker.
+tested in Node and run in a worker. The worker owns every expensive step, so the
+interface stays responsive while a drum solves.
+
+The typeface is embedded as a data URI rather than linked, because Chrome refuses
+font subresources over `file://` and this has to work from a bare filesystem.
+
+## Working on it
+
+```bash
+npm run serve         # dev server on :8080
+npm test              # unit tests, including the accuracy proofs
+npm run bench         # accuracy and timing against closed-form spectra
+npm run isospectral   # verifies the two Kac drums really are isospectral
+npm run smoke         # headless browser test of the whole app
+npm run mobile        # narrow-viewport layout and touch checks
+npm run readme-shots  # regenerates the images above
+```
+
+Puppeteer is a dev dependency, used only by the browser tests, and never loads in
+the browser. The shipped app has zero runtime dependencies in the literal sense:
+every import and every asset reference in `index.html`, `styles/` and `src/`
+resolves inside this repo, with no network fetch at any point.
+
+## Deploying
+
+Copy the repo to any static host. There is no build step, no server-side anything,
+and no environment to configure. GitHub Pages, Netlify, S3, a USB stick.
 
 ## References
 

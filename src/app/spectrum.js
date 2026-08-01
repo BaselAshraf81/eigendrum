@@ -135,6 +135,6 @@ export function renderComb(els, freqs, selectedIndex, partner = null, drive = nu
   els.caption.textContent = drive
     ? 'how much of this sound each mode is'
     : partner && partner.length
-      ? 'where the overtones fall \u2014 the other drum above the line'
+      ? 'where the overtones fall - the other drum above the line'
       : 'where the overtones fall';
 }

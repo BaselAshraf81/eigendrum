@@ -20,7 +20,8 @@
     "bench": "node tools/bench.mjs",
     "isospectral": "node tools/isospectral.mjs",
     "smoke": "node tools/smoke.mjs",
-    "mobile": "node tools/mobile.mjs"
+    "mobile": "node tools/mobile.mjs",
+    "readme-shots": "node tools/readme-shots.mjs"
   },
   "engines": {
     "node": ">=20"

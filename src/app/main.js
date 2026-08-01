@@ -492,7 +492,7 @@ function showModeReadout(i, playing = false) {
     span(
       'note',
       playing
-        ? 'That is this one mode by itself. No mallet can do it \u2014 a real strike always wakes many at once.'
+        ? 'That is this one mode by itself. No mallet can do it - a real strike always wakes many at once.'
         : 'The pale channels are nodal lines, where the surface never moves.',
     ),
   );
@@ -518,7 +518,7 @@ function showStruckReadout(amps) {
     span(
       'note',
       silent.length
-        ? `${silent.length === 1 ? 'Mode' : 'Modes'} ${listNumbers(silent)} stayed silent \u2014 the mallet landed on a nodal line.`
+        ? `${silent.length === 1 ? 'Mode' : 'Modes'} ${listNumbers(silent)} stayed silent - the mallet landed on a nodal line.`
         : 'The rules under the list are the mixture you just made.',
     ),
   );
