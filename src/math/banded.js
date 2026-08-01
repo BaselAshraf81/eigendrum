@@ -149,7 +149,7 @@ export class BandedCholesky {
         if (i === j) {
           if (sum <= 0) {
             throw new Error(
-              'Matrix is not positive definite — the mesh is probably degenerate.',
+              'Matrix is not positive definite - the mesh is probably degenerate.',
             );
           }
           data[i * stride + 0] = Math.sqrt(sum);

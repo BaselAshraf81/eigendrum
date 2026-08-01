@@ -3,7 +3,7 @@
  *
  * Raw pointer traces are far too dense (a hundred points per second, many of
  * them a fraction of a pixel apart) and they never close cleanly. This
- * simplifies, closes, and then *validates* — a self-crossing outline has no
+ * simplifies, closes, and then *validates* - a self-crossing outline has no
  * well-defined interior, so there is nothing sensible to solve on and we say so
  * rather than producing nonsense.
  */

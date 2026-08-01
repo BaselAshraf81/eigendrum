@@ -9,7 +9,7 @@
  * structured mesh, and a lattice has two properties we actively want.
  *
  *   1. Axis-aligned and 45-degree edges are represented *exactly*. That covers
- *      squares, rectangles, L-shapes, and — importantly — the
+ *      squares, rectangles, L-shapes, and - importantly - the
  *      Gordon-Webb-Wolpert isospectral drums, which are built from right
  *      isosceles triangles. Their equal spectra therefore come out equal for
  *      real geometric reasons rather than by luck.
@@ -202,7 +202,7 @@ export function buildMesh(polygonIn, { targetNodes = 2600, smoothPasses = 4, ali
 
   // Split each cell into four triangles around its centre ("union jack"). Using
   // both diagonals rather than one is what lets edges at +45 AND -45 degrees be
-  // represented exactly — the single-diagonal lattice silently staircases one of
+  // represented exactly - the single-diagonal lattice silently staircases one of
   // those directions, which showed up as a real error on the second Kac drum.
   // It also removes the directional bias of a one-way lattice.
   let tris = [];
@@ -370,7 +370,7 @@ export function buildMesh(polygonIn, { targetNodes = 2600, smoothPasses = 4, ali
     if (!isBoundary[i]) interiorIndex[i] = interiorCount++;
   }
   if (interiorCount === 0) {
-    throw new Error('Shape is too thin at this resolution — every node is on the edge.');
+    throw new Error('Shape is too thin at this resolution - every node is on the edge.');
   }
 
   // Quality report.

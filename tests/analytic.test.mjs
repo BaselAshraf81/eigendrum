@@ -2,7 +2,7 @@
  * The tests that license the central claim: that the sound is real.
  *
  * If these pass, the solver reproduces the known spectra of the shapes where the
- * answer is provable. Do not loosen a tolerance to make a change pass — a
+ * answer is provable. Do not loosen a tolerance to make a change pass - a
  * regression here means the physics went wrong, which is the one thing this
  * project is not allowed to get away with.
  */

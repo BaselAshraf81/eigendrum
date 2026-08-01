@@ -3,17 +3,17 @@
  *
  * The index lists every computed mode with its frequency and its ratio to the
  * fundamental, because the ratio is the number that actually characterises a
- * drum: 2, 3, 4 would be a string, and these are not. Each row is playable — it
+ * drum: 2, 3, 4 would be a string, and these are not. Each row is playable - it
  * sounds that one mode on its own, which is something no mallet can do.
  *
  * The comb puts them on a log-frequency axis. A bar measured from zero looks like
- * information but is not — at these frequencies eight consecutive modes differ by
- * a few percent of their length — whereas position on a log axis shows the
+ * information but is not - at these frequencies eight consecutive modes differ by
+ * a few percent of their length - whereas position on a log axis shows the
  * overtones crowding together as they climb, which is the character of the sound.
  *
  * Both views take an optional `drive`: how hard each mode was actually excited by
  * the last strike, normalised to the loudest. That is the quantity that connects
- * the two ideas in this app — a strike is not one mode, it is this mixture — so it
+ * the two ideas in this app - a strike is not one mode, it is this mixture - so it
  * is drawn as a rule under each row and as tick height on the comb.
  */
 

@@ -154,7 +154,7 @@ export function simplify(points, epsilon) {
 /**
  * Normalises a polygon into a canonical frame: centred on the origin and scaled
  * so the enclosed area is 1. This makes spectra comparable between shapes,
- * because Laplacian eigenvalues scale like 1/area — without it, "hear the
+ * because Laplacian eigenvalues scale like 1/area - without it, "hear the
  * shape" would mostly be hearing the size.
  */
 export function normalizeToUnitArea(poly) {
@@ -222,7 +222,7 @@ export function isSimple(poly) {
  * Running the open-polyline version on a loop is subtly wrong: it always keeps
  * the first and last points, which privileges wherever the stroke happened to
  * start and preserves any wobble there as a permanent corner. Splitting the loop
- * into two chains at two well-separated points removes that bias — the retained
+ * into two chains at two well-separated points removes that bias - the retained
  * split points are genuine extremes of the shape rather than an artefact of when
  * the pointer went down.
  */

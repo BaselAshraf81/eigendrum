@@ -5,7 +5,7 @@
 Eigendrum treats whatever you draw as an ideal drumhead clamped at its rim, solves
 the Laplacian eigenvalue problem on that exact region with real finite elements,
 and synthesises the frequencies it finds. Nothing is sampled and no overtone is
-faked — draw a circle and the overtones come out as ratios of Bessel function
+faked - draw a circle and the overtones come out as ratios of Bessel function
 zeros, because that is what a circular drum does.
 
 Then it lets you hit it. Strike different places and the timbre changes, because
@@ -13,7 +13,7 @@ striking a spot drives each mode in proportion to how much that mode moves
 there. Hit a line where a mode stands still and you cannot excite it at all.
 
 You can also watch it: the real vibration modes ripple across the shape, with the
-dark curves where the surface never moves. Those are nodal lines — the
+dark curves where the surface never moves. Those are nodal lines - the
 mathematical ancestors of the sand figures Ernst Chladni was drawing in 1787.
 
 No dependencies, no build step, no backend. It runs from `file://`.
@@ -91,7 +91,7 @@ browser worker.
 
 A handful of shapes have spectra that can be written in closed form, and the test
 suite checks the solver against them on every change. This is measured, not
-asserted — reproduce it with `npm run bench`:
+asserted - reproduce it with `npm run bench`:
 
 | shape | exact spectrum | 1200 nodes | 2600 | 6000 |
 | --- | --- | --- | --- | --- |
@@ -101,7 +101,7 @@ asserted — reproduce it with `npm run bench`:
 | unit disk | squared zeros of `J_m` | 0.946% | 0.437% | 0.192% |
 
 Worst relative error over the lowest 8 modes. The errors fall in the ratio
-1 : 0.47 : 0.21 against predicted `h²` ratios of 1 : 0.471 : 0.207 — clean
+1 : 0.47 : 0.21 against predicted `h²` ratios of 1 : 0.471 : 0.207 - clean
 second-order convergence.
 
 Two further checks worth naming:
@@ -150,7 +150,7 @@ tested in Node and run in a worker.
 - C. Gordon, D. Webb, S. Wolpert, *One cannot hear the shape of a drum*, Bulletin
   of the AMS 27 (1992).
 - T. Driscoll, *Eigenmodes of Isospectral Drums*, SIAM Review 39 (1997).
-  [SIAM](https://epubs.siam.org/doi/abs/10.1137/S0036144595285069) — the source of
+  [SIAM](https://epubs.siam.org/doi/abs/10.1137/S0036144595285069) - the source of
   the coordinates used for the two Kac drums.
 - [Hearing the shape of a drum](https://en.wikipedia.org/wiki/Hearing_the_shape_of_a_drum)
   on Wikipedia, for the wider history.

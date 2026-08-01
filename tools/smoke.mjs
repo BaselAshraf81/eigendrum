@@ -1,5 +1,5 @@
 /**
- * Browser smoke test. Dev-only — puppeteer is a devDependency and the shipped
+ * Browser smoke test. Dev-only - puppeteer is a devDependency and the shipped
  * app still has zero runtime dependencies.
  *
  * Loads the real page against the real dev server and exercises the paths that
@@ -163,8 +163,8 @@ async function main() {
   if (!struck.hintHidden) problems.push('striking the drum had no visible effect');
 
   // A strike has to show its mixture. This is the one thing that connects the mode
-  // list to the drum — a strike is not one row, it is all of them at once in these
-  // proportions — so if every rule came out the same length the interface would
+  // list to the drum - a strike is not one row, it is all of them at once in these
+  // proportions - so if every rule came out the same length the interface would
   // have stopped explaining the physics.
   const mix = await page.evaluate(() => ({
     drives: [...document.querySelectorAll('#spectrum .mode-drive')].map((b) => b.style.transform),
@@ -204,7 +204,7 @@ async function main() {
   console.log('\n-- mode 5 selected --\nreadout:', modeText);
   if (!/Mode\s*5/.test(modeText)) problems.push('selecting a mode did not update the readout');
 
-  // Picking a mode sounds that mode alone — something no mallet can do, and the
+  // Picking a mode sounds that mode alone - something no mallet can do, and the
   // only way to hear what one eigenvalue is. Exactly one rule at full length, the
   // rest at the zero stub.
   const alone = await page.evaluate(() => ({
@@ -281,7 +281,7 @@ async function main() {
   const cx = box.x + box.w / 2;
   const cy = box.y + box.h / 2;
   const r = Math.min(box.w, box.h) * 0.3;
-  // Use the same radius formula for the initial press as for every move —
+  // Use the same radius formula for the initial press as for every move -
   // otherwise the synthetic stroke really does contain a spike at its start, and
   // the app is right to reproduce it.
   const lobe = (a) => r * (1 + 0.16 * Math.cos(3 * a));

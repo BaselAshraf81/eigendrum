@@ -1,4 +1,4 @@
-/* Eigendrum — Bauhaus preliminary-course study sheet.
+/* Eigendrum - Bauhaus preliminary-course study sheet.
  *
  * Plaster ground, hard fields of vermilion / ultramarine / chrome yellow, 3px
  * black rules, one geometric sans set lowercase. No cards, no shadows, no
@@ -549,7 +549,7 @@ h2 {
 /* Takes the column's slack and scrolls inside itself, so the ledger below it is
    always fully visible and never painted over the list. Previously the ledger was
    sticky here and covered the last five rows: they were unreachable and, since the
-   rows became playable, un-pressable — elementFromPoint on mode 16 returned a
+   rows became playable, un-pressable - elementFromPoint on mode 16 returned a
    ledger term. The narrow-viewport rules already avoided this; desktop did not. */
 .modes {
   padding: 1.25rem 1.25rem 1rem;
@@ -571,7 +571,7 @@ h2 {
 }
 
 /* The rows do not read as buttons at a glance, and their most interesting property
-   — that each one sounds — should not have to be discovered by accident. */
+   - that each one sounds - should not have to be discovered by accident. */
 .modes-hint {
   margin: 0.35rem 0 0.55rem;
   font-size: 0.72rem;
@@ -660,7 +660,7 @@ h2 {
 /* How much of the sound now ringing this mode actually is. The one quantity that
    ties the mode list to the drum: a strike is not one of these rows, it is this
    whole set of lengths at once. A bar is honest here in a way it was not for
-   frequency — these values really do run from zero to one, and the exact zeros are
+   frequency - these values really do run from zero to one, and the exact zeros are
    the interesting part.
 
    Drawn as a field filling the row from the left, not as a rule along its foot. At
@@ -692,7 +692,7 @@ h2 {
 /* A mode the strike could not reach: its nodal line was under the mallet. A
    full-height stub at the left edge, at full ink, because a measured zero is a
    result and should not look like missing data. Deliberately not expressed by
-   fading the numbers — that would drop real information below AA contrast. The
+   fading the numbers - that would drop real information below AA contrast. The
    readout names these modes in words too, so the mark is never the only channel. */
 .mode-row.is-mute::after {
   content: '';
@@ -956,7 +956,7 @@ dialog::backdrop {
 }
 
 /* Notation set in the page's own face, tracked out, with lining figures. A system
-   monospace here would be the one voice on the page that was not chosen — and a
+   monospace here would be the one voice on the page that was not chosen - and a
    geometric sans is the right register for this world anyway: the Bauhaus set its
    own mathematics this way. */
 .equation {

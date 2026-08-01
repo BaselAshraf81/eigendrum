@@ -3,7 +3,7 @@
  *
  * Coordinates are stored in whatever frame is natural for each shape. The app
  * normalises every drum to unit area before solving, because Laplacian
- * eigenvalues scale like 1/area — without normalising, comparing two shapes
+ * eigenvalues scale like 1/area - without normalising, comparing two shapes
  * would mostly be comparing their sizes, and "hear the shape" would be a lie.
  *
  * `latticePitch` declares that a shape's vertices sit on a grid of that spacing.
@@ -92,7 +92,7 @@ export const PRESETS = [
     id: 'circle',
     name: 'Circle',
     blurb:
-      'The only shape whose sound we can write down exactly. Its overtones are ratios of Bessel function zeros — famously not whole-number multiples, which is why a drum has no clear pitch.',
+      'The only shape whose sound we can write down exactly. Its overtones are ratios of Bessel function zeros - famously not whole-number multiples, which is why a drum has no clear pitch.',
     polygon: circle(256),
     exact: 'disk',
   },
@@ -168,7 +168,7 @@ export const PRESETS = [
     id: 'gww-b',
     name: 'Kac drum II',
     blurb:
-      'The other half of the pair. Seven identical triangles, rearranged. Same area, same perimeter, completely different outline — and every single frequency is the same. Two drums that sound alike but are not alike.',
+      'The other half of the pair. Seven identical triangles, rearranged. Same area, same perimeter, completely different outline - and every single frequency is the same. Two drums that sound alike but are not alike.',
     polygon: GWW_B,
     latticePitch: 1,
     pairedWith: 'gww-a',

@@ -1,4 +1,4 @@
-# Python virtualenv that happens to live in this folder — unrelated to this project
+# Python virtualenv that happens to live in this folder - unrelated to this project
 .venv/
 __pycache__/
 *.pyc

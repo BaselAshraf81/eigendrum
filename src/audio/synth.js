@@ -132,7 +132,7 @@ export function decayTimes(freqs, baseSeconds = 1.7, brightness = 0.5) {
  * Renders a strike into a mono Float32Array.
  *
  * Sums the decaying sinusoids directly. A struck membrane starts flat and
- * moving, so each mode starts at zero displacement — hence sine rather than
+ * moving, so each mode starts at zero displacement - hence sine rather than
  * cosine, and no click at onset.
  */
 export function renderStrike({
@@ -162,7 +162,7 @@ export function renderStrike({
     // is enough main-thread work to visibly stall the animation when strikes come
     // quickly. Rotating a unit vector and scaling an envelope is a handful of
     // multiplies instead, and the drift over a few hundred thousand steps is
-    // around 1e-10 relative — far below the 16-bit floor we render to.
+    // around 1e-10 relative - far below the 16-bit floor we render to.
     const w = (2 * Math.PI * f) / sampleRate;
     const cosw = Math.cos(w);
     const sinw = Math.sin(w);

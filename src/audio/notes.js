@@ -44,10 +44,10 @@ export function harmonicity(freqs) {
   const centsOff = total / n;
   const verdict =
     centsOff < 15
-      ? 'almost harmonic — this shape has a real pitch'
+      ? 'almost harmonic - this shape has a real pitch'
       : centsOff < 60
         ? 'partly harmonic'
-        : 'inharmonic — a thud rather than a note';
+        : 'inharmonic - a thud rather than a note';
   return { centsOff, verdict };
 }
 

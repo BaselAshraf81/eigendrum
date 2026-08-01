@@ -2,8 +2,8 @@
  * Drawing the drum: its outline, its mesh, and the interpolated displacement
  * field of a vibration mode.
  *
- * The field is rasterised properly — barycentric interpolation across every
- * triangle — rather than flat-shaded per element, because the whole point is to
+ * The field is rasterised properly - barycentric interpolation across every
+ * triangle - rather than flat-shaded per element, because the whole point is to
  * see smooth standing waves and the curves where they vanish. Those curves are
  * the nodal lines, the modern descendants of Chladni's sand figures, and the
  * colour ramp is built to make them read as dark bands without needing a
@@ -292,7 +292,7 @@ export class Board {
 
   /**
    * The finite element mesh. When `values` are supplied the nodes ride the
-   * displacement field, so you watch the actual elements flex — and because
+   * displacement field, so you watch the actual elements flex - and because
    * boundary nodes are clamped to zero, the rim stays still on its own.
    */
   drawMesh(color = 'rgba(20,18,15,0.24)', values = null, amplitude = 1, displace = false) {

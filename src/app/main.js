@@ -1,5 +1,5 @@
 /**
- * Eigendrum — wiring.
+ * Eigendrum - wiring.
  *
  * Owns the DOM, the audio context, the animation loop, and the conversation with
  * the solver worker. All the physics lives in src/math, src/geom and src/fem;
@@ -303,7 +303,7 @@ function driveProfile(amps) {
  * Sounds and animates a modal mixture. Every sound in the app goes through here,
  * so a single mode and a full strike cannot drift apart in how they are made.
  *
- * `kind` is 'strike' — a mallet, which excites every mode at once — or 'mode',
+ * `kind` is 'strike' - a mallet, which excites every mode at once - or 'mode',
  * one mode by itself. The second is not something a mallet can do; it exists
  * because you cannot understand a mixture without first hearing its ingredients.
  */
@@ -351,8 +351,8 @@ function ring({ amps, taus, kind, x = 0, y = 0, gain = 3.2 }) {
   out.gain.value = 0.85;
   src.connect(out).connect(ctx.destination);
 
-  // Overlapping strikes are natural — a real drum does not mute itself when you
-  // hit it again — but the pile-up has to be bounded.
+  // Overlapping strikes are natural - a real drum does not mute itself when you
+  // hit it again - but the pile-up has to be bounded.
   src.addEventListener('ended', () => {
     const i = state.voices.indexOf(src);
     if (i >= 0) state.voices.splice(i, 1);
@@ -370,7 +370,7 @@ function ring({ amps, taus, kind, x = 0, y = 0, gain = 3.2 }) {
 }
 
 /** A mallet lands at (x, y). Every mode responds, in proportion to how much it
- *  moves at that point — which is why where you hit changes the timbre. */
+ *  moves at that point - which is why where you hit changes the timbre. */
 function strike(x, y) {
   const { drum } = state;
   if (!drum) return;
@@ -470,7 +470,7 @@ function renderReadout() {
     strong(`${f0.toFixed(1)} Hz`),
     text(` (${note.label}). The second sits at `),
     strong(`${ratio.toFixed(3)}×`),
-    text(' the first — '),
+    text(' the first - '),
     span('note', `${harm.verdict}.`),
   );
 }
@@ -720,7 +720,7 @@ function selectMode(i) {
   state.selectedMode = i;
   if (state.drum && state.freqs) {
     // Picking a mode plays it. The old behaviour selected it silently, which made
-    // the list look like a filter on the next strike — it is not one, and there is
+    // the list look like a filter on the next strike - it is not one, and there is
     // no way to make a mallet excite a single mode.
     playModeAlone(i);
     return;
