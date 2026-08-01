@@ -8,7 +8,7 @@
 
 import { Board } from './canvas.js';
 import { PRESETS, PRESETS_BY_ID, normalizeShape } from './presets.js';
-import { renderComb, renderSpectrum, setSelected } from './spectrum.js';
+import { renderComb, renderSpectrum, setDrive, setSelected } from './spectrum.js';
 import { strokeToPolygon } from './draw.js';
 import { readHash, shareUrl, writeHash } from './share.js';
 import { freqToNote, harmonicity } from '../audio/notes.js';
@@ -93,6 +93,9 @@ const state = {
   view: 'mode',
   selectedMode: 0,
   strike: null,
+  // Per-mode excitation of whatever is currently ringing, normalised to the
+  // loudest. This is what makes "a strike is all the modes at once" visible.
+  drive: null,
   fieldBuf: null,
   cursor: { x: 0, y: 0 },
   drawMode: false,
@@ -226,10 +229,17 @@ function partnerFreqs() {
 
 function refreshComb() {
   if (!state.freqs) return;
-  // No tick is highlighted while the drum is ringing, because then you are
-  // looking at every mode at once rather than one of them.
-  const selected = state.view === 'struck' ? -1 : state.selectedMode;
-  renderComb(combEls, Array.from(state.freqs), selected, partnerFreqs());
+  const ringing = state.view === 'struck' && Boolean(state.strike);
+  // No tick is singled out while a mallet strike rings, because then you are
+  // hearing every mode at once rather than one of them. A lone mode keeps its mark.
+  const selected = ringing && state.strike.kind === 'strike' ? -1 : state.selectedMode;
+  renderComb(
+    combEls,
+    Array.from(state.freqs),
+    selected,
+    partnerFreqs(),
+    ringing ? state.drive : null,
+  );
 }
 
 /** States the measured agreement between the two Kac drums, rather than claiming it. */
@@ -279,13 +289,26 @@ function ensureAudio() {
 const malletRadius = () => Number(els.mallet.value) / 100;
 const brightness = () => Number(els.bright.value) / 100;
 
-function strike(x, y) {
-  const { drum } = state;
-  if (!drum) return;
+/** |a_k| normalised to the loudest: how much of the sound each mode actually is. */
+function driveProfile(amps) {
+  let peak = 0;
+  for (let k = 0; k < amps.length; k++) peak = Math.max(peak, Math.abs(amps[k]));
+  const out = new Array(amps.length).fill(0);
+  if (peak <= 0) return out;
+  for (let k = 0; k < amps.length; k++) out[k] = Math.abs(amps[k]) / peak;
+  return out;
+}
 
-  const amps = strikeAmplitudes(drum.mesh, drum.modes, x, y, malletRadius(), state.weights);
-  const freqs = state.freqs;
-  const taus = decayTimes(freqs, 1.7, brightness());
+/**
+ * Sounds and animates a modal mixture. Every sound in the app goes through here,
+ * so a single mode and a full strike cannot drift apart in how they are made.
+ *
+ * `kind` is 'strike' — a mallet, which excites every mode at once — or 'mode',
+ * one mode by itself. The second is not something a mallet can do; it exists
+ * because you cannot understand a mixture without first hearing its ingredients.
+ */
+function ring({ amps, taus, kind, x = 0, y = 0, gain = 3.2 }) {
+  const { drum, freqs } = state;
 
   // Reference amplitude for the colour bands: peak displacement near the moment
   // the fundamental first reaches full swing.
@@ -298,6 +321,7 @@ function strike(x, y) {
   }
 
   state.strike = {
+    kind,
     x,
     y,
     amps,
@@ -307,27 +331,25 @@ function strike(x, y) {
     maxTau: Math.max(...taus),
   };
   state.view = 'struck';
+  state.drive = driveProfile(amps);
   els.prompt.hidden = true;
-  // Say what is actually on screen. Leaving the readout on "Mode 8" while sixteen
-  // modes ring together would be the interface lying about the physics.
-  showStruckReadout();
-  setSelected(els.spectrum, -1);
+  setDrive(els.spectrum, state.drive);
   refreshComb();
 
   if (state.muted) return;
   const ctx = ensureAudio();
   if (!ctx) return;
 
-  const samples = renderStrike({ freqs, amps, taus, sampleRate: ctx.sampleRate });
+  const samples = renderStrike({ freqs, amps, taus, sampleRate: ctx.sampleRate, gain });
   state.lastWav = { samples, sampleRate: ctx.sampleRate };
 
   const buffer = ctx.createBuffer(1, samples.length, ctx.sampleRate);
   buffer.copyToChannel(samples, 0);
   const src = ctx.createBufferSource();
   src.buffer = buffer;
-  const gain = ctx.createGain();
-  gain.gain.value = 0.85;
-  src.connect(gain).connect(ctx.destination);
+  const out = ctx.createGain();
+  out.gain.value = 0.85;
+  src.connect(out).connect(ctx.destination);
 
   // Overlapping strikes are natural — a real drum does not mute itself when you
   // hit it again — but the pile-up has to be bounded.
@@ -345,6 +367,33 @@ function strike(x, y) {
     }
   }
   src.start();
+}
+
+/** A mallet lands at (x, y). Every mode responds, in proportion to how much it
+ *  moves at that point — which is why where you hit changes the timbre. */
+function strike(x, y) {
+  const { drum } = state;
+  if (!drum) return;
+  const amps = strikeAmplitudes(drum.mesh, drum.modes, x, y, malletRadius(), state.weights);
+  ring({ amps, taus: decayTimes(state.freqs, 1.7, brightness()), kind: 'strike', x, y });
+  // Say what is actually on screen. Leaving the readout on "Mode 8" while sixteen
+  // modes ring together would be the interface lying about the physics.
+  showStruckReadout(amps);
+  setSelected(els.spectrum, -1);
+}
+
+/** Sounds one mode on its own, so the mixture a strike makes becomes legible. */
+function playModeAlone(i) {
+  const { drum, freqs } = state;
+  if (!drum || !freqs || i < 0 || i >= freqs.length) return;
+  const amps = new Float64Array(freqs.length);
+  amps[i] = 1;
+  // A lone sinusoid needs far less gain than a strike to reach the same level, and
+  // keeping it clear of the soft limiter leaves it a pure tone rather than a
+  // limiter-coloured one.
+  ring({ amps, taus: decayTimes(freqs, 1.7, brightness()), kind: 'mode', gain: 0.45 });
+  setSelected(els.spectrum, i);
+  showModeReadout(i, true);
 }
 
 // ------------------------------------------------------------------ rendering
@@ -390,7 +439,9 @@ function frame(now) {
     }
     board.drawOutline();
 
-    if (ringing) {
+    // Only a mallet has a location. A lone mode is not struck anywhere, so marking
+    // a point on it would be inventing one.
+    if (ringing && state.strike.kind === 'strike') {
       board.drawStrikeMarker(state.strike.x, state.strike.y, (now - state.strike.t0) / 1000);
     }
 
@@ -424,7 +475,7 @@ function renderReadout() {
   );
 }
 
-function showModeReadout(i) {
+function showModeReadout(i, playing = false) {
   const f = state.freqs[i];
   const note = freqToNote(f);
   const parts = [text('Mode '), strong(String(i + 1)), text(' at '), strong(`${f.toFixed(1)} Hz`)];
@@ -437,21 +488,57 @@ function showModeReadout(i) {
       text(' the lowest. '),
     );
   }
-  parts.push(span('note', 'The pale channels are nodal lines, where the surface never moves.'));
+  parts.push(
+    span(
+      'note',
+      playing
+        ? 'That is this one mode by itself. No mallet can do it \u2014 a real strike always wakes many at once.'
+        : 'The pale channels are nodal lines, where the surface never moves.',
+    ),
+  );
   els.readout.replaceChildren(...parts);
 }
 
-function showStruckReadout() {
+function showStruckReadout(amps) {
+  let loud = 0;
+  for (let k = 1; k < amps.length; k++) {
+    if (Math.abs(amps[k]) > Math.abs(amps[loud])) loud = k;
+  }
+  const peak = Math.abs(amps[loud]) || 1;
+  const silent = [];
+  for (let k = 0; k < amps.length; k++) {
+    if (Math.abs(amps[k]) / peak < 0.04) silent.push(k + 1);
+  }
+
   els.readout.replaceChildren(
     strong('Struck.'),
-    text(` All ${state.freqs.length} modes are ringing together, so what you see is their sum and not any one of them. `),
-    span('note', 'Modes with a nodal line under the mallet were never excited at all.'),
+    text(' Every mode sounds at once, each as loud as the surface moves where you hit. Loudest here is '),
+    strong(`mode ${loud + 1}`),
+    text(` at ${state.freqs[loud].toFixed(1)} Hz. `),
+    span(
+      'note',
+      silent.length
+        ? `${silent.length === 1 ? 'Mode' : 'Modes'} ${listNumbers(silent)} stayed silent \u2014 the mallet landed on a nodal line.`
+        : 'The rules under the list are the mixture you just made.',
+    ),
   );
+}
+
+/** "1, 5 and 9", truncated so a well-placed miss cannot produce a paragraph. */
+function listNumbers(ns, cap = 4) {
+  const shown = ns.slice(0, cap).join(', ');
+  if (ns.length > cap) return `${shown} and ${ns.length - cap} more`;
+  const i = shown.lastIndexOf(', ');
+  return i < 0 ? shown : `${shown.slice(0, i)} and ${shown.slice(i + 2)}`;
 }
 
 /** Back to rest: mode 1 shows the whole drum, any other shows itself. */
 function restoreModeView() {
   if (!state.freqs) return;
+  // The excitation rules describe a sound. Once it has died away they would be
+  // describing nothing, so they go with it.
+  state.drive = null;
+  setDrive(els.spectrum, null);
   setSelected(els.spectrum, state.selectedMode);
   if (state.selectedMode === 0) renderReadout();
   else showModeReadout(state.selectedMode);
@@ -631,11 +718,16 @@ function updateKac(preset) {
 
 function selectMode(i) {
   state.selectedMode = i;
+  if (state.drum && state.freqs) {
+    // Picking a mode plays it. The old behaviour selected it silently, which made
+    // the list look like a filter on the next strike — it is not one, and there is
+    // no way to make a mallet excite a single mode.
+    playModeAlone(i);
+    return;
+  }
   state.view = 'mode';
   state.strike = null;
   setSelected(els.spectrum, i);
-  showModeReadout(i);
-  refreshComb();
   showPrompt();
 }
 

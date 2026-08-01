@@ -79,6 +79,32 @@ async function main() {
   if (first.modeRows === 0) problems.push('no modes were listed after solving');
   if (!/Lowest mode/.test(first.readout)) problems.push('readout did not describe the drum');
 
+  // Every listed mode has to be pressable, because pressing one plays it. The
+  // ledger used to be sticky over the foot of this column, which left the last five
+  // rows painted over: elementFromPoint on mode 16 returned a ledger term, so the
+  // app offered sixteen modes and let you reach eleven. Counting rows in the DOM
+  // does not catch that; hit-testing does.
+  const reach = await page.evaluate(() => {
+    const rows = [...document.querySelectorAll('#spectrum .mode-row')];
+    const led = document.querySelector('.ledger').getBoundingClientRect();
+    const unclickable = [];
+    rows.forEach((row, i) => {
+      row.scrollIntoView({ block: 'nearest' });
+      const b = row.getBoundingClientRect();
+      const hit = document.elementFromPoint(b.left + 8, b.top + b.height / 2);
+      if (!hit || hit.closest('.mode-row') !== row) unclickable.push(i + 1);
+    });
+    return {
+      unclickable,
+      ledgerVisible: led.top >= 0 && led.bottom <= window.innerHeight + 0.5,
+    };
+  });
+  console.log('unreachable mode rows:', reach.unclickable.length ? reach.unclickable : 'none');
+  if (reach.unclickable.length) {
+    problems.push(`mode rows not pressable: ${reach.unclickable.join(', ')}`);
+  }
+  if (!reach.ledgerVisible) problems.push('the measurements panel is off screen');
+
   // Check the canvas actually has ink on it, not just an empty element.
   const painted = await page.evaluate(() => {
     const c = document.querySelector('#board');
@@ -135,6 +161,40 @@ async function main() {
   console.log('\n-- after strike --');
   console.log('hint hidden (means struck):', struck.hintHidden);
   if (!struck.hintHidden) problems.push('striking the drum had no visible effect');
+
+  // A strike has to show its mixture. This is the one thing that connects the mode
+  // list to the drum — a strike is not one row, it is all of them at once in these
+  // proportions — so if every rule came out the same length the interface would
+  // have stopped explaining the physics.
+  const mix = await page.evaluate(() => ({
+    drives: [...document.querySelectorAll('#spectrum .mode-drive')].map((b) => b.style.transform),
+    mutes: document.querySelectorAll('#spectrum .mode-row.is-mute').length,
+    readout: document.querySelector('#readout').textContent.trim(),
+  }));
+  const distinct = new Set(mix.drives).size;
+  console.log(`excitation: ${distinct} distinct of ${mix.drives.length}, silent modes: ${mix.mutes}`);
+  console.log('readout:', mix.readout);
+  if (distinct < 4) problems.push('a strike did not show a per-mode mixture');
+  if (mix.drives.some((t) => !/^scaleX\(/.test(t))) {
+    problems.push('an excitation rule was not scaled');
+  }
+  // The words and the marks must agree: the longest rule has to be the mode the
+  // readout calls loudest, or one of the two is lying about the same strike.
+  const scaleOf = (t) => {
+    const m = /scaleX\(([-\d.eE+]+)\)/.exec(t);
+    return m ? parseFloat(m[1]) : NaN;
+  };
+  const mixScales = mix.drives.map(scaleOf);
+  let argmax = 0;
+  for (let i = 1; i < mixScales.length; i++) if (mixScales[i] > mixScales[argmax]) argmax = i;
+  const named = Number(/Loudest here is\s*mode\s*(\d+)/i.exec(mix.readout)?.[1] || 0);
+  console.log(`loudest: readout says mode ${named}, longest rule is mode ${argmax + 1}`);
+  if (named !== argmax + 1) {
+    problems.push(`readout names mode ${named} loudest but the longest rule is mode ${argmax + 1}`);
+  }
+  if (!/Loudest here is\s*mode\s*\d+/i.test(mix.readout)) {
+    problems.push('the strike readout did not name the loudest mode');
+  }
   await shot(page, 'struck');
 
   // Selecting a higher mode should redraw and update the readout.
@@ -143,6 +203,27 @@ async function main() {
   const modeText = await page.$eval('#readout', (n) => n.textContent.trim());
   console.log('\n-- mode 5 selected --\nreadout:', modeText);
   if (!/Mode\s*5/.test(modeText)) problems.push('selecting a mode did not update the readout');
+
+  // Picking a mode sounds that mode alone — something no mallet can do, and the
+  // only way to hear what one eigenvalue is. Exactly one rule at full length, the
+  // rest at the zero stub.
+  const alone = await page.evaluate(() => ({
+    drives: [...document.querySelectorAll('#spectrum .mode-drive')].map((b) => b.style.transform),
+    mutes: document.querySelectorAll('#spectrum .mode-row.is-mute').length,
+    readout: document.querySelector('#readout').textContent,
+  }));
+  // Read the scale numerically: the CSSOM serialises scaleX(1.0000) back as scaleX(1).
+  const scales = alone.drives.map((t) => {
+    const m = /scaleX\(([-\d.eE+]+)\)/.exec(t);
+    return m ? parseFloat(m[1]) : NaN;
+  });
+  const full = scales.filter((s) => s > 0.999).length;
+  console.log(`mode alone -> ${full} full rule(s), ${alone.mutes} silent of ${scales.length}`);
+  if (full !== 1) problems.push('selecting a mode did not sound it on its own');
+  if (alone.mutes !== scales.length - 1) problems.push('a lone mode did not silence the others');
+  if (!/by itself/.test(alone.readout)) {
+    problems.push('the readout did not say that one mode alone is not something a strike can do');
+  }
   await shot(page, 'mode5');
 
   // The isospectral pair: switch to Kac drum I, record its spectrum, switch to

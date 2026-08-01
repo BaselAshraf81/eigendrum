@@ -546,9 +546,19 @@ h2 {
   overflow-y: auto;
 }
 
+/* Takes the column's slack and scrolls inside itself, so the ledger below it is
+   always fully visible and never painted over the list. Previously the ledger was
+   sticky here and covered the last five rows: they were unreachable and, since the
+   rows became playable, un-pressable — elementFromPoint on mode 16 returned a
+   ledger term. The narrow-viewport rules already avoided this; desktop did not. */
 .modes {
   padding: 1.25rem 1.25rem 1rem;
-  flex: none;
+  flex: 1 1 auto;
+  /* A floor, so a tall Kac panel can never squeeze the list away to nothing. If the
+     three sections together still do not fit, `.index` scrolls as a backstop. */
+  min-height: 8rem;
+  display: flex;
+  flex-direction: column;
 }
 .modes h2 {
   display: flex;
@@ -560,11 +570,23 @@ h2 {
   letter-spacing: 0.08em;
 }
 
+/* The rows do not read as buttons at a glance, and their most interesting property
+   — that each one sounds — should not have to be discovered by accident. */
+.modes-hint {
+  margin: 0.35rem 0 0.55rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+}
+
 .spectrum {
   list-style: none;
   margin: 0;
   padding: 0;
   border-top: var(--hair) solid var(--ink);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* A caption, not a field. The solid ink field means "something went wrong and here
@@ -583,6 +605,7 @@ h2 {
 }
 
 .mode-row {
+  position: relative; /* anchors the excitation rule */
   display: grid;
   grid-template-columns: 1.6rem minmax(0, 1fr) 4.4rem;
   align-items: center;
@@ -634,6 +657,53 @@ h2 {
   white-space: nowrap;
 }
 
+/* How much of the sound now ringing this mode actually is. The one quantity that
+   ties the mode list to the drum: a strike is not one of these rows, it is this
+   whole set of lengths at once. A bar is honest here in a way it was not for
+   frequency — these values really do run from zero to one, and the exact zeros are
+   the interesting part.
+
+   Drawn as a field filling the row from the left, not as a rule along its foot. At
+   30px per row a footer rule lands 3px from the divider and 12px from its own
+   numbers, so proximity says "divider" and the eye assigns it to the row below. I
+   misattributed it that way twice while reviewing screenshots and concluded the
+   readout contradicted the bars when it did not. If the author cannot attribute the
+   mark, a reader cannot either; inside the row there is nothing to confuse. */
+.mode-drive {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  background: rgba(20, 18, 15, 0.14);
+  /* Scaled rather than resized: transform stays off the layout path, so sixteen of
+     these updating on every strike cost nothing. */
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 90ms linear;
+}
+/* Positioned, and later in DOM order than the field, so the numbers stay above it. */
+.mode-n,
+.mode-ratio,
+.mode-hz {
+  position: relative;
+}
+
+/* A mode the strike could not reach: its nodal line was under the mallet. A
+   full-height stub at the left edge, at full ink, because a measured zero is a
+   result and should not look like missing data. Deliberately not expressed by
+   fading the numbers — that would drop real information below AA contrast. The
+   readout names these modes in words too, so the mark is never the only channel. */
+.mode-row.is-mute::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--ink);
+}
+
 /* Chrome-yellow field: the theorem. It sits at the top of the column, because
    when it applies it is the most interesting thing on the page and its action
    must not be pushed below the fold. */
@@ -672,9 +742,6 @@ h2 {
    this thing, so they stay in view while the mode list scrolls behind them. */
 .ledger {
   flex: none;
-  margin-top: auto;
-  position: sticky;
-  bottom: 0;
   background: var(--ultramarine);
   color: #fff;
   padding: 1.1rem 1.25rem 1.3rem;
@@ -956,23 +1023,25 @@ dialog form {
   .index {
     border-top: var(--rule) solid var(--ink);
   }
+  /* No nested scrollers on touch: the page itself scrolls, so the mode list is let
+     out to full height and every row is reached by scrolling the document. Bound the
+     measure too, or a full-width row leaves the ratio and the frequency half a
+     screen apart. */
   .modes {
     padding: 1.1rem 1.25rem 1rem;
+    flex: none;
+    min-height: 0;
+    display: block;
   }
-  /* No nested scrollers on touch, and nothing pinned: the page itself scrolls, so
-     a sticky ledger would just paint over the mode list. Bound the measure too,
-     or a full-width row leaves the ratio and the frequency half a screen apart. */
   .spectrum {
     max-width: 26rem;
+    flex: none;
+    overflow-y: visible;
   }
   .ledger dl,
   .kac p,
   .kac .chip-invert {
     max-width: 34rem;
-  }
-  .ledger {
-    position: static;
-    margin-top: 0;
   }
   .kac {
     border-top: var(--rule) solid var(--ink);
