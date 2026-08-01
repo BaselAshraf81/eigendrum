@@ -566,13 +566,19 @@ h2 {
   border-top: var(--hair) solid var(--ink);
 }
 
+/* A caption, not a field. The solid ink field means "something went wrong and here
+   is what to do"; staleness is a quieter kind of truth and must not borrow that
+   voice. It heads the whole column, because the mode list, the comb and the
+   measurements are all equally out of date while you are tracing. */
 .stale-note {
-  margin: 0 0 0.5rem;
-  padding: 0.3rem 0.5rem;
-  background: var(--ink);
-  color: var(--plaster);
-  font-size: 0.74rem;
-  letter-spacing: 0.06em;
+  flex: none;
+  margin: 0;
+  padding: 0.6rem 1.25rem;
+  border-bottom: var(--hair) solid rgba(20, 18, 15, 0.3);
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .mode-row {
@@ -953,9 +959,16 @@ dialog form {
     padding: 1.1rem 1.25rem 1rem;
   }
   /* No nested scrollers on touch, and nothing pinned: the page itself scrolls, so
-     a sticky ledger would just paint over the mode list. */
+     a sticky ledger would just paint over the mode list. Bound the measure too,
+     or a full-width row leaves the ratio and the frequency half a screen apart. */
   .spectrum {
     max-height: none;
+    max-width: 26rem;
+  }
+  .ledger dl,
+  .kac p,
+  .kac .chip-invert {
+    max-width: 34rem;
   }
   .ledger {
     position: static;

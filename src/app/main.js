@@ -47,6 +47,7 @@ const els = {
   spectrum: el('spectrum'),
   modesCount: el('modes-count'),
   staleNote: el('stale-note'),
+  comb: el('comb'),
   facts: el('facts'),
   aboutBody: el('about-body'),
   drawBtn: el('btn-draw'),
@@ -650,6 +651,9 @@ function setDrawMode(on) {
   // While you are tracing, every number on the right still belongs to the drum
   // that is no longer on screen. Say so rather than letting them read as current.
   els.staleNote.hidden = !on;
+  // The comb describes the outgoing drum too, and unlike the lists it has no room
+  // for a caveat, so it stands down while you trace.
+  els.comb.hidden = on;
   if (on) {
     els.readout.replaceChildren(
       strong('Trace an outline'),
