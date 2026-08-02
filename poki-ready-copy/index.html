@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <!-- No user-scalable=no: blocking zoom fails WCAG 1.4.4, and nothing here needs it. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
+    <title>Nodal</title>
+    <meta
+      name="description"
+      content="Strike a real drumhead where it cannot hear you. A puzzle game played on the actual vibration modes of a shape."
+    />
+    <link rel="stylesheet" href="engine/styles/font.css" />
+    <link rel="stylesheet" href="styles/game.css" />
+    <!--
+      The one external request in this build, and it is the platform's own required
+      SDK. Everything else, the typeface included, is embedded. game/poki.js stubs
+      every call, so a blocked, failed or absent SDK still yields a fully playable
+      game: that covers ad blockers, local development and running off a bare
+      filesystem, and Poki requires the ad-blocker case explicitly.
+    -->
+    <script src="https://game-cdn.poki.com/scripts/v2/poki-sdk.js"></script>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f0ede6'/%3E%3Ccircle cx='16' cy='16' r='11' fill='%23d8321c'/%3E%3Cpath d='M5 16h22' stroke='%2314120f' stroke-width='3'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <!--
+      THESIS: The nodal line is the level geometry. You win by striking where a mode
+      cannot hear you. Refuses the centred-plate-with-HUD-frame every browser puzzle
+      game ships, where the play object floats in chrome.
+      OWN-WORLD: Inherited Bauhaus Vorkurs study sheet. Plaster ground, 3px ink
+      rules, flat fields of vermilion (the instruction), ultramarine (the
+      measurement), chrome yellow (what you got right). No radius, no shadow, no
+      gradient, one embedded geometric sans, lowercase.
+      STORY: The visitor reads a standing wave, finds the curve where it is still,
+      strikes there, and hears a mode vanish from a chord.
+      FIRST VIEWPORT: Two plates at equal scale divided by one 3px rule: the mode to
+      defeat on the left, the drum you strike on the right. Instruction band and
+      measurement strip across the foot. The primary action is the whole right plate.
+      FORM: Matched comparative plate, candidate 7 of 7, seed key 90fda3dc.
+      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+    -->
+    <a class="skip" href="#drum">skip to the drum</a>
+
+    <div class="game" id="game">
+      <header class="masthead">
+        <p class="slate" id="slate"><b id="chapter-name">hot spots</b><span id="level-count">1 / 5</span></p>
+        <ol class="progress" id="progress" aria-label="Progress through this chapter"></ol>
+        <div class="masthead-tools">
+          <p class="tally" id="tally" aria-label="Resonances earned">0</p>
+          <button type="button" class="tool" id="btn-hint" aria-describedby="hint-note">hint</button>
+          <button type="button" class="tool" id="btn-sound" aria-pressed="false">sound on</button>
+        </div>
+      </header>
+      <p class="visually-hidden" id="hint-note">Reveals real winning territory, computed from the drum itself.</p>
+
+      <main class="plates">
+        <section class="plate-cell" aria-labelledby="target-label">
+          <h2 class="cell-label" id="target-label">
+            <span id="target-title">mode 1</span>
+            <em id="target-verb">make it loud</em>
+          </h2>
+          <div class="plate-frame">
+            <canvas id="target" width="600" height="600"></canvas>
+            <p class="plate-note" id="target-note">the pale curves never move</p>
+          </div>
+        </section>
+
+        <section class="plate-cell is-live" aria-labelledby="drum-label">
+          <h2 class="cell-label" id="drum-label">
+            <span>the drum</span>
+            <em>strike it</em>
+          </h2>
+          <div class="plate-frame">
+            <canvas
+              id="drum"
+              width="600"
+              height="600"
+              tabindex="0"
+              role="application"
+              aria-describedby="drum-help"
+            ></canvas>
+            <p class="visually-hidden" id="drum-help">
+              A drumhead. Move the crosshair with the arrow keys and press Enter to strike, or click
+              and tap directly.
+            </p>
+            <p class="plate-note" id="drum-note">tap anywhere</p>
+          </div>
+        </section>
+      </main>
+
+      <footer class="foot">
+        <div class="brief">
+          <p class="brief-line" id="brief">Strike the drum.</p>
+          <!-- The result is what should be announced, not the twelve strip cells. -->
+          <p class="verdict" id="verdict" role="status" aria-live="polite" hidden></p>
+          <button type="button" id="btn-next" hidden>next</button>
+        </div>
+        <div class="gauge">
+          <h2
+            class="gauge-label"
+            title="Frequency ratios, mode shapes and which modes a strike can reach are decided by the outline. Absolute pitch and how fast each overtone fades are modelling choices, not properties of the shape."
+          >
+            what woke up
+          </h2>
+          <ol class="strip" id="strip"></ol>
+        </div>
+      </footer>
+
+      <div class="curtain" id="curtain" hidden>
+        <div class="curtain-body" role="dialog" aria-modal="true" aria-labelledby="curtain-title">
+          <p class="curtain-kind" id="curtain-kind">chapter clear</p>
+          <h2 class="curtain-title" id="curtain-title">hot spots</h2>
+          <p class="curtain-copy" id="curtain-copy"></p>
+          <div class="curtain-actions">
+            <button type="button" class="chip-solid" id="btn-onward">next</button>
+            <button type="button" class="chip" id="btn-replay" hidden>play it again</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="solving" id="solving" hidden>
+        <p class="solving-copy">solving the drum</p>
+        <div class="solving-rule"><span id="solving-fill"></span></div>
+        <p class="solving-sub" id="solving-sub">no formula exists for this outline</p>
+      </div>
+    </div>
+
+    <script type="module" src="game/main.js"></script>
+  </body>
+</html>

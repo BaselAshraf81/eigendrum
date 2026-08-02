@@ -1,0 +1,665 @@
+/**
+ * Nodal. The Bauhaus Vorkurs study sheet from the instrument, recomposed as a
+ * game stage: two plates at equal scale divided by one rule, an instruction band,
+ * and a measurement strip.
+ *
+ * Inherited without negotiation from the root DESIGN.md: plaster ground, 3px ink
+ * rules, three primaries that each own a region, zero radius, zero shadow, zero
+ * gradient, one embedded geometric sans set lowercase.
+ *
+ * Region jobs, unchanged: vermilion is where you are told to act, ultramarine is
+ * measurement, chrome yellow is what you got right and what is being asked about.
+ * A failure is an ink field, never a yellow one.
+ */
+
+:root {
+  --plaster: #f0ede6;
+  --plate: #e8e3d6;
+  --ink: #14120f;
+  --ink-soft: #55504a;
+  --vermilion: #c62d1a;
+  --vermilion-bright: #d8321c;
+  --ultramarine: #1b39a8;
+  --ultramarine-tint: #c9d2f5;
+  --chrome: #f2c300;
+  --rule: 3px;
+  --hair: 1px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* A class that sets display outranks the UA sheet's [hidden] rule, which once left
+   an invisible overlay swallowing every pointer event. */
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--ink);
+  color: var(--ink);
+  font-family: Jost, Futura, 'Century Gothic', 'Avenir Next', system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  font-synthesis-weight: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  /* Nothing in a game should be selectable by a stray drag, and a long press on a
+     phone must not offer to copy the drum. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 20;
+  background: var(--chrome);
+  color: var(--ink);
+  padding: 0.5rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.skip:focus {
+  left: 0;
+}
+
+:focus-visible {
+  outline: var(--rule) solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------- the stage */
+
+/* Fills whatever viewport it is given, and is composed against 16:9, which is the
+   canvas Poki serves. Filling rather than letterboxing is what lets the same build
+   cover the whole screen in portrait as well. */
+.game {
+  position: relative;
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: var(--plaster);
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------- the masthead */
+
+.masthead {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.5rem 0.9rem;
+  border-bottom: var(--rule) solid var(--ink);
+  min-width: 0;
+}
+
+.slate {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.slate b {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.slate span {
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* One mark per level in the chapter. A field, not a dot, so it belongs to the
+   same vocabulary as everything else here. */
+.progress {
+  display: flex;
+  gap: 3px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.pip {
+  width: 1.1rem;
+  height: 0.55rem;
+  border: var(--hair) solid var(--ink);
+  background: transparent;
+}
+.pip.is-done {
+  background: var(--chrome);
+}
+.pip.is-here {
+  outline: var(--hair) solid var(--ink);
+  outline-offset: 2px;
+}
+
+.masthead-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tally {
+  margin: 0;
+  min-width: 2ch;
+  text-align: right;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.tool {
+  appearance: none;
+  border: var(--hair) solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding: 0.28rem 0.55rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.tool:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--plaster);
+}
+.tool:disabled {
+  color: var(--ink-soft);
+  border-color: rgba(20, 18, 15, 0.35);
+  cursor: default;
+}
+.tool[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--plaster);
+}
+
+/* ------------------------------------------------------------------ the plates */
+
+/* The composition. Two plates at equal scale, one 3px rule between them, because
+   the skill the game teaches is transferring a curve you can see on the left onto
+   a surface you touch on the right. Equal scale is the whole argument; a smaller
+   reference diagram would turn the comparison into a caption. */
+.plates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 0;
+  min-width: 0;
+  /* The divider is a gap with the ink ground showing through, not a border on one
+     cell. A border belongs to whichever cell carries it and takes its 3px out of
+     that cell alone, which made the two plates differ by 4px in portrait, where
+     height is the constraining axis. Equal scale is the whole thesis, so the rule
+     has to be drawn between the cells rather than inside one. */
+  gap: var(--rule);
+  background: var(--ink);
+}
+
+.plate-cell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  min-width: 0;
+  padding: 0.4rem 0.6rem 0.6rem;
+  background: var(--plaster);
+}
+
+.cell-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0 0 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--ink-soft);
+  min-width: 0;
+}
+.cell-label em {
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.is-live .cell-label em {
+  background: var(--chrome);
+  padding: 0.05rem 0.3rem;
+}
+
+.plate-frame {
+  position: relative;
+  min-height: 0;
+  min-width: 0;
+  display: grid;
+  place-items: center;
+  /* Declared before the 100cqh below depends on it. */
+  container-type: size;
+}
+
+.plate-frame canvas {
+  display: block;
+  /* Square, and never larger than the cell in either direction. Sizing from both
+     axes is what keeps the two plates at equal scale on any viewport. */
+  width: min(100%, 100cqh);
+  height: auto;
+  aspect-ratio: 1 / 1;
+  max-height: 100%;
+  background: var(--plate);
+  border: var(--hair) solid var(--ink);
+}
+
+#drum {
+  cursor: crosshair;
+}
+
+.plate-note {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------- the foot */
+
+.foot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  border-top: var(--rule) solid var(--ink);
+  min-width: 0;
+}
+
+/* Vermilion: the band that tells you what to do. */
+.brief {
+  background: var(--vermilion);
+  color: #fff;
+  padding: 0.6rem 0.9rem 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  justify-content: center;
+  min-width: 0;
+}
+
+.brief-line {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.3;
+  font-weight: 500;
+  max-width: 44ch;
+}
+
+.verdict {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  max-width: 52ch;
+}
+/* A result is white on the vermilion band either way. Chrome yellow already means
+   "correct" on the star marks, and colouring the sentence too would be shouting. */
+.verdict.is-good,
+.verdict.is-bad {
+  color: #fff;
+}
+
+.stars {
+  display: inline-flex;
+  gap: 3px;
+  flex: none;
+}
+.star {
+  width: 0.6rem;
+  height: 0.6rem;
+  border: var(--hair) solid #fff;
+}
+.star.is-on {
+  background: var(--chrome);
+  border-color: var(--ink);
+}
+
+#btn-next {
+  align-self: flex-start;
+  appearance: none;
+  border: var(--hair) solid var(--ink);
+  background: var(--ink);
+  color: var(--plaster);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.3rem 0.9rem;
+  cursor: pointer;
+}
+#btn-next:hover {
+  background: var(--chrome);
+  color: var(--ink);
+}
+.brief :focus-visible {
+  outline-color: #fff;
+}
+
+/* Ultramarine: measurement. Every mode, what it did, in length and in figures. */
+.gauge {
+  background: var(--ultramarine);
+  color: #fff;
+  padding: 0.5rem 0.9rem 0.6rem;
+  border-left: var(--rule) solid var(--ink);
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.35rem;
+}
+
+.gauge-label {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--ultramarine-tint);
+}
+
+.strip {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 2px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+}
+
+.cell {
+  position: relative;
+  overflow: hidden;
+  border: var(--hair) solid rgba(255, 255, 255, 0.4);
+  padding: 0.15rem 0.1rem 0.2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+/* How hard this mode was driven, as a field rising from the foot of its own cell.
+   Inside the cell rather than under it: a rule along the bottom edge gets read as
+   belonging to the neighbour, which is a mistake this project has already made
+   once and does not need to make again. */
+.cell-fill {
+  position: absolute;
+  inset: 0;
+  /* 0.28 measured about 1.9:1 against the ultramarine ground, under the 3:1 needed
+     for a graphical object. The root system records fixing exactly this on the
+     slider track; do not lower it again for the sake of a softer look. */
+  background: rgba(255, 255, 255, 0.55);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 90ms linear;
+}
+
+.cell-n,
+.cell-v {
+  position: relative;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.cell-n {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ultramarine-tint);
+}
+.cell-v {
+  font-size: 0.72rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* The mode this level is about. Chrome yellow, the same as everywhere else. */
+.cell.is-target {
+  border-color: var(--chrome);
+  border-width: 2px;
+}
+.cell.is-target .cell-n {
+  background: var(--chrome);
+  color: var(--ink);
+  padding: 0 0.2rem;
+}
+/* A measured zero is a result and should look like one, not like missing data. A
+   flat square at the cell's foot, at full white, rather than faded type: dimming
+   the figures would push real information below AA contrast on this ground. The
+   figures also read "silent" wherever there is room for them. */
+.cell.is-quiet::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  background: #fff;
+}
+
+/* ------------------------------------------------------------------ the curtain */
+
+.curtain {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(20, 18, 15, 0.62);
+}
+
+.curtain-body {
+  background: var(--plaster);
+  border: var(--rule) solid var(--ink);
+  padding: 1.3rem 1.4rem 1.4rem;
+  max-width: 34rem;
+  width: 100%;
+}
+
+.curtain-kind {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--ink-soft);
+}
+.curtain-title {
+  margin: 0 0 0.6rem;
+  font-size: clamp(1.45rem, 4vw, 2rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+.curtain-copy {
+  margin: 0 0 1.1rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  max-width: 62ch;
+}
+
+.curtain-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.chip,
+.chip-solid {
+  appearance: none;
+  border: var(--hair) solid var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.42rem 0.95rem;
+  cursor: pointer;
+}
+.chip {
+  background: transparent;
+  color: var(--ink);
+}
+.chip:hover {
+  background: var(--ink);
+  color: var(--plaster);
+}
+.chip-solid {
+  background: var(--ink);
+  color: var(--plaster);
+}
+.chip-solid:hover {
+  background: var(--vermilion);
+  border-color: var(--vermilion);
+  color: #fff;
+}
+
+/* ------------------------------------------------------------------- solving */
+
+.solving {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.7rem;
+  background: var(--plate);
+  padding: 1rem;
+  text-align: center;
+}
+.solving-copy {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--ink-soft);
+}
+.solving-rule {
+  width: min(18rem, 60vw);
+  height: var(--rule);
+  background: rgba(20, 18, 15, 0.2);
+}
+.solving-rule span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 120ms linear;
+}
+.solving-sub {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  max-width: 34ch;
+}
+
+/* ------------------------------------------------------- portrait and short */
+
+/* Portrait stacks the pair. They stay the same size as each other, which is the
+   one property the composition cannot give up. */
+@media (max-aspect-ratio: 1 / 1) {
+  .plates {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  .foot {
+    grid-template-columns: 1fr;
+  }
+  .gauge {
+    border-left: 0;
+    border-top: var(--rule) solid var(--ink);
+  }
+  .brief-line {
+    font-size: 0.95rem;
+  }
+  .cell-v {
+    display: none;
+  }
+  .progress {
+    display: none;
+  }
+}
+
+/* A 16:9 stage at 640x360 leaves very little vertical room, so the labels and
+   notes step down rather than the plates. */
+@media (max-height: 460px) {
+  .masthead {
+    padding: 0.35rem 0.7rem;
+  }
+  .plate-note {
+    display: none;
+  }
+  .cell-v {
+    display: none;
+  }
+  .brief {
+    padding: 0.45rem 0.7rem 0.5rem;
+  }
+  .brief-line {
+    font-size: 0.85rem;
+  }
+  .verdict {
+    font-size: 0.72rem;
+  }
+  .gauge {
+    padding: 0.35rem 0.7rem 0.45rem;
+  }
+  .gauge-label {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

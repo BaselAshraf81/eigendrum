@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, master, poki]
   pull_request:
 
 jobs:
@@ -27,12 +27,18 @@ jobs:
       - name: Verify the isospectral pair
         run: npm run isospectral
 
+      # The game's central promise: no level without a provably winning strike.
+      # This caught six unwinnable levels out of twenty-five when it was written.
+      - name: Verify every game level is winnable
+        run: npm run poki:levels
+
       - name: Browser smoke test
         run: |
           npm run serve &
           npx wait-on http://localhost:8080 || sleep 5
           npm run smoke
           npm run mobile
+          npm run poki:smoke
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -41,9 +47,13 @@ jobs:
           path: .smoke/
           if-no-files-found: ignore
 
+  # Pages has a single source, and this branch is a superset of master: it carries
+  # the instrument *and* the game, so one deploy publishes both.
+  #   /                    the instrument
+  #   /poki-ready-copy/    the game
   deploy:
     needs: test
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/poki'
     runs-on: ubuntu-latest
     permissions:
       pages: write

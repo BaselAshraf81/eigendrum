@@ -1,0 +1,75 @@
+{
+  "generatedBy": "tools/poki-sync.mjs",
+  "files": [
+    {
+      "rel": "src/math/linalg.js",
+      "to": "/poki-ready-copy/engine/math/linalg.js",
+      "hash": "6ea7c71edc981413"
+    },
+    {
+      "rel": "src/math/sparse.js",
+      "to": "/poki-ready-copy/engine/math/sparse.js",
+      "hash": "9e2e89675a9da59b"
+    },
+    {
+      "rel": "src/math/banded.js",
+      "to": "/poki-ready-copy/engine/math/banded.js",
+      "hash": "d55a9fc061af68ae"
+    },
+    {
+      "rel": "src/math/eigen.js",
+      "to": "/poki-ready-copy/engine/math/eigen.js",
+      "hash": "70f546a3b5887906"
+    },
+    {
+      "rel": "src/geom/polygon.js",
+      "to": "/poki-ready-copy/engine/geom/polygon.js",
+      "hash": "b9528e44520b825a"
+    },
+    {
+      "rel": "src/geom/mesh.js",
+      "to": "/poki-ready-copy/engine/geom/mesh.js",
+      "hash": "ee324bc79b662cc4"
+    },
+    {
+      "rel": "src/fem/assemble.js",
+      "to": "/poki-ready-copy/engine/fem/assemble.js",
+      "hash": "feb47add563a4563"
+    },
+    {
+      "rel": "src/fem/solve.js",
+      "to": "/poki-ready-copy/engine/fem/solve.js",
+      "hash": "69a91ec760d18186"
+    },
+    {
+      "rel": "src/audio/synth.js",
+      "to": "/poki-ready-copy/engine/audio/synth.js",
+      "hash": "461333645e8d45e4"
+    },
+    {
+      "rel": "src/audio/notes.js",
+      "to": "/poki-ready-copy/engine/audio/notes.js",
+      "hash": "48215b20dca94cb0"
+    },
+    {
+      "rel": "src/app/presets.js",
+      "to": "/poki-ready-copy/engine/app/presets.js",
+      "hash": "d94f57c9fc4fc80e"
+    },
+    {
+      "rel": "src/app/draw.js",
+      "to": "/poki-ready-copy/engine/app/draw.js",
+      "hash": "a4871325ebb2f4cb"
+    },
+    {
+      "rel": "src/app/canvas.js",
+      "to": "/poki-ready-copy/engine/app/canvas.js",
+      "hash": "3fe50721c22be66d"
+    },
+    {
+      "rel": "styles/font.css",
+      "to": "/poki-ready-copy/engine/styles/font.css",
+      "hash": "26314aaf1cf09cfe"
+    }
+  ]
+}

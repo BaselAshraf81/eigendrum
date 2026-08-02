@@ -14,14 +14,19 @@
     "no-dependencies"
   ],
   "scripts": {
-    "test": "node --test \"tests/**/*.test.mjs\"",
+    "test": "node tools/poki-sync.mjs --check && node --test \"tests/**/*.test.mjs\"",
     "serve": "node tools/serve.mjs",
     "dev": "node tools/serve.mjs",
     "bench": "node tools/bench.mjs",
     "isospectral": "node tools/isospectral.mjs",
     "smoke": "node tools/smoke.mjs",
     "mobile": "node tools/mobile.mjs",
-    "readme-shots": "node tools/readme-shots.mjs"
+    "readme-shots": "node tools/readme-shots.mjs",
+    "poki:sync": "node tools/poki-sync.mjs",
+    "poki:check": "node tools/poki-sync.mjs --check",
+    "poki:levels": "node tools/poki-levels.mjs",
+    "poki:survey": "node tools/poki-survey.mjs",
+    "poki:smoke": "node tools/poki-smoke.mjs"
   },
   "engines": {
     "node": ">=20"

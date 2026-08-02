@@ -29,8 +29,8 @@ PRODUCT.md
 .kiro/steering/10-codebase-map.md
 .kiro/steering/00-project.md
 .kiro/steering/20-memory.md
-poki-ready-copy/
-tools/poki-levels.mjs
-tools/poki-smoke.mjs
-tools/poki-survey.mjs
-tools/poki-sync.mjs
+
+# Working docs stay local on this branch too, same as DESIGN.md and PRODUCT.md.
+# The branch carries the runnable build and its tooling, not the reasoning.
+poki-ready-copy/GAME.md
+poki-ready-copy/SUBMISSION.md
