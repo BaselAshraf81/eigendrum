@@ -1,10 +1,9 @@
 /**
  * Sound.
  *
- * The engine renders a strike by summing decaying sinusoids, one per mode, at the
- * amplitudes the projection produced. Nothing here alters a frequency ratio; the
- * only choices this file makes are the ones that belong to a mallet and a room:
- * overall level, and how fast each overtone fades.
+ * The engine renders a strike by summing decaying sinusoids, one per mode. Nothing
+ * here alters a frequency ratio; the only choices this file makes are the ones that
+ * belong to a mallet and a room: overall level, and how fast each overtone fades.
  *
  * An AudioContext cannot start before a gesture, which is exactly the behaviour
  * the honesty rule wants, so no sound can escape before the player's first tap.
@@ -61,8 +60,16 @@ function stopAll() {
   }
 }
 
-/** Plays one strike. `amps` is the real projection, straight from the engine. */
-export function playStrike(freqs, amps, { brightness = 0.55, gain = 3.0, taus: given = null } = {}) {
+/**
+ * Plays one strike.
+ *
+ * `amps` must be *audible* amplitudes, not raw projections: the caller is expected
+ * to have put them through the engine's `audibleAmps` and to pass a `gain` scaled
+ * by `strikeHeadroom`. The default of 1 assumes that has happened. It used to be
+ * 3.0 applied to raw projections, which drove the sum well past the renderer's soft
+ * limiter and made every strike a burst of clipping.
+ */
+export function playStrike(freqs, amps, { brightness = 0.55, gain = 1, taus: given = null } = {}) {
   const audio = ensureContext();
   if (!audio) return;
 

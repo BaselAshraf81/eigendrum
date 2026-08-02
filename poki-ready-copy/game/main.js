@@ -13,7 +13,15 @@
  */
 
 import { PRESETS_BY_ID, GWW_A, GWW_B, normalizeShape } from '../engine/app/presets.js';
-import { strikeAmplitudes, nodeWeights, decayTimes, fieldAtTime } from '../engine/audio/synth.js';
+import {
+  strikeAmplitudes,
+  nodeWeights,
+  modeNorms,
+  audibleAmps,
+  strikeHeadroom,
+  decayTimes,
+  fieldAtTime,
+} from '../engine/audio/synth.js';
 import {
   CHAPTERS,
   OBJECTIVES,
@@ -104,6 +112,8 @@ const state = {
   drum: null,
   stats: null,
   weights: null,
+  norms: null,
+  headroom: null,
   freqs: null,
   aim: { x: 0, y: 0 },
   strike: null,
@@ -373,6 +383,8 @@ function adoptDrum(reply) {
   state.drum = { mesh: reply.mesh, modes: reply.modes, eigenvalues: reply.eigenvalues };
   state.freqs = reply.freqs;
   state.weights = nodeWeights(reply.mesh);
+  state.norms = modeNorms(reply.mesh, reply.modes, state.weights);
+  state.headroom = null;
   state.stats = {
     table: reply.table,
     peaks: reply.peaks,
@@ -384,6 +396,38 @@ function adoptDrum(reply) {
   target.setDrum(state.drum);
   drum.setDrum(state.drum);
   state.aim = centroidOf(reply.mesh.polygon);
+}
+
+// The mallet's contact time, as the harmonic where its rolloff turns over, and the
+// level the hardest available strike should reach. Both live in audibleAmps and
+// strikeHeadroom; see the note in strikeAt.
+const CONTACT_RATIO = 2.2;
+const TARGET_PEAK = 0.72;
+
+/**
+ * One loudness scale per drum and mallet: the drive of the hardest strike this
+ * drum allows. Every strike on it shares that gain, so hitting near the rim really
+ * is quieter than hitting the middle, while nothing ever reaches the renderer's
+ * soft limiter. A fixed gain of 3.0 used to drive the sum far into it, and the
+ * clipping was most of why strikes sounded harsh.
+ */
+function headroom() {
+  const r = malletRadius(state.mallet);
+  if (!state.headroom || state.headroom.radius !== r) {
+    state.headroom = {
+      radius: r,
+      value: strikeHeadroom(
+        state.drum.mesh,
+        state.drum.modes,
+        state.norms,
+        state.freqs,
+        state.weights,
+        r,
+        CONTACT_RATIO,
+      ),
+    };
+  }
+  return state.headroom.value;
 }
 
 /** The membrane's displacement at time t, unnormalised. */
@@ -448,8 +492,23 @@ function strikeAt(x, y, force = 1) {
     previous: state.previousAmps,
   });
 
-  const heard = new Float64Array(unit.length);
-  for (let k = 0; k < unit.length; k++) heard[k] = unit[k] * force;
+  // Two different quantities, and conflating them is what made strikes buzz.
+  //
+  // `unit` is the projection integral(phi_k g), which is what the puzzle is about:
+  // it answers "how much does this mode move where I hit". Scoring and the
+  // measurement strip use it and nothing else.
+  //
+  // What you *hear* is displacement, which carries two more factors the projection
+  // does not: the modes' mass normalisation, and 1/omega, because a mallet sets
+  // initial velocity rather than initial displacement. Without them sixteen
+  // inharmonic partials arrive at equal level and the drum sounds like a gong.
+  // audibleAmps preserves zeros exactly, so a silenced mode is still silent and no
+  // verdict can disagree with what is heard.
+  const strip = new Float64Array(unit.length);
+  for (let k = 0; k < unit.length; k++) strip[k] = unit[k] * force;
+
+  const heard = audibleAmps(unit, state.norms, state.freqs, CONTACT_RATIO);
+  for (let k = 0; k < heard.length; k++) heard[k] *= force;
 
   state.amps = heard;
   state.taus = decayTimes(state.freqs, 1.35, 0.55);
@@ -464,9 +523,9 @@ function strikeAt(x, y, force = 1) {
   state.ringing = true;
 
   let peak = 0;
-  for (let k = 0; k < heard.length; k++) peak = Math.max(peak, Math.abs(heard[k]));
-  hud.paintStrip(els.strip, heard, levelModes(state.level), peak, state.freqs);
-  audio.playStrike(state.freqs, heard, { taus: state.taus });
+  for (let k = 0; k < strip.length; k++) peak = Math.max(peak, Math.abs(strip[k]));
+  hud.paintStrip(els.strip, strip, levelModes(state.level), peak, state.freqs);
+  audio.playStrike(state.freqs, heard, { taus: state.taus, gain: TARGET_PEAK / headroom() });
 
   els.verdict.hidden = false;
   els.verdict.className = result.stars > 0 ? 'verdict is-good' : 'verdict is-bad';

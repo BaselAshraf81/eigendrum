@@ -13,7 +13,16 @@
 
 import { PRESETS, PRESETS_BY_ID, normalizeShape } from '../engine/app/presets.js';
 import { strokeToPolygon } from '../engine/app/draw.js';
-import { strikeAmplitudes, nodeWeights, decayTimes, fieldAtTime, frequencies } from '../engine/audio/synth.js';
+import {
+  strikeAmplitudes,
+  nodeWeights,
+  modeNorms,
+  audibleAmps,
+  strikeHeadroom,
+  decayTimes,
+  fieldAtTime,
+  frequencies,
+} from '../engine/audio/synth.js';
 import { freqToNote, harmonicity } from '../engine/audio/notes.js';
 import { requestDrum } from './solve.js';
 import { MALLETS, malletRadius, DEFAULT_MALLET, forceFor, CHARGE_MS } from './mallets.js';
@@ -23,6 +32,10 @@ import * as audio from './audio.js';
 
 const TARGET_NODES = 1200;
 const MODE_COUNT = 12;
+// The mallet's contact time, as the harmonic where its rolloff turns over, and the
+// level the hardest strike on a drum should reach. See audibleAmps.
+const CONTACT_RATIO = 2.2;
+const TARGET_PEAK = 0.72;
 
 /** Shapes offered in free mode, in a deliberate order: simple, then strange. */
 /** A single mode on its own, for the at-rest sand figure. */
@@ -259,6 +272,8 @@ export class Sandbox {
     this.drum = { mesh: reply.mesh, modes: reply.modes, eigenvalues: reply.eigenvalues };
     this.freqs = frequencies(reply.eigenvalues, this.baseHz);
     this.weights = nodeWeights(reply.mesh);
+    this.norms = modeNorms(reply.mesh, reply.modes, this.weights);
+    this.headroom = null;
     this.strike = null;
     this.amps = null;
     this.ringing = false;
@@ -301,12 +316,21 @@ export class Sandbox {
       malletRadius(this.mallet),
       this.weights,
     );
+    // The projection answers "how much does each mode move where I hit", which is
+    // what the strip measures. Displacement carries two more factors - the modes'
+    // mass normalisation and 1/omega, since a mallet sets initial velocity rather
+    // than initial displacement - and without them the high inharmonic modes arrive
+    // at the same level as the fundamental and the drum sounds like a gong.
+    //
     // Force scales every mode by the same factor, which is the whole truth about
     // force: it is loudness, not timbre.
     const scaled = new Float64Array(amps.length);
     for (let k = 0; k < amps.length; k++) scaled[k] = amps[k] * force;
 
-    this.amps = scaled;
+    const heard = audibleAmps(amps, this.norms, this.freqs, CONTACT_RATIO);
+    for (let k = 0; k < heard.length; k++) heard[k] *= force;
+
+    this.amps = heard;
     this.taus = decayTimes(this.freqs, this.decay, 0.55);
     // One fixed reference for the whole ring-out. Normalising each frame to its own
     // peak holds the maximum at 1.0 and the animation stops reading as movement.
@@ -319,12 +343,39 @@ export class Sandbox {
     let peak = 0;
     for (let k = 0; k < scaled.length; k++) peak = Math.max(peak, Math.abs(scaled[k]));
     hud.paintStrip(this.els.strip, scaled, [], peak, this.freqs);
-    audio.playStrike(this.freqs, scaled, { taus: this.taus });
+    audio.playStrike(this.freqs, heard, {
+      taus: this.taus,
+      gain: TARGET_PEAK / this.headroomFor(),
+    });
     const pct = Math.round(force * 100);
     this.els.drumNote.textContent =
       force < 0.99
         ? `struck at ${pct}% force - hold before releasing to hit harder`
         : 'struck at full force';
+  }
+
+  /**
+   * One loudness scale per drum and mallet, taken from the hardest strike the drum
+   * allows, so a rim strike stays quieter than a centre one while nothing reaches
+   * the renderer's soft limiter.
+   */
+  headroomFor() {
+    const r = malletRadius(this.mallet);
+    if (!this.headroom || this.headroom.radius !== r) {
+      this.headroom = {
+        radius: r,
+        value: strikeHeadroom(
+          this.drum.mesh,
+          this.drum.modes,
+          this.norms,
+          this.freqs,
+          this.weights,
+          r,
+          CONTACT_RATIO,
+        ),
+      };
+    }
+    return this.headroom.value;
   }
 
   /**

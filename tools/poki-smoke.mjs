@@ -45,13 +45,32 @@ const note = (s) => console.log(s);
   // this build is targeted at is actually injected. Both are listed because
   // platform.js carries an adapter for each; game/target.js decides which loads.
   const ALLOWED = /^https:\/\/(sdk\.crazygames\.com|game-cdn\.poki\.com)\//;
+  // A link the player can click is not a subresource: nothing is fetched into the
+  // page and no third party gets to run code. Both portals *require* their terms
+  // and privacy pages to be linked from the menu, so those have to be legal here
+  // while a stylesheet or script from the same host would not be.
+  const LINKABLE = /^https:\/\/(www\.)?(crazygames\.com|poki\.com)\//;
   let refs = 0;
+  let links = 0;
   for (const file of files) {
     const text = readFileSync(file, 'utf8');
+    // Anchor targets are navigation, so they are audited separately and more
+    // loosely. Everything else in the file is treated as a fetch.
+    const anchors = new Set();
+    for (const m of text.matchAll(/<a\b[^>]*?href\s*=\s*["']([^"']+)["']/gi)) {
+      const url = m[1];
+      if (!/^https?:\/\//.test(url)) continue;
+      anchors.add(url);
+      links++;
+      if (!LINKABLE.test(url)) {
+        problems.push(`off-portal link in ${file.replace(GAME, '')}: ${url}`);
+      }
+    }
     for (const m of text.matchAll(/https?:\/\/[^\s"'`)<>]+/g)) {
       const url = m[0];
       // XML namespaces are identifiers, not fetches.
       if (url.startsWith('http://www.w3.org/')) continue;
+      if (anchors.has(url)) continue;
       refs++;
       if (!ALLOWED.test(url)) {
         problems.push(`external reference in ${file.replace(GAME, '')}: ${url}`);
@@ -67,7 +86,10 @@ const note = (s) => console.log(s);
 
   let bytes = 0;
   for (const f of files) bytes += statSync(f).size;
-  note(`source audit: ${files.length} files, ${(bytes / 1024).toFixed(0)} kB, ${refs} off-origin reference(s), all allowed`);
+  note(
+    `source audit: ${files.length} files, ${(bytes / 1024).toFixed(0)} kB, ` +
+      `${refs} fetched off-origin reference(s) and ${links} outbound link(s), all allowed`,
+  );
 }
 
 // -------------------------------------------------------------- 2. the browser
