@@ -1,4 +1,4 @@
-# Eigendrum
+# Eigendrum - Everything is a drum if you put your mind to it
 
 **Draw a shape. Hear the sound it would actually make.**
 
