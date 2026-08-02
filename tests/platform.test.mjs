@@ -31,8 +31,10 @@ function fakeDom({ sdk, failScript = false }) {
 /** Records every call a portal SDK receives, in order. */
 function recordingCrazySdk({ adBehaviour = 'finish' } = {}) {
   const calls = [];
+  const dataStore = new Map();
   return {
     calls,
+    dataStore,
     sdk: {
       init: async () => calls.push('init'),
       game: {
@@ -50,6 +52,12 @@ function recordingCrazySdk({ adBehaviour = 'finish' } = {}) {
             setTimeout(() => (adBehaviour === 'error' ? cb.adError?.('nope') : cb.adFinished?.()), 0);
           }, 0);
         },
+      },
+      // Mirrors localStorage, per CrazyGames' own docs for the Data Module.
+      data: {
+        getItem: (k) => (dataStore.has(k) ? dataStore.get(k) : null),
+        setItem: (k, v) => dataStore.set(k, v),
+        removeItem: (k) => dataStore.delete(k),
       },
     },
   };
@@ -163,6 +171,29 @@ test('a missing or blocked SDK leaves the game fully playable', async () => {
     await platform.commercialBreak({ onStart: () => assert.fail('no ad can start without an SDK') });
     platform.captureError(new Error('handled'));
   }
+});
+
+test('dataModule is exposed once init settles, and reflects the real backing store', async () => {
+  const { sdk, dataStore } = recordingCrazySdk();
+  fakeDom({ sdk });
+  const platform = await freshPlatform();
+
+  assert.equal(platform.dataModule(), null, 'no data module should be claimed before init settles');
+  await platform.initPlatform();
+
+  const mod = platform.dataModule();
+  assert.ok(mod, 'CrazyGames exposes a Data Module, so it must not be null once ready');
+  mod.setItem('k', 'v');
+  assert.equal(dataStore.get('k'), 'v', 'writes through dataModule() must reach the real SDK.data');
+  assert.equal(mod.getItem('missing'), null);
+});
+
+test('dataModule is null for a portal with no equivalent, and when no portal loaded', async () => {
+  // Poki has no Data Module; store.js is expected to fall back to localStorage there.
+  fakeDom({ sdk: null });
+  const platform = await freshPlatform();
+  await platform.initPlatform();
+  assert.equal(platform.dataModule(), null);
 });
 
 test('calls made before the SDK settles are replayed, not dropped', async () => {

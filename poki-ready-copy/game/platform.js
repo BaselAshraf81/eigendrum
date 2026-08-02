@@ -23,6 +23,9 @@ import { TARGET } from './target.js';
 
 const noop = () => {};
 
+/** No portal-backed save. store.js falls back to plain localStorage in this case. */
+const NO_DATA = { available: false, getItem: () => null, setItem: noop, removeItem: noop };
+
 /** Used when there is no portal, and as the fallback when one fails to load. */
 const STUB = {
   loadingStart: noop,
@@ -32,6 +35,7 @@ const STUB = {
   ad: () => Promise.resolve(false),
   rewarded: () => Promise.resolve(false),
   captureError: noop,
+  data: NO_DATA,
 };
 
 /** No callback from a portal may hold the game up longer than this. */
@@ -98,6 +102,15 @@ function crazyAdapter(SDK) {
     // For a rewarded ad, adFinished is the signal that the reward was earned.
     rewarded: (opts) => request('rewarded', opts),
     captureError: noop,
+    // Games served in CrazyGames' iframe are explicitly exempt from their Automatic
+    // Progress Save, so plain localStorage there is not actually backed up. The Data
+    // Module mirrors the localStorage API, so store.js can use it as a drop-in.
+    data: {
+      available: true,
+      getItem: (k) => SDK.data.getItem(k),
+      setItem: (k, v) => SDK.data.setItem(k, v),
+      removeItem: (k) => SDK.data.removeItem(k),
+    },
   };
 }
 
@@ -130,6 +143,9 @@ function pokiAdapter(SDK) {
     ad: (opts) => wrap((onStart) => SDK.commercialBreak(onStart), opts),
     rewarded: (opts) => wrap((onStart) => SDK.rewardedBreak(onStart), opts),
     captureError: (err) => SDK.captureError?.(err),
+    // Poki has no equivalent data module; store.js keeps using localStorage for this
+    // target, guarded there against Incognito throwing on access.
+    data: NO_DATA,
   };
 }
 
@@ -210,6 +226,17 @@ export async function initPlatform() {
 
 export const loadingStart = defer('loadingStart');
 export const loadingFinished = defer('loadingFinished');
+
+/**
+ * The portal's own save slot, if it has one, else null.
+ *
+ * `store.js` calls this once `initPlatform()` has resolved, so `ready` is guaranteed
+ * true here; before that there is nothing to prefer over plain localStorage anyway,
+ * since the game has not decided which target it is running under yet.
+ */
+export function dataModule() {
+  return sdk.data.available ? sdk.data : null;
+}
 
 /** Kept balanced by a flag, since the game has several routes into and out of play. */
 export function gameplayStart() {

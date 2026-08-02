@@ -57,7 +57,10 @@ const note = (s) => console.log(s);
         problems.push(`external reference in ${file.replace(GAME, '')}: ${url}`);
       }
     }
-    if (/localStorage/.test(text) && !/store\.js$/.test(file)) {
+    // Matches actual API usage (localStorage.getItem(...), Object.defineProperty on
+    // it, etc.), not the bare word appearing in a comment or docblock, which platform.js
+    // legitimately does when explaining why it defers to store.js.
+    if (/localStorage\s*[.[]/.test(text) && !/store\.js$/.test(file)) {
       problems.push(`${file.replace(GAME, '')} touches localStorage directly; it must go through store.js`);
     }
   }

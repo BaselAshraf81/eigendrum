@@ -38,7 +38,7 @@ import { requestDrum, setProgressHandler } from './solve.js';
 import * as hud from './hud.js';
 import * as audio from './audio.js';
 import * as portal from './platform.js';
-import { loadProgress, saveProgress, isPersistent } from './store.js';
+import { loadProgress, saveProgress, isPersistent, resyncProgress } from './store.js';
 
 const MODE_COUNT = 12;
 const TARGET_NODES = 1200;
@@ -932,6 +932,16 @@ async function boot() {
   requestAnimationFrame(frame);
   await sdkReady;
   portal.loadingFinished();
+
+  // Only now does a portal-backed save exist to check. The menu was already shown
+  // from the local cache above, so a slow portal never delays first paint; if the
+  // reconciled result differs (a returning player on a new device, say), refresh the
+  // one thing on screen that depends on it.
+  const reconciled = resyncProgress();
+  if (reconciled) {
+    state.progress = reconciled;
+    if (state.mode === 'home') goHome();
+  }
 }
 
 boot().catch((err) => {
