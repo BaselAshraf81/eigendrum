@@ -47,26 +47,13 @@ jobs:
           path: .smoke/
           if-no-files-found: ignore
 
-  # Pages has a single source, and this branch is a superset of master: it carries
-  # the instrument *and* the game, so one deploy publishes both.
+  # There is deliberately no deploy job on this branch.
+  #
+  # GitHub Pages serves this branch directly (Settings -> Pages, source: poki, /),
+  # because there is no build step: the source *is* the site. Publishing that way
+  # also keeps deployment independent of CI, so a flaky headless-browser run cannot
+  # take the live game down.
+  #
+  # This branch is a superset of master, so one source publishes both:
   #   /                    the instrument
   #   /poki-ready-copy/    the game
-  deploy:
-    needs: test
-    if: github.ref == 'refs/heads/poki'
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      # No build step: the source *is* the site.
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
-      - id: deploy
-        uses: actions/deploy-pages@v4

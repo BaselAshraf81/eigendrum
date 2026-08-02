@@ -1,0 +1,5 @@
+Serving this branch through GitHub Pages without Jekyll.
+
+Jekyll would try to process the site and, among other things, refuses to publish
+paths beginning with an underscore. Nothing here needs a build step: the source is
+the site.
