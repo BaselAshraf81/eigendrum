@@ -889,6 +889,21 @@ body {
   max-width: 56ch;
 }
 
+.home-legal {
+  margin: 0.6rem 0 0;
+  font-size: 0.78rem;
+}
+
+.home-legal a {
+  color: var(--ink-soft);
+  text-decoration: underline;
+}
+
+.home-legal a:hover,
+.home-legal a:focus-visible {
+  color: var(--ink);
+}
+
 @media (max-width: 34rem) {
   .way {
     grid-template-columns: 2.2rem minmax(0, 1fr);
