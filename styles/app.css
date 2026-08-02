@@ -551,6 +551,96 @@ h2 {
   color: var(--ink);
 }
 
+/* ------------------------------------------------------ the equation panel */
+
+/* A region, not a card: plaster ground with a 3px ink rule above it, so it is
+   separated by adjacency and rule weight like everything else here. It takes no
+   hue of its own, because the three primaries already have jobs and this is a
+   place to write rather than a bench, a ledger or a remarkable thing. */
+.formula {
+  border-top: var(--rule) solid var(--ink);
+  padding-top: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.formula h2 {
+  margin-bottom: 0;
+}
+.formula-kinds {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.formula-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.formula-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+/* Tabular figures and a fixed width, so r(t), x(t) and y(t) put their inputs on
+   the same left edge and the two parametric rows read as one pair. */
+.formula-var {
+  flex: none;
+  width: 3.1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--ink-soft);
+}
+
+/* White ground on plaster: this is the one place on the sheet you write, and
+   paper is what you write on. No radius, 1px keyline like every other component
+   keyline, and the page's own face - there is no monospace in this system. */
+.formula input[type='text'] {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--ink);
+  background: #fff;
+  border: var(--hair) solid var(--ink);
+  border-radius: 0;
+  padding: 0.34rem 0.5rem;
+}
+.formula input[type='text']:focus-visible {
+  outline: var(--rule) solid var(--ink);
+  outline-offset: 1px;
+}
+
+.formula-hint {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  max-width: 48ch;
+}
+
+.formula-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.formula-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+/* The gallery is a set of starting points, not a set of presets, so its chips are
+   deliberately quieter than the form chips above. */
+.chip-tiny {
+  font-size: 0.78rem;
+  padding: 0.24rem 0.5rem;
+}
+
 /* -------------------------------------------------------------- the index */
 
 /* One scroll region for the whole right column. Two nested scrollers (a list

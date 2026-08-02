@@ -2,45 +2,23 @@
  * Turning a freehand stroke into a drum outline the mesher will accept.
  *
  * Raw pointer traces are far too dense (a hundred points per second, many of
- * them a fraction of a pixel apart) and they never close cleanly. This
- * simplifies, closes, and then *validates* - a self-crossing outline has no
- * well-defined interior, so there is nothing sensible to solve on and we say so
- * rather than producing nonsense.
+ * them a fraction of a pixel apart) and they never close cleanly. The geometry of
+ * cleaning and validating a candidate outline lives in `cleanClosedOutline`,
+ * because a sampled formula curve needs exactly the same checks; all this adds is
+ * the wording, which is genuinely stroke-specific advice.
  */
 
-import { area, dedupe, ensureCCW, isSimple, simplifyClosed } from '../geom/polygon.js';
+import { cleanClosedOutline } from '../geom/polygon.js';
 
-const MAX_VERTICES = 220;
+const MESSAGES = {
+  short: 'That stroke is too short to be a drum.',
+  degenerate: 'That stroke is too simple to be a drum.',
+  area: 'That outline encloses almost no area. Try a rounder shape.',
+  crossing: 'That outline crosses itself, so it has no inside. Try again without overlapping.',
+};
 
 export function strokeToPolygon(points, { tolerance = 0.006, minArea = 0.004 } = {}) {
-  if (!points || points.length < 8) {
-    return { ok: false, error: 'That stroke is too short to be a drum.' };
-  }
-
-  let poly = dedupe(points, 1e-6);
-  poly = dedupe(simplifyClosed(poly, tolerance), tolerance * 0.5);
-
-  if (poly.length < 3) {
-    return { ok: false, error: 'That stroke is too simple to be a drum.' };
-  }
-
-  // Progressively coarsen rather than refuse, if the outline is still huge.
-  let tol = tolerance;
-  while (poly.length > MAX_VERTICES && tol < 0.2) {
-    tol *= 1.6;
-    poly = dedupe(simplifyClosed(poly, tol), tol * 0.5);
-  }
-
-  if (area(poly) < minArea) {
-    return { ok: false, error: 'That outline encloses almost no area. Try a rounder shape.' };
-  }
-
-  if (!isSimple(poly)) {
-    return {
-      ok: false,
-      error: 'That outline crosses itself, so it has no inside. Try again without overlapping.',
-    };
-  }
-
-  return { ok: true, polygon: ensureCCW(poly) };
+  const result = cleanClosedOutline(points, { tolerance, minArea });
+  if (result.ok) return { ok: true, polygon: result.polygon };
+  return { ok: false, error: MESSAGES[result.reason] || MESSAGES.degenerate };
 }

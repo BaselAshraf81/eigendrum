@@ -10,6 +10,8 @@ import { Board } from './canvas.js';
 import { PRESETS, PRESETS_BY_ID, normalizeShape } from './presets.js';
 import { renderComb, renderSpectrum, setDrive, setSelected } from './spectrum.js';
 import { strokeToPolygon } from './draw.js';
+import { FORMULA_EXAMPLES, formulaLabel } from './formulas.js';
+import { formulaToPolygon } from '../geom/curve.js';
 import { readHash, shareUrl, writeHash } from './share.js';
 import { freqToNote, harmonicity } from '../audio/notes.js';
 import {
@@ -68,6 +70,18 @@ const els = {
   sound: el('btn-sound'),
   soundLabel: el('sound-label'),
   soundCut: el('sound-cut'),
+  formulaBtn: el('btn-formula'),
+  formulaLabelEl: el('formula-label'),
+  formula: el('formula'),
+  formulaPolar: el('formula-polar'),
+  formulaParam: el('formula-param'),
+  formulaExamples: el('formula-examples'),
+  formulaHint: el('formula-hint'),
+  polarBtn: el('btn-polar'),
+  paramBtn: el('btn-param'),
+  inR: el('in-r'),
+  inX: el('in-x'),
+  inY: el('in-y'),
   about: el('btn-about'),
   dlgAbout: el('dlg-about'),
   share: el('btn-share'),
@@ -104,6 +118,11 @@ const state = {
   drawMode: false,
   drawing: false,
   stroke: [],
+  // The equation the current drum came from, when it came from one. Kept so the
+  // readout can name it and the share link can carry the recipe rather than a
+  // sampling of it.
+  formula: null,
+  formulaKind: 'polar',
   muted: false,
   lastWav: null,
   requestId: 0,
@@ -156,17 +175,32 @@ worker.onmessage = (event) => {
   onSolved(msg);
 };
 
-function solve(source) {
+/** Sends a shape to the worker. Returns false if there was nothing solvable. */
+function solve(source, { keepNotice = false } = {}) {
   const preset = source.kind === 'preset' ? PRESETS_BY_ID.get(source.id) : null;
-  const rawPolygon = preset ? preset.polygon : source.polygon;
-  if (!rawPolygon) return;
+
+  // An equation is turned into an outline here rather than by the caller, so that
+  // a formula typed into the box, a formula arriving from a shared link, and a
+  // formula from the gallery all go through the same sampling and the same
+  // validation. A link is untrusted input; this is where it gets checked.
+  let rawPolygon = preset ? preset.polygon : source.polygon;
+  if (source.kind === 'formula') {
+    const traced = formulaToPolygon(source.formula);
+    if (!traced.ok) {
+      showNotice(traced.error);
+      return false;
+    }
+    rawPolygon = traced.polygon;
+  }
+  if (!rawPolygon) return false;
 
   const { polygon, align } = normalizeShape(rawPolygon, preset?.latticePitch || 0);
 
   state.source = source;
   state.presetId = preset ? preset.id : null;
+  state.formula = source.kind === 'formula' ? source.formula : null;
   state.requestId += 1;
-  clearNotice();
+  if (!keepNotice) clearNotice();
   setSolving(true);
   updatePresetChips();
   updateKac(preset);
@@ -198,9 +232,10 @@ function solve(source) {
     state.partnerReqId = 0;
   }
 
-  writeHash(
-    source.kind === 'preset' ? { kind: 'preset', id: source.id } : { kind: 'custom', polygon },
-  );
+  if (source.kind === 'preset') writeHash({ kind: 'preset', id: source.id });
+  else if (source.kind === 'formula') writeHash({ kind: 'formula', formula: source.formula });
+  else writeHash({ kind: 'custom', polygon });
+  return true;
 }
 
 function onSolved(msg) {
@@ -516,14 +551,19 @@ function renderReadout() {
   const note = freqToNote(f0);
   const harm = harmonicity(Array.from(state.freqs));
   const ratio = state.freqs[1] / f0;
-  els.readout.replaceChildren(
+  const parts = [
     text('Lowest mode '),
     strong(`${f0.toFixed(1)} Hz`),
     text(` (${note.label}). The second sits at `),
     strong(`${ratio.toFixed(3)}×`),
     text(' the first - '),
     span('note', `${harm.verdict}.`),
-  );
+  ];
+  // Name the equation when there is one. The numbers above are a property of that
+  // formula, and a formula is a thing you can edit by one character, which is the
+  // reason for typing one instead of tracing.
+  if (state.formula) parts.push(text(' '), span('tex', formulaLabel(state.formula)));
+  els.readout.replaceChildren(...parts);
 }
 
 function showModeReadout(i, playing = false) {
@@ -784,7 +824,88 @@ function selectMode(i) {
 
 // ---------------------------------------------------------------------- input
 
+/* ------------------------------------------------------------------- formulas */
+
+/** Reads whichever notation is currently showing. */
+function currentFormula() {
+  if (state.formulaKind === 'polar') return { kind: 'polar', r: els.inR.value };
+  return { kind: 'parametric', x: els.inX.value, y: els.inY.value };
+}
+
+function setFormulaKind(kind, focus = true) {
+  state.formulaKind = kind;
+  const polar = kind === 'polar';
+  els.polarBtn.setAttribute('aria-pressed', String(polar));
+  els.paramBtn.setAttribute('aria-pressed', String(!polar));
+  els.formulaPolar.hidden = !polar;
+  els.formulaParam.hidden = polar;
+  if (focus) (polar ? els.inR : els.inX).focus();
+}
+
+function setFormulaMode(on) {
+  // The two ways of making your own drum are alternatives, not layers. Opening one
+  // closes the other, or the plate would be waiting for a stroke while the panel
+  // waits for an equation.
+  if (on && state.drawMode) setDrawMode(false);
+  els.formula.hidden = !on;
+  els.formulaBtn.setAttribute('aria-pressed', String(on));
+  els.formulaBtn.setAttribute('aria-expanded', String(on));
+  els.formulaLabelEl.textContent = on ? 'close the equation' : 'from an equation';
+  if (on) {
+    (state.formulaKind === 'polar' ? els.inR : els.inX).focus();
+  } else {
+    clearNotice();
+  }
+}
+
+/** Loads a formula into the box and solves it, so the gallery is a starting point
+ *  you can then edit rather than a fixed menu. */
+function useExample(example) {
+  setFormulaKind(example.formula.kind, false);
+  if (example.formula.kind === 'polar') {
+    els.inR.value = example.formula.r;
+  } else {
+    els.inX.value = example.formula.x;
+    els.inY.value = example.formula.y;
+  }
+  els.formulaHint.textContent = example.note;
+  solve({ kind: 'formula', formula: example.formula });
+}
+
+/**
+ * Shows a formula in the panel without solving it. Used for anything that arrives
+ * from outside - a shared link, or the address bar being edited - so an equation
+ * turns up as something you can read and change rather than as an outline of
+ * unexplained origin.
+ */
+function loadFormulaIntoPanel(formula) {
+  setFormulaKind(formula.kind, false);
+  if (formula.kind === 'polar') els.inR.value = formula.r;
+  else {
+    els.inX.value = formula.x;
+    els.inY.value = formula.y;
+  }
+  if (state.drawMode) setDrawMode(false);
+  els.formula.hidden = false;
+  els.formulaBtn.setAttribute('aria-pressed', 'true');
+  els.formulaBtn.setAttribute('aria-expanded', 'true');
+  els.formulaLabelEl.textContent = 'close the equation';
+}
+
+function buildFormulaExamples() {
+  for (const example of FORMULA_EXAMPLES) {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'chip chip-tiny';
+    chip.textContent = example.name;
+    chip.title = formulaLabel(example.formula);
+    chip.addEventListener('click', () => useExample(example));
+    els.formulaExamples.append(chip);
+  }
+}
+
 function setDrawMode(on) {
+  if (on && !els.formula.hidden) setFormulaMode(false);
   state.drawMode = on;
   state.stroke = [];
   state.drawing = false;
@@ -903,6 +1024,15 @@ els.mallet.addEventListener('input', () => {
 
 els.drawBtn.addEventListener('click', () => setDrawMode(!state.drawMode));
 
+els.formulaBtn.addEventListener('click', () => setFormulaMode(els.formula.hidden));
+els.polarBtn.addEventListener('click', () => setFormulaKind('polar'));
+els.paramBtn.addEventListener('click', () => setFormulaKind('parametric'));
+els.formula.addEventListener('submit', (e) => {
+  e.preventDefault();
+  clearNotice();
+  solve({ kind: 'formula', formula: currentFormula() });
+});
+
 els.kacSwap.addEventListener('click', () => {
   const target = els.kacSwap.dataset.target;
   if (target) solve({ kind: 'preset', id: target });
@@ -971,15 +1101,55 @@ function download(blob, filename) {
 
 window.addEventListener('resize', () => board.resize());
 
+/**
+ * Follow the URL when it changes under us.
+ *
+ * The formula format exists so that a shape is readable text you can retype and
+ * edit, and the address bar is the most obvious place to edit it. Without this the
+ * invitation was a lie: changing `#f=p:1+0.3cos(5t)` to `cos(7t)` and pressing
+ * enter did nothing at all. `writeHash` uses `replaceState`, which does not fire
+ * this event, so there is no loop.
+ */
+window.addEventListener('hashchange', () => {
+  const next = readHash();
+  if (!next) return;
+  if (next.kind === 'preset' && PRESETS_BY_ID.has(next.id)) {
+    if (state.presetId === next.id) return;
+    setFormulaMode(false);
+    setDrawMode(false);
+    solve({ kind: 'preset', id: next.id });
+  } else if (next.kind === 'formula') {
+    loadFormulaIntoPanel(next.formula);
+    solve({ kind: 'formula', formula: next.formula });
+  } else if (next.kind === 'custom') {
+    setFormulaMode(false);
+    setDrawMode(false);
+    solve({ kind: 'custom', polygon: next.polygon });
+  }
+});
+
 // -------------------------------------------------------------------- startup
 
 buildPresetChips();
+buildFormulaExamples();
 board.resize();
 requestAnimationFrame(frame);
 
 const fromUrl = readHash();
 if (fromUrl?.kind === 'custom') solve({ kind: 'custom', polygon: fromUrl.polygon });
-else if (fromUrl?.kind === 'preset' && PRESETS_BY_ID.has(fromUrl.id)) {
+else if (fromUrl?.kind === 'formula') {
+  // Show the shared equation in the box as well as solving it, so a link arrives as
+  // something you can edit rather than as an outline of unexplained origin. If it
+  // does not compile, `solve` posts the reason and the box is where you fix it.
+  loadFormulaIntoPanel(fromUrl.formula);
+  // A link is untrusted: if the equation does not compile, the notice says why and
+  // the page still has to come up with a drum on it.
+  if (!solve({ kind: 'formula', formula: fromUrl.formula })) {
+    // Keep the reason on screen. Falling back to a working drum must not also erase
+    // the explanation of why the link did not load.
+    solve({ kind: 'preset', id: 'circle' }, { keepNotice: true });
+  }
+} else if (fromUrl?.kind === 'preset' && PRESETS_BY_ID.has(fromUrl.id)) {
   solve({ kind: 'preset', id: fromUrl.id });
 } else {
   solve({ kind: 'preset', id: 'circle' });

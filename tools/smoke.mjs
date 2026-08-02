@@ -314,6 +314,139 @@ async function main() {
   if (!/Lowest mode/.test(custom.readout)) problems.push('drawn shape did not solve');
   if (!custom.hash.startsWith('#s=')) problems.push('drawn shape was not encoded into the URL');
 
+  // ------------------------------------------------------------- from an equation
+
+  await page.click('#btn-formula');
+  await page.waitForFunction(() => !document.querySelector('#formula').hidden, { timeout: 5000 });
+
+  // Opening the equation panel must close drawing. They are alternatives, and if
+  // both were live the plate would be waiting for a stroke that can never be
+  // meaningful while the panel waits for text.
+  const exclusive = await page.evaluate(
+    () => document.querySelector('#btn-draw').getAttribute('aria-pressed') === 'false',
+  );
+  if (!exclusive) problems.push('opening the equation panel left drawing mode on');
+
+  const typeAndSolve = async (selector, source) => {
+    await page.click(selector, { count: 3 });
+    await page.type(selector, source);
+    await page.click('#btn-solve-formula');
+  };
+
+  // A shape only an equation can reach: eleven lobes is not something a hand traces.
+  await typeAndSolve('#in-r', '1 + 0.22cos(11t)');
+  await page.waitForFunction(
+    () =>
+      document.querySelector('#solving').hidden &&
+      location.hash.startsWith('#f=') &&
+      document.querySelector('#facts')?.children.length > 0,
+    { timeout: 30000 },
+  );
+  await sleep(400);
+  const formula = await page.evaluate(() => ({
+    readout: document.querySelector('#readout').textContent.trim(),
+    hash: decodeURIComponent(location.hash),
+    tex: document.querySelector('#readout .tex')?.textContent || '',
+    hz: [...document.querySelectorAll('.mode-hz')].slice(0, 4).map((n) => n.textContent.trim()),
+  }));
+  console.log('\n-- from an equation --');
+  console.log('readout:', formula.readout);
+  console.log('url    :', formula.hash);
+  console.log('lowest :', formula.hz.join('  '));
+  await shot(page, 'formula');
+
+  if (!/Lowest mode/.test(formula.readout)) problems.push('the equation did not solve');
+  // The share link must carry the recipe as readable text, not a sampled polygon.
+  // That is the whole reason a formula is stored as a formula.
+  if (formula.hash !== '#f=p:1 + 0.22cos(11t)') {
+    problems.push(`the equation was not in the URL as text (got ${formula.hash})`);
+  }
+  if (!formula.tex.includes('0.22cos(11t)')) {
+    problems.push('the readout did not name the equation it solved');
+  }
+
+  // A bad equation must fail into an explanation and leave the drum it had. The
+  // notice is the ink field, which is the right voice for a failure.
+  const priorReadout = await page.evaluate(() =>
+    document.querySelector('#readout').textContent.trim(),
+  );
+  await typeAndSolve('#in-r', 'cos(2t)'); // goes negative, so it would overlap itself
+  await sleep(300);
+  const rejected = await page.evaluate(() => ({
+    notice: document.querySelector('#notice').textContent.trim(),
+    noticeShown: !document.querySelector('#notice').hidden,
+    readout: document.querySelector('#readout').textContent.trim(),
+    solving: !document.querySelector('#solving').hidden,
+  }));
+  console.log('refused:', rejected.notice);
+  if (!rejected.noticeShown || !/negative/.test(rejected.notice)) {
+    problems.push('a negative radius was not refused with a reason');
+  }
+  if (rejected.readout !== priorReadout) {
+    problems.push('a refused equation disturbed the current drum');
+  }
+  if (rejected.solving) problems.push('a refused equation left the solving overlay up');
+
+  // An expression is untrusted input arriving from somebody else's link. It must
+  // never be executed, and the page must still come up with a drum on it.
+  await page.evaluate(() => {
+    window.__pwned = false;
+  });
+  await page.goto(
+    `${BASE}#f=p:${encodeURIComponent('globalThis.__pwned=true')}`,
+    { waitUntil: 'domcontentloaded' },
+  );
+  await page.waitForFunction(
+    () => document.querySelector('#solving').hidden && document.querySelector('#facts')?.children.length > 0,
+    { timeout: 30000 },
+  );
+  const hostile = await page.evaluate(() => ({
+    pwned: window.__pwned === true,
+    notice: document.querySelector('#notice').textContent.trim(),
+    noticeShown: !document.querySelector('#notice').hidden,
+    readout: document.querySelector('#readout').textContent.trim(),
+  }));
+  console.log('hostile link refused:', hostile.notice || '(nothing)');
+  if (hostile.pwned) problems.push('an expression from a URL was executed');
+  if (!hostile.noticeShown) problems.push('a hostile link failed silently');
+  if (!/Lowest mode/.test(hostile.readout)) {
+    problems.push('a hostile link left the page without a drum');
+  }
+
+  // A good link must arrive already loaded into the box, so it is editable rather
+  // than an outline of unexplained origin.
+  await page.goto(`${BASE}#f=q:${encodeURIComponent('cos(t)~sin(t)(1 + 0.35cos(t))')}`, {
+    waitUntil: 'domcontentloaded',
+  });
+  await page.waitForFunction(
+    () => document.querySelector('#solving').hidden && document.querySelector('#facts')?.children.length > 0,
+    { timeout: 30000 },
+  );
+  const shared = await page.evaluate(() => ({
+    open: !document.querySelector('#formula').hidden,
+    kind: document.querySelector('#btn-param').getAttribute('aria-pressed'),
+    x: document.querySelector('#in-x').value,
+    y: document.querySelector('#in-y').value,
+    readout: document.querySelector('#readout').textContent.trim(),
+  }));
+  console.log('shared link:', `x = ${shared.x}, y = ${shared.y}`);
+  if (!shared.open) problems.push('a shared equation did not open the panel');
+  if (shared.kind !== 'true') problems.push('a shared parametric link did not select parametric');
+  if (shared.x !== 'cos(t)' || shared.y !== 'sin(t)(1 + 0.35cos(t))') {
+    problems.push('a shared equation was not loaded into the inputs');
+  }
+  if (!/Lowest mode/.test(shared.readout)) problems.push('a shared equation did not solve');
+  await shot(page, 'formula-shared');
+
+  // Back to a preset, so the stress test below runs against the same drum it always
+  // did rather than against whatever the last link happened to contain.
+  await page.click('.form-chip[data-id="circle"]');
+  await page.waitForFunction(
+    () => document.querySelector('#solving').hidden && document.querySelector('#facts')?.children.length > 0,
+    { timeout: 30000 },
+  );
+  await sleep(300);
+
   // Rapid strikes must not stall the animation. This is a regression test: the
   // synthesiser used to render each strike with per-sample Math.sin/Math.exp on
   // the main thread, so a fast series of hits blocked requestAnimationFrame and
