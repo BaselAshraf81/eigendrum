@@ -125,8 +125,51 @@
                 </svg>
                 <span id="draw-label">draw your own</span>
               </button>
+              <button type="button" id="btn-formula" class="form-chip form-chip-draw" aria-pressed="false" aria-expanded="false" aria-controls="formula">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M4 4v16h16" stroke="currentColor" stroke-width="2" fill="none" />
+                  <path d="M4 17C9 17 8 6 14 6s5 8 6 8" stroke="currentColor" stroke-width="2" fill="none" />
+                </svg>
+                <span id="formula-label">from an equation</span>
+              </button>
             </div>
           </div>
+
+          <form class="formula" id="formula" hidden>
+            <h2>from an equation</h2>
+            <div class="formula-kinds" role="group" aria-label="Notation">
+              <button type="button" class="chip" id="btn-polar" aria-pressed="true">polar</button>
+              <button type="button" class="chip" id="btn-param" aria-pressed="false">parametric</button>
+            </div>
+
+            <div class="formula-fields" id="formula-polar">
+              <label class="formula-field">
+                <span class="formula-var">r(t) =</span>
+                <input type="text" id="in-r" value="1 + 0.3cos(5t)" autocomplete="off" spellcheck="false" autocapitalize="off" />
+              </label>
+            </div>
+
+            <div class="formula-fields" id="formula-param" hidden>
+              <label class="formula-field">
+                <span class="formula-var">x(t) =</span>
+                <input type="text" id="in-x" value="3cos(t) - cos(3t)" autocomplete="off" spellcheck="false" autocapitalize="off" />
+              </label>
+              <label class="formula-field">
+                <span class="formula-var">y(t) =</span>
+                <input type="text" id="in-y" value="3sin(t) - sin(3t)" autocomplete="off" spellcheck="false" autocapitalize="off" />
+              </label>
+            </div>
+
+            <p class="formula-hint" id="formula-hint">
+              t sweeps one full turn, in radians. Size does not matter: every drum is scaled to
+              the same area, so only the shape is audible.
+            </p>
+
+            <div class="formula-actions">
+              <button type="submit" class="chip chip-solid" id="btn-solve-formula">hear it</button>
+              <span class="formula-examples" id="formula-examples"></span>
+            </div>
+          </form>
         </div>
       </section>
 
@@ -256,6 +299,24 @@
           square were the ones your mallet could not reach. Pressing a row instead plays that single
           mode <em>alone</em> - something no mallet can do, and the only way to hear what one
           frequency of a shape actually sounds like.
+        </p>
+
+        <h3>drums from equations</h3>
+        <p>
+          Besides tracing an outline you can write one. <span class="tex">r(t)</span> gives the
+          radius as <span class="tex">t</span> sweeps one full turn, so
+          <span class="tex">1 + 0.3cos(5t)</span> is a five-lobed flower; a parametric
+          <span class="tex">x(t), y(t)</span> pair reaches the closed curves polar cannot, like a
+          nephroid or an egg. This is not a shortcut for drawing. It reaches shapes no hand traces
+          accurately - eleven even lobes, a superellipse partway between a circle and a square - and
+          it makes a shape something you <em>vary</em>: change one number and hear what moved.
+        </p>
+        <p>
+          A written shape travels as its own text. The link for a formula holds the formula, so it
+          is something you can read and retype rather than a few hundred characters of encoded
+          outline, and editing it in the address bar works. Anything too thin to mesh honestly is
+          refused rather than answered, because a sliver would still return numbers and they would
+          be wrong.
         </p>
 
         <h3>can one hear the shape of a drum?</h3>
