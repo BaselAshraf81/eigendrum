@@ -12,13 +12,16 @@ import { solveDrum } from '../src/fem/solve.js';
 import { besselJZero } from '../src/math/bessel.js';
 import { regularPolygon } from '../src/math/analytic.js';
 import {
+  audibleAmps,
   decayTimes,
   encodeWav,
   fieldAtTime,
   frequencies,
+  modeNorms,
   nodeWeights,
   renderStrike,
   strikeAmplitudes,
+  strikeHeadroom,
 } from '../src/audio/synth.js';
 import { freqToNote, harmonicity, ratios } from '../src/audio/notes.js';
 import { decodeShape, encodeShape } from '../src/app/share.js';
@@ -87,6 +90,103 @@ test('a wider mallet produces a duller strike', () => {
   assert.ok(
     brightness(soft) < brightness(hard),
     'a soft beater should drive the high modes relatively less',
+  );
+});
+
+test('what you hear rolls off with frequency instead of being flat', () => {
+  // The strike projection is pure geometry and has no rolloff at all: measured on
+  // a disk, mode 14 came out with a *larger* projection than the fundamental.
+  // Sixteen inharmonic partials at equal level is a gong. audibleAmps supplies
+  // the two factors that were missing - the mass normalisation of the modes and
+  // the 1/omega from impulsive force excitation - plus the mallet's contact time.
+  const { mesh, modes, eigenvalues } = solveDrum(regularPolygon(256, 1), {
+    modes: 14,
+    targetNodes: 2200,
+  });
+  const freqs = frequencies(eigenvalues, 130);
+  const w = nodeWeights(mesh);
+  const norms = modeNorms(mesh, modes, w);
+  const projected = strikeAmplitudes(mesh, modes, 0.22, 0, 0.06, w);
+  const heard = audibleAmps(projected, norms, freqs, 2.2);
+
+  const loudest = heard.reduce(
+    (best, v, k) => (Math.abs(v) > Math.abs(heard[best]) ? k : best),
+    0,
+  );
+  assert.equal(loudest, 0, 'the fundamental must be the loudest partial of a struck drum');
+
+  // And the top of the range has to be well below it, not level with it.
+  const top = Math.abs(heard[heard.length - 1]) / Math.abs(heard[0]);
+  assert.ok(top < 0.35, `highest mode should be at least 9 dB down, ratio was ${top}`);
+
+  // A nodal-line silence is still exactly silent: the correction is per-mode
+  // scaling and cannot invent excitation where there was none.
+  const centre = strikeAmplitudes(mesh, modes, 0, 0, 0.06, w);
+  const centreHeard = audibleAmps(centre, norms, freqs, 2.2);
+  for (const k of [1, 2]) {
+    assert.ok(
+      Math.abs(centreHeard[k]) < Math.abs(centreHeard[0]) * 0.05,
+      `mode ${k + 1} must stay silent from the centre, got ${centreHeard[k]}`,
+    );
+  }
+});
+
+test('a physically scaled strike never reaches the soft limiter', () => {
+  // The old default of gain = 3.2 drove the summed modes to a pre-limiter peak of
+  // about 11, so two thirds of the first 300 ms came out of tanh hard clipped -
+  // audible distortion manufactured by the renderer. The pre-existing clipping
+  // test could not see it, because it only measured the limiter's own output,
+  // which is inside [-1, 1] by construction. This measures the input.
+  const { mesh, modes, eigenvalues } = solveDrum(regularPolygon(256, 1), {
+    modes: 14,
+    targetNodes: 2200,
+  });
+  const freqs = frequencies(eigenvalues, 130);
+  const w = nodeWeights(mesh);
+  const norms = modeNorms(mesh, modes, w);
+  const taus = decayTimes(freqs, 1.7, 0.5);
+  const head = strikeHeadroom(mesh, modes, norms, freqs, w, 0.06, 2.2);
+  const gain = 0.72 / head;
+
+  // The hardest strike available on this drum is the reference, so nothing can
+  // exceed it. Sample the waveform densely through the attack.
+  const loudest = modes[0].reduce(
+    (best, v, i) => (Math.abs(v) > Math.abs(modes[0][best]) ? i : best),
+    0,
+  );
+  const amps = audibleAmps(
+    strikeAmplitudes(mesh, modes, mesh.nodes[loudest * 2], mesh.nodes[loudest * 2 + 1], 0.06, w),
+    norms,
+    freqs,
+    2.2,
+  );
+
+  const sr = 48000;
+  let peak = 0;
+  for (let n = 0; n < 0.3 * sr; n++) {
+    const t = n / sr;
+    let v = 0;
+    for (let k = 0; k < freqs.length; k++) {
+      v += amps[k] * gain * Math.sin(2 * Math.PI * freqs[k] * t) * Math.exp(-t / taus[k]);
+    }
+    peak = Math.max(peak, Math.abs(v));
+  }
+  assert.ok(peak <= 0.9, `pre-limiter peak was ${peak}; tanh would be distorting`);
+  assert.ok(peak > 0.1, `pre-limiter peak was only ${peak}; the strike would be inaudible`);
+});
+
+test('decay times follow Rayleigh damping, so loss grows with frequency squared', () => {
+  // C = alpha M + beta K gives 1/tau = alpha + beta omega^2. The old law used a
+  // tunable power of the frequency ratio which sat below 1 at the default, leaving
+  // the high inharmonic cluster ringing for half a second.
+  const freqs = Float64Array.from([100, 200, 400]);
+  const taus = decayTimes(freqs, 1.7, 0.5);
+  const rate = (i) => 1 / taus[i];
+  const excess = (i) => rate(i) - rate(0);
+  // Doubling the ratio must quadruple the frequency-dependent part of the loss.
+  assert.ok(
+    Math.abs(excess(2) / excess(1) - (16 - 1) / (4 - 1)) < 1e-9,
+    'the frequency-dependent loss term must be quadratic',
   );
 });
 

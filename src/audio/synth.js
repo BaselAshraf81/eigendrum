@@ -113,17 +113,121 @@ export function strikeAmplitudes(mesh, modes, px, py, radius, weights = null) {
 }
 
 /**
- * Decay time per mode. High modes lose energy faster, which is why a struck
- * drum's tone darkens as it rings out. `brightness` in [0, 1] trades a dull
- * thud against a long shimmer.
+ * Squared mass norm of each stored mode, integral(phi_k^2).
+ *
+ * `solveDrum` normalises every mode to a *peak* of 1 so the colour map has a
+ * predictable range. That is the wrong normalisation for a modal expansion: the
+ * coefficient of phi_k in u = sum c_k phi_k is only integral(phi_k g) when the
+ * modes are orthonormal in the mass inner product. Dividing the projection by
+ * this restores that, and it matters - the norm varies by a factor of ~2 across
+ * the first sixteen modes of a disk, so without it high modes come out several
+ * times too loud for no physical reason.
+ */
+export function modeNorms(mesh, modes, weights = null) {
+  const w = weights || nodeWeights(mesh);
+  const out = new Float64Array(modes.length);
+  for (let k = 0; k < modes.length; k++) {
+    const phi = modes[k];
+    let acc = 0;
+    for (let i = 0; i < phi.length; i++) acc += w[i] * phi[i] * phi[i];
+    out[k] = acc;
+  }
+  return out;
+}
+
+/**
+ * Turns a geometric strike projection into the modal amplitudes you actually
+ * hear. Three factors, none of which touches a frequency:
+ *
+ *  1. 1 / integral(phi_k^2) - the mass normalisation described above.
+ *  2. 1 / omega_k. A mallet delivers an impulse of *force*, which sets the
+ *     membrane's initial velocity rather than its displacement. Solving
+ *     u_k(0) = 0, u_k'(0) = a_k gives u_k(t) = (a_k / omega_k) sin(omega_k t),
+ *     so displacement carries a 6 dB/octave rolloff. Leaving it out is why the
+ *     old code produced sixteen inharmonic partials at *equal* level, which is
+ *     the recipe for a gong, not a drum.
+ *  3. The mallet's contact time. No beater is an impulse: a force pulse lasting
+ *     T cannot pump a mode whose period is much shorter than T. Modelled as a
+ *     one-pole rolloff with its corner at `contactRatio` times the fundamental,
+ *     which keeps it a pure ratio so the timbre does not drift when the pitch
+ *     slider moves.
+ *
+ * Factor 3 is a modelling choice about the mallet and is declared as such. The
+ * first two are not choices; they were missing.
+ *
+ * Zeros are preserved exactly, so "striking a nodal line cannot excite this
+ * mode" survives untouched.
+ */
+export function audibleAmps(amps, norms, freqs, contactRatio = 3) {
+  const out = new Float64Array(amps.length);
+  if (!amps.length || !(freqs[0] > 0)) return out;
+  const cut = Math.max(0.5, contactRatio);
+  for (let k = 0; k < amps.length; k++) {
+    const n2 = norms[k] > 1e-12 ? norms[k] : 1;
+    const ratio = freqs[k] / freqs[0];
+    const lowpass = 1 / (1 + (ratio / cut) * (ratio / cut));
+    out[k] = (amps[k] / n2 / Math.max(1e-9, ratio)) * lowpass;
+  }
+  return out;
+}
+
+/**
+ * A single loudness reference for one drum: the total drive of the hardest
+ * available strike, taken at the fundamental's own peak.
+ *
+ * The renderer scales by this instead of per-strike normalising, so a strike near
+ * the rim stays quieter than one in the middle - that difference is information
+ * the physics is trying to convey - while nothing ever reaches the limiter.
+ */
+export function strikeHeadroom(mesh, modes, norms, freqs, weights, radius, contactRatio = 3) {
+  const phi1 = modes[0];
+  let best = 0;
+  let node = 0;
+  for (let i = 0; i < phi1.length; i++) {
+    const a = Math.abs(phi1[i]);
+    if (a > best) {
+      best = a;
+      node = i;
+    }
+  }
+  const amps = strikeAmplitudes(
+    mesh,
+    modes,
+    mesh.nodes[node * 2],
+    mesh.nodes[node * 2 + 1],
+    radius,
+    weights,
+  );
+  const heard = audibleAmps(amps, norms, freqs, contactRatio);
+  let l1 = 0;
+  for (let k = 0; k < heard.length; k++) l1 += Math.abs(heard[k]);
+  return l1 > 1e-12 ? l1 : 1;
+}
+
+/**
+ * Decay time per mode, from Rayleigh damping: C = alpha M + beta K, the standard
+ * proportional-damping model for exactly this kind of finite element system. In
+ * modal coordinates that is
+ *
+ *     1 / tau_k = alpha + beta omega_k^2
+ *
+ * so loss grows with the *square* of frequency. That is the important part. The
+ * old law used a tunable power of the frequency ratio, whose exponent sat below 1
+ * at the default setting, leaving the high inharmonic cluster ringing for half a
+ * second. A real membrane loses those partials in tens of milliseconds, and that
+ * fast darkening is most of what makes a drum read as a pitched thud.
+ *
+ * `brightness` in [0, 1] moves weight from the stiffness term to the mass term.
  */
 export function decayTimes(freqs, baseSeconds = 1.7, brightness = 0.5) {
   const out = new Float64Array(freqs.length);
   if (!freqs.length) return out;
-  const exponent = 1.35 - brightness; // 0.35 (bright) .. 1.35 (dull)
+  const stiff = 0.96 - 0.9 * brightness; // 0.96 (dull) .. 0.06 (bright)
+  const mass = 1 - stiff;
+  const rate = 1 / Math.max(0.02, baseSeconds);
   for (let k = 0; k < freqs.length; k++) {
-    const ratio = freqs[k] / freqs[0];
-    out[k] = Math.max(0.02, baseSeconds / Math.pow(ratio, exponent));
+    const ratio = freqs[0] > 0 ? freqs[k] / freqs[0] : 1;
+    out[k] = Math.max(0.006, 1 / (rate * (mass + stiff * ratio * ratio)));
   }
   return out;
 }
@@ -134,6 +238,12 @@ export function decayTimes(freqs, baseSeconds = 1.7, brightness = 0.5) {
  * Sums the decaying sinusoids directly. A struck membrane starts flat and
  * moving, so each mode starts at zero displacement - hence sine rather than
  * cosine, and no click at onset.
+ *
+ * `gain` is the caller's job to set so the sum lands near full scale. The tanh
+ * below is a safety net and nothing more: it used to be doing real work, because
+ * a fixed gain of 3.2 drove sixteen modes to a pre-limiter peak of about 11, and
+ * two thirds of the first 300 ms of every strike came out of the limiter hard
+ * clipped. See `strikeHeadroom`.
  */
 export function renderStrike({
   freqs,
@@ -141,7 +251,7 @@ export function renderStrike({
   taus,
   sampleRate = 48000,
   duration = null,
-  gain = 3.2,
+  gain = 1,
 }) {
   const longest = taus.length ? Math.max(...taus) : 0.3;
   const seconds = Math.min(4.5, Math.max(0.25, duration ?? longest * 2.9));
