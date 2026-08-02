@@ -145,9 +145,28 @@ h3 {
 .masthead-actions {
   margin-left: auto;
   display: flex;
+  align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+/* The source, written out. A chip with an icon would be tidier and would tell a
+   viewer of a recording nothing; the point of this one is that it can be read off
+   the screen and typed in. Underlined with a hairline rather than coloured, because
+   there is no job left for a fourth hue. */
+.repo {
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--ink-soft);
+  text-decoration: none;
+  border-bottom: var(--hair) solid rgba(20, 18, 15, 0.4);
+  white-space: nowrap;
+}
+.repo:hover {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
 }
 
 /* ------------------------------------------------------------------- chips */
@@ -1061,6 +1080,11 @@ dialog form {
     gap: 0.7rem;
   }
   .masthead-titles p {
+    display: none;
+  }
+  /* The full repo path will not fit beside the controls on a phone, and the controls
+     win. It is still in the explainer. */
+  .repo {
     display: none;
   }
   /* Only the explainer loses its label. The sound button keeps its words, because
