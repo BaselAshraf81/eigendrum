@@ -114,10 +114,17 @@
           </div>
         </div>
         <div class="tray-group">
+          <h2 class="tray-label">one mode at a time</h2>
+          <div class="tray-row">
+            <button type="button" class="chip" id="fig-prev">lower</button>
+            <span class="fig-name" id="fig-name">mode 1</span>
+            <button type="button" class="chip" id="fig-next">higher</button>
+          </div>
+        </div>
+        <div class="tray-group">
           <h2 class="tray-label">view</h2>
           <div class="tray-row">
             <button type="button" class="chip" id="btn-sand" aria-pressed="false">sand</button>
-            <button type="button" class="chip" id="btn-wav" hidden>save sound</button>
           </div>
         </div>
       </div>
@@ -172,6 +179,17 @@
               </button>
             </li>
           </ul>
+          <div class="home-extra">
+            <h2 class="tray-label">how it is played</h2>
+            <ul class="home-controls">
+              <li><b>tap the drum</b> to strike it</li>
+              <li><b>hold, then let go</b> to hit harder</li>
+              <li><b>arrow keys</b> to aim, <b>hold enter</b> to strike</li>
+            </ul>
+            <button type="button" class="chip" id="btn-restart" hidden>
+              replay from the first drum
+            </button>
+          </div>
           <p class="home-foot">
             Sound is a reward, never a requirement: everything a level asks can be read from the plate
             and the strip.

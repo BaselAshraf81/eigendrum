@@ -268,10 +268,14 @@ export const CHAPTERS = [
     ],
   },
   {
+    // The id stays `by-ear` so saved progress keyed on it survives, but the name and
+    // the premise no longer claim a listening skill nobody has. The real method is a
+    // measured hunt: strike, read the marked bar, and let your own marks converge on
+    // the curve you cannot see.
     id: 'by-ear',
-    name: 'by ear',
+    name: 'without the diagram',
     premise:
-      'The diagram is gone. You still have the drum, the strip of what woke up, and your ears.',
+      'No picture this time. Strike anywhere and read the marked bar: it tells you how loud the mode you must silence came out. Every strike you make stays on the drum, and the smaller its mark, the nearer you were. Close in on the curve you cannot see.',
     levels: [
       { shape: 'star', kind: 'silence', mode: 3, mallet: MALLET, blind: true },
       { shape: 'star', kind: 'silence', mode: 1, mallet: MALLET, blind: true },

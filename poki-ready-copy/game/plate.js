@@ -29,6 +29,80 @@ export class Plate {
 
   setDrum(drum) {
     this.board.setDrum(drum);
+    this.grains = null;
+  }
+
+  /**
+   * A fixed cloud of sand grains, spread evenly by **area**.
+   *
+   * The first version put one grain at each mesh node, which made density a property
+   * of the mesh rather than of the physics: the mesher packs nodes towards the
+   * boundary, so sand piled up along the rim and read as rendering artefacts. Grains
+   * are now allocated per triangle in proportion to triangle area, and each one
+   * carries the barycentric weights it needs to read the field at its own position.
+   *
+   * Positions come from an index hash rather than Math.random, so the pile is
+   * identical every frame instead of boiling.
+   */
+  prepareGrains(count = 4200) {
+    const mesh = this.board.drum.mesh;
+    const { nodes, triangles, triangleCount } = mesh;
+
+    const areas = new Float64Array(triangleCount);
+    let total = 0;
+    for (let t = 0; t < triangleCount; t++) {
+      const a = triangles[t * 3];
+      const b = triangles[t * 3 + 1];
+      const c = triangles[t * 3 + 2];
+      const ax = nodes[a * 2];
+      const ay = nodes[a * 2 + 1];
+      const area = Math.abs(
+        (nodes[b * 2] - ax) * (nodes[c * 2 + 1] - ay) - (nodes[c * 2] - ax) * (nodes[b * 2 + 1] - ay),
+      ) / 2;
+      areas[t] = area;
+      total += area;
+    }
+
+    const grains = [];
+    let carry = 0;
+    let seed = 1;
+    const rand = () => {
+      // Deterministic and cheap: a fixed-increment hash, so the same drum always
+      // produces the same cloud.
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+
+    for (let t = 0; t < triangleCount && total > 0; t++) {
+      const want = (areas[t] / total) * count + carry;
+      const n = Math.floor(want);
+      carry = want - n;
+      const a = triangles[t * 3];
+      const b = triangles[t * 3 + 1];
+      const c = triangles[t * 3 + 2];
+      for (let g = 0; g < n; g++) {
+        // Uniform inside a triangle: reflect the unit square onto the simplex.
+        let u = rand();
+        let v = rand();
+        if (u + v > 1) {
+          u = 1 - u;
+          v = 1 - v;
+        }
+        const w0 = 1 - u - v;
+        grains.push({
+          x: w0 * nodes[a * 2] + u * nodes[b * 2] + v * nodes[c * 2],
+          y: w0 * nodes[a * 2 + 1] + u * nodes[b * 2 + 1] + v * nodes[c * 2 + 1],
+          a,
+          b,
+          c,
+          w0,
+          w1: u,
+          w2: v,
+          keep: rand(),
+        });
+      }
+    }
+    this.grains = grains;
   }
 
   /** `values` is one number per mesh node, already normalised to -1..1. */
@@ -42,7 +116,16 @@ export class Plate {
     this.hidden = hidden;
   }
 
-  draw({ crosshair = null, marks = null, strike = null, sand = false, charge = null, stroke = null } = {}) {
+  draw({
+    crosshair = null,
+    marks = null,
+    strike = null,
+    history = null,
+    sand = false,
+    settle = 1,
+    charge = null,
+    stroke = null,
+  } = {}) {
     const { board } = this;
     board.clear();
     if (!board.drum) {
@@ -64,8 +147,9 @@ export class Plate {
     }
     board.drawOutline(INK, 2);
 
-    if (sand && this.values) this.drawSand();
+    if (sand && this.values) this.drawSand(settle);
     if (this.hidden) this.drawWithheld();
+    if (history && history.length) this.drawHistory(history);
     if (marks) this.drawMarks(marks);
     if (strike) this.drawStrike(strike);
     if (charge) this.drawCharge(charge);
@@ -84,31 +168,34 @@ export class Plate {
    * Jitter is derived from the node index rather than from Math.random, so grains
    * hold their positions from frame to frame instead of boiling while the drum rings.
    */
-  drawSand() {
+  /**
+   * Sand, with density continuous in the amplitude rather than switched by a cutoff.
+   *
+   * A grain survives with probability `(1 - e)^sharpness`, where `e` is the local
+   * envelope. That is what makes it look like sand: the pile is densest exactly on the
+   * still curves and thins out smoothly away from them, instead of a hard-edged band
+   * of dots appearing and vanishing as values cross a threshold.
+   *
+   * `settle` runs 0 to 1 and raises the exponent, so grains visibly gather onto the
+   * nodal lines instead of appearing there fully formed. Real sand migrates, and the
+   * migration is the part worth watching.
+   */
+  drawSand(settle = 1) {
+    if (!this.grains) this.prepareGrains();
     const { ctx } = this.board;
-    const mesh = this.board.drum.mesh;
     const v = this.values;
-    const dpr = this.board.dpr || 1;
-    const grain = Math.max(1, 0.0022 * Math.min(this.canvas.width, this.canvas.height));
-    const spread = grain * 5;
+    const size = Math.max(1.2, 0.0026 * Math.min(this.canvas.width, this.canvas.height));
+    const sharpness = 1 + 7 * Math.min(1, Math.max(0, settle));
 
     ctx.save();
-    this.board.tracePolygon(mesh.polygon);
+    this.board.tracePolygon(this.board.drum.mesh.polygon);
     ctx.clip();
     ctx.fillStyle = INK;
-    for (let i = 0; i < mesh.nodeCount; i++) {
-      const a = Math.abs(v[i]);
-      if (a > 0.1) continue;
-      const grains = a < 0.03 ? 3 : a < 0.06 ? 2 : 1;
-      const p = this.board.toPixel(mesh.nodes[i * 2], mesh.nodes[i * 2 + 1]);
-      for (let g = 0; g < grains; g++) {
-        // Deterministic hash, so the pile is stable across frames.
-        const h = Math.sin((i + 1) * 12.9898 + g * 78.233) * 43758.5453;
-        const h2 = Math.sin((i + 1) * 39.3468 + g * 11.135) * 24634.6345;
-        const jx = ((h - Math.floor(h)) - 0.5) * spread;
-        const jy = ((h2 - Math.floor(h2)) - 0.5) * spread;
-        ctx.fillRect(p.x + jx, p.y + jy, grain * dpr, grain * dpr);
-      }
+    for (const g of this.grains) {
+      const e = Math.min(1, Math.abs(v[g.a] * g.w0 + v[g.b] * g.w1 + v[g.c] * g.w2));
+      if (g.keep > Math.pow(1 - e, sharpness)) continue;
+      const p = this.board.toPixel(g.x, g.y);
+      ctx.fillRect(p.x, p.y, size, size);
     }
     ctx.restore();
   }
@@ -188,6 +275,39 @@ export class Plate {
       ctx.beginPath();
       ctx.rect(q.x - size / 2, q.y - size / 2, size, size);
       ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /**
+   * Every strike you have already made on this drum, sized by how badly it missed.
+   *
+   * A small square means the mode you were told to silence came out quiet there, so
+   * the still curve runs somewhere near it. This exists because the chapter that hides
+   * the diagram was otherwise a memory test: the feedback was real but it evaporated
+   * after each hit, leaving the player searching a two-dimensional area from memory.
+   * Now their own measurements stay on the plate and the invisible curve emerges from
+   * them.
+   *
+   * Size carries the value, and a fill marks the ones that actually scored, so neither
+   * reading depends on colour alone.
+   */
+  drawHistory(history) {
+    const { ctx } = this.board;
+    const span = Math.min(this.canvas.width, this.canvas.height);
+    ctx.save();
+    ctx.lineWidth = Math.max(1, (this.board.dpr || 1) * 1.2);
+    for (const h of history) {
+      const side = span * (0.008 + 0.028 * Math.min(1, Math.max(0, h.miss)));
+      const p = this.board.toPixel(h.x, h.y);
+      ctx.beginPath();
+      ctx.rect(p.x - side / 2, p.y - side / 2, side, side);
+      if (h.scored) {
+        ctx.fillStyle = CHROME;
+        ctx.fill();
+      }
+      ctx.strokeStyle = INK;
       ctx.stroke();
     }
     ctx.restore();

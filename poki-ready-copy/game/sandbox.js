@@ -68,6 +68,9 @@ export class Sandbox {
     this.taus = null;
     this.t0 = 0;
     this.ringing = false;
+    this.figure = 0;
+    this.settle = 1;
+    this.settleT0 = 0;
 
     this.drawing = false;
     this.stroke = [];
@@ -198,11 +201,29 @@ export class Sandbox {
   showField() {
     if (!this.drum) return;
     if (this.sand) {
-      const amps = this.amps || unitAmps(this.drum.modes.length, 0);
+      const amps = this.amps || unitAmps(this.drum.modes.length, this.figure);
       this.plate.setField(envelopeField(this.drum.modes, amps), 1);
+      // Restart the settle, so grains gather onto the new figure rather than cutting
+      // to it. This is the whole reason the view is worth having.
+      this.settleT0 = performance.now();
+      this.settle = 0;
     } else if (!this.ringing) {
-      this.plate.setField(modeField(this.drum.modes, 0), 1);
+      this.plate.setField(modeField(this.drum.modes, this.figure), 1);
     }
+  }
+
+  /**
+   * Steps the figure being shown.
+   *
+   * A single mode is what a Chladni figure actually is; the envelope of a whole strike
+   * only vanishes at the rim, because different modes' still curves do not coincide.
+   * Reaching one mode therefore has to be obvious, not buried in the strip.
+   */
+  stepFigure(delta) {
+    if (!this.drum) return;
+    const count = this.drum.modes.length;
+    this.figure = (this.figure + delta + count) % count;
+    this.soundMode(this.figure);
   }
 
   // -------------------------------------------------------------------- loading
@@ -250,7 +271,7 @@ export class Sandbox {
     hud.enableStripPicking(this.els.strip, this.freqs, (k) => this.soundMode(k));
     hud.clearStrip(this.els.strip, []);
     this.describe();
-    this.els.drumNote.textContent = 'tap anywhere, or hold to hit harder';
+    this.els.drumNote.textContent = 'tap to strike, or hold and release to hit harder';
     this.render();
     return true;
   }
@@ -299,6 +320,11 @@ export class Sandbox {
     for (let k = 0; k < scaled.length; k++) peak = Math.max(peak, Math.abs(scaled[k]));
     hud.paintStrip(this.els.strip, scaled, [], peak, this.freqs);
     audio.playStrike(this.freqs, scaled, { taus: this.taus });
+    const pct = Math.round(force * 100);
+    this.els.drumNote.textContent =
+      force < 0.99
+        ? `struck at ${pct}% force - hold before releasing to hit harder`
+        : 'struck at full force';
   }
 
   /**
@@ -310,6 +336,8 @@ export class Sandbox {
    */
   soundMode(k) {
     if (!this.drum || k >= this.drum.modes.length) return;
+    this.figure = k;
+    if (this.els.figName) this.els.figName.textContent = `mode ${k + 1}`;
     const amps = unitAmps(this.drum.modes.length, k);
     this.amps = amps;
     this.taus = decayTimes(this.freqs, this.decay, 0.55);
@@ -365,11 +393,15 @@ export class Sandbox {
   // --------------------------------------------------------------------- render
 
   frame(now, reducedMotion) {
+    // Sand does not oscillate: a Chladni figure is a time-average over many cycles.
+    // What it does do is *settle*, so the only motion here is the grains gathering.
+    if (this.sand) {
+      if (!this.drum || this.settle >= 1) return;
+      this.settle = reducedMotion ? 1 : Math.min(1, (now - this.settleT0) / 700);
+      this.render();
+      return;
+    }
     if (!this.ringing || !this.amps) return;
-    // Sand is a time-average, so it does not animate: the figure is already the whole
-    // history of the vibration, and shaking it frame by frame would be a lie about
-    // what sand does.
-    if (this.sand) return;
     const elapsed = (now - this.t0) / 1000;
     const maxTau = Math.max(...this.taus);
     if (elapsed > maxTau * 3.2) {
@@ -400,6 +432,7 @@ export class Sandbox {
     this.plate.draw({
       strike: this.ringing ? this.strike : null,
       sand: this.sand,
+      settle: this.settle,
       charge,
       stroke: this.stroke.length > 1 ? this.stroke : null,
     });

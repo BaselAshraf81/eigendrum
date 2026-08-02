@@ -23,7 +23,15 @@ import {
   scoreStrike,
   solveSet,
 } from './levels.js';
-import { MALLETS, MALLETS_BY_ID, DEFAULT_MALLET, malletRadius, unlockedMallets, forceFor } from './mallets.js';
+import {
+  MALLETS,
+  MALLETS_BY_ID,
+  DEFAULT_MALLET,
+  malletRadius,
+  unlockedMallets,
+  forceFor,
+  CHARGE_MS,
+} from './mallets.js';
 import { Plate, modeField, bothQuietField } from './plate.js';
 import { Sandbox } from './sandbox.js';
 import { requestDrum, setProgressHandler } from './solve.js';
@@ -64,6 +72,10 @@ const els = {
   dialPitch: el('dial-pitch'),
   dialDecay: el('dial-decay'),
   btnSand: el('btn-sand'),
+  restart: el('btn-restart'),
+  figPrev: el('fig-prev'),
+  figNext: el('fig-next'),
+  figName: el('fig-name'),
   homeScreen: el('home'),
   wayPlay: el('way-play'),
   wayPlayMeta: el('way-play-meta'),
@@ -102,6 +114,9 @@ const state = {
   previousAmps: null,
   marks: null,
   winners: null,
+  // Every strike made on the current drum, so a player hunting a hidden nodal line
+  // can see their own measurements converge on it.
+  history: [],
   passed: false,
   busy: false,
   generation: 0,
@@ -186,11 +201,16 @@ function goHome() {
   const resume = firstUnfinished();
   els.chapterName.textContent = 'nodal';
   els.levelCount.textContent = '';
+  const atStart = resume && resume.chapter === 0 && resume.index === 0;
   els.wayPlayMeta.textContent = resume
-    ? resume.chapter === 0 && resume.index === 0
-      ? 'start at the beginning'
+    ? atStart
+      ? 'starts with three taps that cannot be failed'
       : `continue: ${CHAPTERS[resume.chapter].name}, ${resume.index + 1} of ${CHAPTERS[resume.chapter].levels.length}`
     : 'every drum cleared';
+  // Saved progress used to make the opening unreachable: "play" resumes wherever you
+  // left off, so anyone returning skipped the three teaching beats permanently and had
+  // no way back to them. Offered here whenever the player is past them.
+  els.restart.hidden = Boolean(atStart);
 }
 
 async function enterSandbox(kind) {
@@ -247,6 +267,7 @@ async function loadLevel() {
   state.winners = null;
   state.ringing = false;
   state.charge = null;
+  state.history = [];
   state.busy = true;
   const gen = ++state.generation;
 
@@ -263,7 +284,7 @@ async function loadLevel() {
   els.verdict.hidden = true;
   els.next.hidden = true;
   els.hint.disabled = true;
-  els.drumNote.textContent = 'tap anywhere, or hold to hit harder';
+  els.drumNote.textContent = 'tap to strike, or hold and release to hit harder';
   hud.buildProgress(els.progress, chapter.levels.length, (i) => starsFor(state.chapter, i));
   hud.markCurrent(els.progress, state.index);
   hud.clearStrip(els.strip, modes);
@@ -324,7 +345,12 @@ async function loadLevel() {
     els.targetNote.textContent = objective.note;
   } else {
     target.setField(null, 1);
-    els.targetNote.textContent = 'withheld - use the strip and your ears';
+    // Honest about the method. An earlier version said "use the strip and your ears",
+    // and the ears half was simply false: nobody can hear whether one particular mode
+    // out of twelve is silent inside a chord. The strip half is true and is the whole
+    // technique, so it says that and nothing more.
+    els.targetNote.textContent = 'withheld - hunt it with the marked bar';
+    els.drumNote.textContent = 'strike, read the marked bar, move, strike again';
   }
 
   layout();
@@ -443,7 +469,14 @@ function strikeAt(x, y, force = 1) {
   els.verdict.hidden = false;
   els.verdict.className = result.stars > 0 ? 'verdict is-good' : 'verdict is-bad';
   els.verdict.replaceChildren(hud.starMarks(result.stars), document.createTextNode(` ${result.say}`));
-  els.drumNote.textContent = result.stars > 0 ? 'or strike again to do better' : 'strike again';
+  // Report the force every time, and say what to do about it. The charge ring on the
+  // plate is invisible as an affordance: nothing tells you holding is even an option
+  // until a number appears and changes when you hold longer.
+  const pct = Math.round(force * 100);
+  els.drumNote.textContent =
+    force < 0.99
+      ? `struck at ${pct}% force - hold before releasing to hit harder`
+      : 'struck at full force';
 
   if (result.stars > 0) {
     recordStars(state.chapter, state.index, result.stars);
@@ -459,6 +492,18 @@ function strikeAt(x, y, force = 1) {
     }
   }
   state.previousAmps = unit;
+
+  // Keep the measurement on the plate. `miss` is normalised so that 0 is a perfect
+  // answer for whichever objective this is, which lets one visual encoding serve all
+  // of them: the smaller the mark, the better that spot was.
+  if (state.level.kind !== 'tutorial') {
+    const miss =
+      state.level.kind === 'silence' || state.level.kind === 'double'
+        ? Math.min(1, result.value / 0.12)
+        : Math.max(0, 1 - result.value);
+    state.history.push({ x, y, miss, scored: result.stars > 0 });
+    if (state.history.length > 24) state.history.shift();
+  }
 }
 
 function showHint() {
@@ -674,6 +719,7 @@ function render() {
     crosshair: state.usingKeyboard && !state.ringing ? state.aim : null,
     marks: state.marks && state.phase === 'level' ? state.marks : null,
     strike: state.strike,
+    history: state.phase === 'level' ? state.history : null,
     charge: state.charge,
   });
 }
@@ -693,6 +739,14 @@ function layout() {
  * the peak instead, which keeps the information and drops the movement.
  */
 function frame(now) {
+  // Charging is reported in words in every mode. The ring closing on the aim point is
+  // invisible as an affordance on its own: a number that moves while you hold is what
+  // tells a player that holding does anything at all.
+  if (state.charge) {
+    state.charge.t = Math.min(1, (now - state.charge.start) / CHARGE_MS);
+    els.drumNote.textContent = `${Math.round(forceFor(now - state.charge.start) * 100)}% force - release to strike`;
+  }
+
   if (state.mode === 'draw' || state.mode === 'free') {
     sandbox.frame(now, reducedMotion);
     if (state.charge) sandbox.render(state.charge);
@@ -701,7 +755,6 @@ function frame(now) {
   }
 
   if (state.charge) {
-    state.charge.t = Math.min(1, (now - state.charge.start) / 620);
     render();
   } else if (state.ringing && state.amps) {
     const elapsed = (now - state.t0) / 1000;
@@ -827,9 +880,17 @@ els.wayPlay.addEventListener('click', () => {
     loadCapstone();
   }
 });
+els.restart.addEventListener('click', () => {
+  // Replays from the opening without discarding anything already earned.
+  state.chapter = 0;
+  state.index = 0;
+  loadLevel();
+});
 els.wayDraw.addEventListener('click', () => enterSandbox('draw'));
 els.wayFree.addEventListener('click', () => enterSandbox('free'));
 els.btnSand.addEventListener('click', () => sandbox.toggleSand());
+els.figPrev.addEventListener('click', () => sandbox.stepFigure(-1));
+els.figNext.addEventListener('click', () => sandbox.stepFigure(1));
 els.dialPitch.addEventListener('input', () => sandbox.setPitch(Number(els.dialPitch.value)));
 els.dialDecay.addEventListener('input', () => sandbox.setDecay(Number(els.dialDecay.value)));
 
