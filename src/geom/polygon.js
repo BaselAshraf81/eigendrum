@@ -276,3 +276,44 @@ export function simplifyClosed(points, epsilon) {
   // Both chains include their shared endpoints, so drop the duplicates.
   return first.concat(second.slice(1, -1));
 }
+
+/**
+ * The single gate every candidate outline passes through before the mesher sees
+ * it: simplify, bound the vertex count, then check it is actually a drum.
+ *
+ * Two very different producers feed this - a freehand pointer trace and a sampled
+ * formula curve - and they used to be one validator and one plan for a second.
+ * They share it instead, because the checks are properties of the *outline* and
+ * not of how it was made: too few vertices, not enough area to be a membrane, and
+ * self-crossing, which is the fatal one since a crossing outline has no
+ * well-defined interior and there is nothing to solve on.
+ *
+ * Returns `{ ok: true, polygon }` (counter-clockwise) or `{ ok: false, reason }`
+ * with `reason` one of 'short' | 'degenerate' | 'area' | 'crossing'. The reason is
+ * a code rather than a sentence so each caller can word it for its own surface: a
+ * stroke that crosses itself and a formula that crosses itself need different
+ * advice.
+ */
+export function cleanClosedOutline(
+  points,
+  { tolerance = 0.006, minArea = 0.004, maxVertices = 220, minPoints = 8 } = {},
+) {
+  if (!points || points.length < minPoints) return { ok: false, reason: 'short' };
+
+  let poly = dedupe(points, 1e-6);
+  poly = dedupe(simplifyClosed(poly, tolerance), tolerance * 0.5);
+  if (poly.length < 3) return { ok: false, reason: 'degenerate' };
+
+  // Coarsen progressively rather than refuse. A 720-sample analytic curve and a
+  // dense pointer trace both arrive well over the budget, and throwing away
+  // detail the mesh could not resolve anyway costs nothing.
+  let tol = tolerance;
+  while (poly.length > maxVertices && tol < 0.2) {
+    tol *= 1.6;
+    poly = dedupe(simplifyClosed(poly, tol), tol * 0.5);
+  }
+
+  if (area(poly) < minArea) return { ok: false, reason: 'area' };
+  if (!isSimple(poly)) return { ok: false, reason: 'crossing' };
+  return { ok: true, polygon: ensureCCW(poly) };
+}

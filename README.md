@@ -43,19 +43,64 @@ npm test          # 35 tests, including the accuracy proofs below
   afterwards.
 - **Draw your own outline**, or pick from eleven built-in forms, including both halves
   of the isospectral pair.
+- **Or write the outline as an equation.** `r(t)` in polar, or a parametric `x(t), y(t)`
+  pair, with `t` sweeping one full turn. This reaches shapes a hand cannot trace
+  accurately - eleven even lobes, a superellipse partway between a circle and a square
+  - and it makes a shape something you can *vary*: change one number and hear what
+  moved. Expressions are parsed, never evaluated as JavaScript, because a formula
+  arriving from somebody else's link is untrusted input.
 - **Retune what the shape does not decide.** Absolute pitch and ring-out are yours.
   Mallet width changes how sharply the strike is localised, and so which modes it can
   reach. The overtone *ratios* are never adjustable, because those belong to the
   outline.
 - **See the mesh** the solver actually used, flexing with the membrane.
-- **Take it with you.** Copy a link that encodes the shape in the URL fragment, save
-  the strike as a `.wav`, or the plate as a `.png`.
+- **Take it with you.** Copy a link that carries the shape in the URL fragment, save
+  the strike as a `.wav`, or the plate as a `.png`. A formula travels as the formula
+  (`#f=p:1 + 0.3cos(5t)`), so the link is readable, editable in the address bar, and
+  survives any later change to how curves are sampled.
 - **Keyboard throughout.** Tab to the plate and press Enter or Space to strike it at
   the marked point. Every form, mode and control is reachable and labelled, contrast
   meets WCAG AA, and `prefers-reduced-motion` holds the peak displacement instead of
   animating.
 
 Nothing is uploaded, stored or tracked. There is no backend to upload it to.
+
+## Writing a shape as an equation
+
+`t` runs from 0 to `tau` in radians, one full turn. Size is irrelevant, since every
+outline is scaled to unit area before solving - what you hear is the shape and not
+the size - so `r = 0.001` and `r = 5000` are the same drum.
+
+| notation | meaning | example |
+| --- | --- | --- |
+| polar | `r(t)`, the radius at angle `t` | `1 + 0.3cos(5t)` |
+| parametric | `x(t)`, `y(t)` | `3cos(t) - cos(3t)`, `3sin(t) - sin(3t)` |
+
+Operators are `+ - * / % ^` with the usual precedence, `^` right associative.
+Brackets group, `|x|` is absolute value, and implicit multiplication is accepted, so
+`2t`, `3cos(t)` and `2(1 + t)` all mean what they look like.
+
+Available: `pi tau e phi`, and `sin cos tan asin acos atan atan2 sinh cosh tanh exp
+log ln log2 log10 sqrt cbrt abs sign floor ceil round hypot pow mod min max clamp`,
+plus `square` and `tri` - a square wave and a triangle wave of period `tau`, which is
+how you get teeth and facets without a piecewise notation.
+
+Three kinds of formula are refused rather than answered, and each says which it is:
+
+- one that has no value somewhere on the sweep,
+- one whose curve crosses itself, since a crossing outline has no interior to solve
+  on (a negative `r` is the usual cause, and it is named as such),
+- one too thin to mesh honestly. A hair-thin sliver has no interior nodes across its
+  narrow direction, so it would come back with numbers, and they would be wrong.
+
+An implicit form `F(x, y) = 0` is deliberately absent. It needs contour tracing and a
+rule for which contour you meant, which is a different job from parsing an expression.
+
+Expressions are compiled by a recursive-descent parser in `src/math/expr.js`, never
+by `eval` or `new Function`. That is not stylistic: shapes travel in the URL
+fragment, so an expression is untrusted input arriving from a link somebody else
+wrote, and handing that to a JavaScript evaluator would make every shared drum a
+script-injection vector.
 
 ## Can one hear the shape of a drum?
 
@@ -200,8 +245,8 @@ can reach, never at what frequency a mode sits.
 index.html    the whole page: shell markup and the About dialog, no logic
 styles/       all styling, plus the typeface as a base64 data URI
 src/math/     linalg, sparse CSR, banded Cholesky + RCM, eigensolver, Bessel,
-              closed-form spectra
-src/geom/     polygon utilities, the mesher
+              closed-form spectra, the expression parser
+src/geom/     polygon utilities, the mesher, equations to outlines
 src/fem/      P1 assembly, and the pipeline that ties it together
 src/audio/    modal synthesis, WAV encoding, note naming
 src/app/      DOM, canvas rendering, input, presets, sharing
