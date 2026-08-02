@@ -12,10 +12,81 @@
  * that would earn three stars, so a level that cannot be beaten cannot ship.
  */
 
+import { malletRadius, DEFAULT_MALLET } from './mallets.js';
+
 /** A strike so soft it wakes nothing is not a way to silence a mode. */
 const MIN_LOUDNESS = 0.3;
 
+/**
+ * The three opening beats. Deliberately unfailable, and worded without the word
+ * "mode", which is introduced only after the player has seen three of them behave
+ * differently.
+ *
+ * `elsewhere` is the one that does the teaching: it will not pass until the mixture
+ * genuinely differs from the previous strike, so the player cannot help noticing
+ * that position is the variable.
+ */
+const TUTORIAL = {
+  tap: {
+    brief: 'Tap the drum anywhere.',
+    pass: 'That is the drum ringing. The bars on the right are every way this shape can vibrate, and how much of each one you just woke.',
+    retry: 'Tap somewhere on the drum itself.',
+    score: ({ peak }) => ({ value: peak, stars: peak > 0 ? 3 : 0 }),
+  },
+  elsewhere: {
+    brief: 'Now tap somewhere well away from your first hit.',
+    pass: 'Different spot, different mixture, same drum. Where you hit decides what you hear.',
+    retry: 'Too close to the last hit, so the mixture barely changed. Try much further away.',
+    score: ({ amps, peak, previous }) => {
+      if (!(peak > 0)) return { value: 0, stars: 0 };
+      if (!previous) return { value: 1, stars: 3 };
+      // How far the normalised mixture moved. Distance, not just loudness, so a
+      // harder hit in the same place will not pass.
+      let mine = 0;
+      let theirs = 0;
+      for (let k = 0; k < amps.length; k++) {
+        mine = Math.max(mine, Math.abs(amps[k]));
+        theirs = Math.max(theirs, Math.abs(previous[k] || 0));
+      }
+      let diff = 0;
+      for (let k = 0; k < amps.length; k++) {
+        diff += Math.abs(Math.abs(amps[k]) / (mine || 1) - Math.abs(previous[k] || 0) / (theirs || 1));
+      }
+      const spread = diff / amps.length;
+      return { value: spread, stars: spread > 0.08 ? 3 : 0 };
+    },
+  },
+  quiet: {
+    brief: 'Same again, but softly: press and let go straight away.',
+    pass: 'Quieter, and otherwise identical. Hitting harder scales every mode by the same amount, so force is loudness and nothing else. Position is the part that changes the sound.',
+    retry: 'Still too hard. Tap and release immediately, without holding.',
+    score: ({ peak, force }) => ({ value: force, stars: peak > 0 && force < 0.55 ? 3 : 0 }),
+  },
+};
+
 export const OBJECTIVES = {
+  /**
+   * The opening beats, which ask for nothing and teach by consequence.
+   *
+   * A player's first contact used to be "strike so mode 1 rings as loudly as it can",
+   * which is jargon before a single cause has been shown. These three cannot be
+   * failed. They are marked `trivial` because they are not spatial puzzles, so the
+   * solvability proof has nothing to check: any real strike satisfies them.
+   */
+  tutorial: {
+    trivial: true,
+    verb: 'just try it',
+    brief: (l) => TUTORIAL[l.step].brief,
+    field: (l) => ({ kind: 'signed', mode: 0 }),
+    note: 'this is the deepest way this shape can move',
+    score(l, { amps, peak, previous, force }) {
+      return TUTORIAL[l.step].score({ amps, peak, previous, force });
+    },
+    say(l, r) {
+      return r.stars > 0 ? TUTORIAL[l.step].pass : TUTORIAL[l.step].retry;
+    },
+  },
+
   /** Drive one mode as hard as the shape allows. */
   wake: {
     verb: 'make it loud',
@@ -126,17 +197,34 @@ export const OBJECTIVES = {
  * varying it changes which levels are winnable, and a single value keeps the
  * guarantee auditable against one survey.
  */
-const MALLET = 0.05;
+/**
+ * The radius every level's solvability is proven at: the fingertip, the tool a player
+ * starts with. At runtime the player's own choice is used instead, and if their tool
+ * cannot reach the objective the game says so plainly rather than letting them fail
+ * without knowing why. A wide beater genuinely cannot excite a fine mode, and finding
+ * that out is the point of having tools at all.
+ */
+const MALLET = malletRadius(DEFAULT_MALLET);
 
 export const CHAPTERS = [
   {
     id: 'hot-spots',
     name: 'hot spots',
-    premise: 'Every mode has places where it moves most. Find them.',
+    premise: 'Every way a drum can vibrate has places where it moves most. Find them.',
     levels: [
-      { shape: 'circle', kind: 'wake', mode: 0, mallet: MALLET },
-      { shape: 'circle', kind: 'wake', mode: 1, mallet: MALLET },
-      { shape: 'square', kind: 'wake', mode: 0, mallet: MALLET },
+      { shape: 'circle', kind: 'tutorial', step: 'tap', mode: 0, mallet: MALLET, title: 'the whole drum' },
+      { shape: 'circle', kind: 'tutorial', step: 'elsewhere', mode: 0, mallet: MALLET, title: 'somewhere else' },
+      { shape: 'circle', kind: 'tutorial', step: 'quiet', mode: 0, mallet: MALLET, title: 'gently' },
+      // The word "mode" is used for the first time here, after three of them have
+      // been seen behaving differently.
+      {
+        shape: 'circle',
+        kind: 'wake',
+        mode: 0,
+        mallet: MALLET,
+        brief:
+          'Those bars are called modes. Wake the first one as hard as this drum will let you.',
+      },
       { shape: 'square', kind: 'wake', mode: 3, mallet: MALLET },
       { shape: 'circle', kind: 'wake', mode: 4, mallet: MALLET },
     ],
@@ -200,16 +288,27 @@ export function levelModes(level) {
 }
 
 export function levelTitle(level) {
+  if (level.title) return level.title;
   const ms = levelModes(level);
   return ms.length > 1 ? `modes ${ms[0] + 1} and ${ms[1] + 1}` : `mode ${ms[0] + 1}`;
 }
 
-/** Scores one strike. `amps` is the real projection at the point the player hit. */
-export function scoreStrike(level, amps, stats) {
+export function levelBrief(level) {
+  return level.brief || OBJECTIVES[level.kind].brief(level);
+}
+
+/**
+ * Scores one strike.
+ *
+ * `amps` is the unit-force projection at the point the player hit, so force never
+ * enters a score: what is measured is *where* you struck. `context` carries force and
+ * the previous strike's amplitudes, which only the tutorial reads.
+ */
+export function scoreStrike(level, amps, stats, context = {}) {
   let peak = 0;
   for (let k = 0; k < amps.length; k++) peak = Math.max(peak, Math.abs(amps[k]));
   const objective = OBJECTIVES[level.kind];
-  const result = objective.score(level, { amps, peak, ...stats });
+  const result = objective.score(level, { amps, peak, force: 1, previous: null, ...stats, ...context });
   return { ...result, peak, say: objective.say(level, result) };
 }
 
@@ -221,6 +320,15 @@ export function scoreStrike(level, amps, stats) {
  */
 export function solveSet(level, stats, { limit = Infinity } = {}) {
   const { table, peaks, modeCount, nodeCount } = stats;
+  // A tutorial beat is not a spatial puzzle: any real strike satisfies it, so there
+  // is nothing here to prove and every interior point is a winner.
+  if (OBJECTIVES[level.kind].trivial) {
+    const all = [];
+    for (let i = 0; i < nodeCount && all.length < Math.min(limit, 64); i++) {
+      if (peaks[i] > 0) all.push(i);
+    }
+    return all;
+  }
   const winners = [];
   const amps = new Float64Array(modeCount);
   for (let i = 0; i < nodeCount && winners.length < limit; i++) {

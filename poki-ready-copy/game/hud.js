@@ -8,6 +8,8 @@
  * audience.
  */
 
+import { freqToNote } from '../engine/audio/notes.js';
+
 const MODE_COUNT = 12;
 
 export function buildStrip(container) {
@@ -42,13 +44,18 @@ export function buildStrip(container) {
  * this world too. `quiet` is a measured fact, so it gets a full-ink stub rather
  * than dimmed text: a zero is a result and should not look like missing data.
  */
-export function paintStrip(container, amps, targets = [], peak = 0) {
+export function paintStrip(container, amps, targets = [], peak = 0, freqs = null) {
   const cells = container.children;
   const top = peak || Math.max(...Array.from(amps, Math.abs), 1e-12);
   const wanted = new Set(targets);
 
   for (let k = 0; k < cells.length; k++) {
     const cell = cells[k];
+    // Where the frequencies are known, each cell says what note it is. A number in
+    // hertz is a fact about the sound; a note name is that fact made legible.
+    if (freqs && k < freqs.length) {
+      cell.title = `mode ${k + 1}: ${freqs[k].toFixed(1)} Hz, ${freqToNote(freqs[k]).label}`;
+    }
     const a = k < amps.length ? Math.abs(amps[k]) / top : 0;
     // The same threshold the silence objectives score three stars at, so a cell
     // labelled "silent" means what the game means by silent. At 0.04 a mode could be
@@ -106,4 +113,26 @@ export function starMarks(stars) {
   label.textContent = `${stars} of 3`;
   wrap.append(label);
   return wrap;
+}
+
+/**
+ * Makes every cell in the strip pressable, so a single mode can be sounded and seen
+ * on its own. Used by the sandbox modes only; in play mode the strip is a readout.
+ *
+ * The button is a real element laid over its cell rather than the cell itself being
+ * one, so the existing selectors, the fill and the figures are all untouched.
+ */
+export function enableStripPicking(container, freqs, onPick) {
+  [...container.children].forEach((cell, k) => {
+    let hit = cell.querySelector('.cell-hit');
+    if (!hit) {
+      hit = document.createElement('button');
+      hit.type = 'button';
+      hit.className = 'cell-hit';
+      cell.append(hit);
+    }
+    const label = freqs && k < freqs.length ? `${freqs[k].toFixed(1)} Hz, ${freqToNote(freqs[k]).label}` : '';
+    hit.setAttribute('aria-label', `Hear mode ${k + 1} on its own${label ? `: ${label}` : ''}`);
+    hit.onclick = () => onPick(k);
+  });
 }

@@ -102,9 +102,19 @@ body {
   position: relative;
   height: 100dvh;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  /* masthead, plates, tray, foot. The tray is display:none outside the sandbox
+     modes, so its track collapses on its own. */
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
   background: var(--plaster);
   overflow: hidden;
+}
+
+/* Draw and free show one drum, not a matched pair, so the second track goes away
+   rather than leaving an empty half. */
+.game[data-mode='draw'] .plates,
+.game[data-mode='free'] .plates {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
 }
 
 /* ---------------------------------------------------------------- the masthead */
@@ -607,6 +617,13 @@ body {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr 1fr;
   }
+  .game[data-mode='draw'] .plates,
+  .game[data-mode='free'] .plates {
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .tray {
+    gap: 0.5rem 0.9rem;
+  }
   .foot {
     grid-template-columns: 1fr;
   }
@@ -662,4 +679,251 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* ---------------------------------------------------------------- the workbench */
+
+/* Shown in draw and free mode, and in play only once a second mallet is earned.
+   A band of labelled groups on plaster, divided from the foot by the usual rule. */
+.tray {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.4rem 1.1rem;
+  padding: 0.5rem 0.9rem 0.6rem;
+  border-top: var(--rule) solid var(--ink);
+  min-width: 0;
+}
+
+.tray-group {
+  min-width: 0;
+}
+
+.tray-label {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--ink-soft);
+}
+
+.tray-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.tray .chip {
+  padding: 0.26rem 0.6rem;
+  font-size: 0.74rem;
+}
+.tray .chip[aria-pressed='true'] {
+  background: var(--chrome);
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+/* The two dials that are honest to expose: pitch is size and tension, ring is
+   material and air. Neither can touch a frequency ratio, which is the shape's. */
+.dial {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+.dial input[type='range'] {
+  appearance: none;
+  width: 6.5rem;
+  height: var(--rule);
+  background: rgba(20, 18, 15, 0.9);
+  border: 0;
+  padding: 0;
+}
+.dial input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: 0.55rem;
+  height: 1.1rem;
+  border-radius: 0;
+  background: #fff;
+  border: var(--hair) solid var(--ink);
+}
+.dial input[type='range']::-moz-range-thumb {
+  width: 0.55rem;
+  height: 1.1rem;
+  border-radius: 0;
+  background: #fff;
+  border: var(--hair) solid var(--ink);
+}
+
+/* -------------------------------------------------------------------- the menu */
+
+/* Three ways in. Not a splash: it is the first playable surface, and it says what
+   the game is before asking for anything. */
+.home {
+  position: absolute;
+  inset: 0;
+  z-index: 16;
+  background: var(--plaster);
+  overflow-y: auto;
+  display: grid;
+  place-items: center;
+  padding: 1.2rem;
+}
+
+.home-body {
+  width: 100%;
+  max-width: 46rem;
+}
+
+.home-title {
+  margin: 0;
+  font-size: clamp(2.4rem, 9vw, 4.6rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 0.9;
+}
+
+.home-strap {
+  margin: 0.5rem 0 1.1rem;
+  font-size: 1.02rem;
+  line-height: 1.4;
+  max-width: 42ch;
+  border-top: var(--rule) solid var(--ink);
+  padding-top: 0.6rem;
+}
+
+.home-ways {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--rule);
+  background: var(--ink);
+  border: var(--rule) solid var(--ink);
+}
+
+.way {
+  appearance: none;
+  border: 0;
+  width: 100%;
+  text-align: left;
+  background: var(--plaster);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 2.6rem minmax(0, 8rem) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0.2rem 0.8rem;
+  padding: 0.7rem 0.9rem 0.8rem;
+}
+.way:hover,
+.way:focus-visible {
+  background: var(--chrome);
+}
+
+.way-n {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.way:hover .way-n,
+.way:focus-visible .way-n {
+  color: var(--ink);
+}
+.way-name {
+  font-size: 1.45rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.way-copy {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  max-width: 46ch;
+}
+.way-meta {
+  grid-column: 2 / -1;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+}
+.way:hover .way-meta,
+.way:focus-visible .way-meta {
+  color: var(--ink);
+}
+
+.home-foot {
+  margin: 1rem 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  max-width: 56ch;
+}
+
+@media (max-width: 34rem) {
+  .way {
+    grid-template-columns: 2.2rem minmax(0, 1fr);
+  }
+  .way-copy,
+  .way-meta {
+    grid-column: 2 / -1;
+  }
+}
+
+/* On a short landscape stage the menu has to stay reachable, so it scrolls and the
+   type steps down rather than the buttons shrinking below a tappable size. */
+@media (max-height: 460px) {
+  .home {
+    place-items: start center;
+    padding: 0.8rem;
+  }
+  .home-title {
+    font-size: 2rem;
+  }
+  .home-strap {
+    font-size: 0.85rem;
+    margin-bottom: 0.7rem;
+  }
+  .way {
+    padding: 0.5rem 0.8rem 0.55rem;
+  }
+  .way-name {
+    font-size: 1.02rem;
+  }
+  .home-foot {
+    display: none;
+  }
+  .tray {
+    padding: 0.35rem 0.7rem 0.45rem;
+    gap: 0.3rem 0.8rem;
+  }
+  .tray-label {
+    display: none;
+  }
+}
+
+/* A pressable overlay on each strip cell, so a mode can be heard and seen alone in
+   the sandbox modes. Transparent: the cell already shows everything, and this only
+   needs to be a target and a focus ring. */
+.cell-hit {
+  position: absolute;
+  inset: 0;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+.cell-hit:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+.cell-hit:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
 }

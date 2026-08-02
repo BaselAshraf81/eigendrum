@@ -88,6 +88,20 @@ const browser = await puppeteer.launch({
  * iframe over the game, and without this the suite measured the ad's geometry and
  * screenshotted a Drive Mad promo instead of the drum.
  */
+/** The menu is the first playable surface, so every path in starts by choosing one. */
+const enter = async (page, way) => {
+  await page.waitForFunction(() => !document.querySelector('#home').hidden, { timeout: 30000, polling: 60 });
+  await page.$eval(`#way-${way}`, (n) => n.click());
+};
+
+const solved = (page, timeout = 45000) =>
+  page.waitForFunction(
+    () =>
+      document.querySelector('#solving').hidden === true &&
+      /Lowest mode/.test(document.querySelector('#brief').textContent),
+    { timeout, polling: 80 },
+  );
+
 const ready = (page, timeout = 45000) =>
   page.waitForFunction(
     () => {
@@ -147,6 +161,7 @@ const ours = (errors) =>
 for (const view of VIEWS) {
   const { page, errors } = await open(view);
   try {
+    await enter(page, 'play');
     await ready(page);
   } catch {
     const why = await page.evaluate(() => ({
@@ -200,29 +215,87 @@ for (const view of VIEWS) {
 
 {
   const { page, errors } = await open(VIEWS[2]);
+  await enter(page, 'play');
   await ready(page);
   await sleep(120);
 
-  // Keyboard, so no ad overlay can intercept the input. Poki asks for alternative
-  // control schemes anyway, so this is a requirement being tested, not a workaround.
+  // Keyboard throughout, so no ad overlay can intercept the input. Poki asks for
+  // alternative control schemes anyway, so this is a requirement being tested rather
+  // than a workaround. Enter charges on keydown and strikes on keyup, and `press`
+  // releases immediately, which is the softest available hit.
   await page.focus('#drum');
-  await page.keyboard.press('Enter');
-  await sleep(260);
 
-  const after = await page.evaluate(() => ({
-    verdict: document.querySelector('#verdict').textContent.trim(),
-    shown: !document.querySelector('#verdict').hidden,
-    stars: document.querySelectorAll('#verdict .star.is-on').length,
-    woke: [...document.querySelectorAll('#strip .cell-fill')].filter(
-      (f) => parseFloat((/scaleX\(([-\d.eE+]+)\)/.exec(f.style.transform) || [])[1] || 0) > 0.02,
-    ).length,
-    next: !document.querySelector('#btn-next').hidden,
-  }));
-  note(`\nstrike -> ${after.stars} star(s), ${after.woke} modes woke, next=${after.next}`);
-  note(`verdict: ${after.verdict}`);
-  if (!after.shown) problems.push('a strike produced no verdict');
-  if (after.woke < 2) problems.push('a strike woke fewer than two modes, so the strip is not reporting');
-  if (!/%/.test(after.verdict)) problems.push('the verdict quoted no measured number');
+  const readState = () =>
+    page.evaluate(() => ({
+      count: document.querySelector('#level-count').textContent.trim(),
+      brief: document.querySelector('#brief').textContent.trim(),
+      verdict: document.querySelector('#verdict').textContent.trim(),
+      shown: !document.querySelector('#verdict').hidden,
+      stars: document.querySelectorAll('#verdict .star.is-on').length,
+      woke: [...document.querySelectorAll('#strip .cell-fill')].filter(
+        (f) => parseFloat((/scaleX\(([-\d.eE+]+)\)/.exec(f.style.transform) || [])[1] || 0) > 0.02,
+      ).length,
+      next: !document.querySelector('#btn-next').hidden,
+    }));
+
+  const nextLevel = async (expect) => {
+    await page.$eval('#btn-next', (n) => n.click());
+    try {
+      await page.waitForFunction(
+        (want) => document.querySelector('#level-count').textContent.trim() === want,
+        { timeout: 30000, polling: 60 },
+        expect,
+      );
+      await ready(page, 30000);
+      await page.focus('#drum');
+      return true;
+    } catch {
+      problems.push(`advancing did not reach ${expect}`);
+      return false;
+    }
+  };
+
+  // The three opening beats teach by consequence and cannot be failed. Each one is
+  // walked here, because they are the only part of the game a new player must get
+  // through before anything else makes sense.
+  await page.keyboard.press('Enter');
+  await sleep(280);
+  let s = await readState();
+  note(`\ntutorial 1 (${s.count}): ${s.stars} star(s), ${s.woke} modes woke`);
+  if (s.stars === 0) problems.push('the first tutorial beat could not be passed by tapping the drum');
+  if (s.woke < 2) problems.push('a strike woke fewer than two modes, so the strip is not reporting');
+
+  if (await nextLevel('2 / 6')) {
+    // "Somewhere else" only passes when the mixture genuinely differs, so aim well
+    // away from the centre before striking.
+    for (let i = 0; i < 7; i++) await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Enter');
+    await sleep(280);
+    s = await readState();
+    note(`tutorial 2 (${s.count}): ${s.stars} star(s) - ${s.verdict.slice(0, 68)}`);
+    if (s.stars === 0) problems.push('striking a different spot did not satisfy the "somewhere else" beat');
+  }
+
+  if (await nextLevel('3 / 6')) {
+    await page.keyboard.press('Enter'); // instant release, so the softest force
+    await sleep(280);
+    s = await readState();
+    note(`tutorial 3 (${s.count}): ${s.stars} star(s) - ${s.verdict.slice(0, 68)}`);
+    if (s.stars === 0) problems.push('a light tap did not satisfy the "gently" beat');
+  }
+
+  // The first scored level. This is where a measured number has to appear.
+  if (await nextLevel('4 / 6')) {
+    await page.keyboard.press('Enter');
+    await sleep(300);
+    s = await readState();
+    note(`scored (${s.count}): ${s.stars} star(s), ${s.woke} modes woke`);
+    note(`verdict: ${s.verdict}`);
+    if (!s.shown) problems.push('a scored strike produced no verdict');
+    if (!/%/.test(s.verdict)) problems.push('the verdict quoted no measured number');
+    if (!/mode/i.test(s.brief)) problems.push('the first scored level never introduces the word "mode"');
+  }
+  const after = await readState();
 
   // Wait for the condition, never for a duration. Both of these assertions failed
   // once against a fixed sleep while the app was behaving correctly, which is a
@@ -241,21 +314,103 @@ for (const view of VIEWS) {
   }
   await page.screenshot({ path: join(OUT, 'poki-play-hinted.png') });
 
-  // Advancing must actually load the next level.
-  if (after.next) {
-    await page.$eval('#btn-next', (n) => n.click());
-    try {
-      await page.waitForFunction(() => document.querySelector('#level-count').textContent.trim() === '2 / 5', {
-        timeout: 30000,
-        polling: 50,
-      });
-      await ready(page, 30000);
-      note(`advanced to ${await page.$eval('#level-count', (n) => n.textContent)}`);
-    } catch {
-      problems.push(`advancing landed on "${await page.$eval('#level-count', (n) => n.textContent)}"`);
-    }
-  }
+  if (!after.next) problems.push('a passed level offered no way forward');
   if (ours(errors).length) problems.push(`play: ${ours(errors)[0]}`);
+  await page.close();
+}
+
+// ------------------------------------------------- 3b. draw mode and free mode
+
+{
+  const { page, errors } = await open(VIEWS[2]);
+  await enter(page, 'draw');
+  await sleep(300);
+
+  // Trace a lobed closed loop. One radius function for every point including the
+  // first: pressing down at a bare radius and then moving with a lobed one leaves a
+  // genuine spike in the stroke, which this repo has already been fooled by once.
+  const box = await page.$eval('#drum', (c) => {
+    const r = c.getBoundingClientRect();
+    return { x: r.x, y: r.y, w: r.width, h: r.height };
+  });
+  const cx = box.x + box.w / 2;
+  const cy = box.y + box.h / 2;
+  const rAt = (t) => Math.min(box.w, box.h) * (0.3 + 0.05 * Math.sin(3 * t));
+  await page.mouse.move(cx + rAt(0), cy);
+  await page.mouse.down();
+  for (let i = 1; i <= 84; i++) {
+    const t = (2 * Math.PI * i) / 84;
+    await page.mouse.move(cx + rAt(t) * Math.cos(t), cy + rAt(t) * Math.sin(t));
+  }
+  await page.mouse.up();
+
+  let drew = true;
+  try {
+    await solved(page);
+  } catch {
+    drew = false;
+    problems.push('a drawn outline never solved');
+  }
+  if (drew) {
+    const said = await page.$eval('#brief', (n) => n.textContent);
+    note(`\ndrawn: ${said}`);
+    if (!/Hz/.test(said)) problems.push('a drawn drum reported no frequency');
+    await page.mouse.click(cx + box.w * 0.08, cy - box.h * 0.06);
+    await sleep(300);
+    const woke = await page.$$eval('#strip .cell-fill', (f) =>
+      f.filter((x) => parseFloat((/scaleX\(([-\d.eE+]+)\)/.exec(x.style.transform) || [])[1] || 0) > 0.02).length,
+    );
+    note(`a strike on the drawn drum woke ${woke} modes`);
+    if (woke < 2) problems.push('striking a drawn drum woke almost nothing');
+    await page.screenshot({ path: join(OUT, 'poki-draw.png') });
+  }
+
+  // Free mode: the whole gallery, the tools, and the sand view.
+  await page.$eval('#btn-home', (n) => n.click());
+  await enter(page, 'free');
+  try {
+    await solved(page);
+  } catch {
+    problems.push('free mode never solved its first shape');
+  }
+  const free = await page.evaluate(() => ({
+    shapes: [...document.querySelectorAll('#tray-shapes .chip')].map((n) => n.textContent),
+    mallets: [...document.querySelectorAll('#tray-mallets .chip')].map((n) => n.textContent),
+    targetHidden: document.querySelector('#cell-target').hidden,
+    brief: document.querySelector('#brief').textContent,
+  }));
+  note(`free: ${free.shapes.length} shapes, ${free.mallets.length} mallets, second plate hidden=${free.targetHidden}`);
+  if (free.shapes.length < 10) problems.push(`free mode offers only ${free.shapes.length} shapes`);
+  if (free.mallets.length !== 3) problems.push(`free mode offers ${free.mallets.length} mallets, expected 3`);
+  if (!free.targetHidden) problems.push('free mode still shows the comparison plate');
+  if (!/Hz/.test(free.brief)) problems.push('free mode reported no frequency');
+
+  // Sand is the Chladni view: it must actually change what is drawn.
+  await page.mouse.click(cx, cy - box.h * 0.05);
+  await sleep(320);
+  const before = await page.evaluate(() => {
+    const c = document.querySelector('#drum');
+    const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let h = 0;
+    for (let i = 0; i < d.length; i += 1009) h = (h * 31 + d[i]) | 0;
+    return h;
+  });
+  await page.$eval('#btn-sand', (n) => n.click());
+  await sleep(320);
+  const sandOn = await page.$eval('#btn-sand', (n) => n.getAttribute('aria-pressed'));
+  const afterSand = await page.evaluate(() => {
+    const c = document.querySelector('#drum');
+    const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let h = 0;
+    for (let i = 0; i < d.length; i += 1009) h = (h * 31 + d[i]) | 0;
+    return h;
+  });
+  note(`sand pressed=${sandOn}, plate changed=${before !== afterSand}`);
+  if (sandOn !== 'true') problems.push('the sand control did not engage');
+  if (before === afterSand) problems.push('turning sand on changed nothing on the plate');
+  await page.screenshot({ path: join(OUT, 'poki-free-sand.png') });
+
+  if (ours(errors).length) problems.push(`sandbox: ${ours(errors)[0]}`);
   await page.close();
 }
 
@@ -265,6 +420,7 @@ for (const view of VIEWS) {
   const { page, errors } = await open({ ...VIEWS[2], killStorage: true });
   let ok = true;
   try {
+    await enter(page, 'play');
     await ready(page);
   } catch {
     ok = false;

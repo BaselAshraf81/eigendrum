@@ -8,7 +8,7 @@
     <title>Nodal</title>
     <meta
       name="description"
-      content="Strike a real drumhead where it cannot hear you. A puzzle game played on the actual vibration modes of a shape."
+      content="Strike a real drumhead where it cannot hear you, draw your own drums, and listen to the shape. Played on the actual vibration modes of whatever outline you give it."
     />
     <link rel="stylesheet" href="engine/styles/font.css" />
     <link rel="stylesheet" href="styles/game.css" />
@@ -34,30 +34,30 @@
       rules, flat fields of vermilion (the instruction), ultramarine (the
       measurement), chrome yellow (what you got right). No radius, no shadow, no
       gradient, one embedded geometric sans, lowercase.
-      STORY: The visitor reads a standing wave, finds the curve where it is still,
-      strikes there, and hears a mode vanish from a chord.
-      FIRST VIEWPORT: Two plates at equal scale divided by one 3px rule: the mode to
-      defeat on the left, the drum you strike on the right. Instruction band and
-      measurement strip across the foot. The primary action is the whole right plate.
+      STORY: The visitor taps a drum, sees the pattern it makes, learns to read the
+      still curves, then draws a drum of their own and hears what its outline does.
+      FIRST VIEWPORT: Three ways in on a plaster ground, then two plates at equal
+      scale divided by one 3px rule: the mode to defeat, and the drum you strike.
       FORM: Matched comparative plate, candidate 7 of 7, seed key 90fda3dc.
       FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
     -->
     <a class="skip" href="#drum">skip to the drum</a>
 
-    <div class="game" id="game">
+    <div class="game" id="game" data-mode="home">
       <header class="masthead">
-        <p class="slate" id="slate"><b id="chapter-name">hot spots</b><span id="level-count">1 / 5</span></p>
+        <p class="slate" id="slate"><b id="chapter-name">nodal</b><span id="level-count"></span></p>
         <ol class="progress" id="progress" aria-label="Progress through this chapter"></ol>
         <div class="masthead-tools">
           <p class="tally" id="tally" aria-label="Resonances earned">0</p>
           <button type="button" class="tool" id="btn-hint" aria-describedby="hint-note">hint</button>
           <button type="button" class="tool" id="btn-sound" aria-pressed="false">sound on</button>
+          <button type="button" class="tool" id="btn-home">menu</button>
         </div>
       </header>
       <p class="visually-hidden" id="hint-note">Reveals real winning territory, computed from the drum itself.</p>
 
-      <main class="plates">
-        <section class="plate-cell" aria-labelledby="target-label">
+      <main class="plates" id="plates">
+        <section class="plate-cell" id="cell-target" aria-labelledby="target-label">
           <h2 class="cell-label" id="target-label">
             <span id="target-title">mode 1</span>
             <em id="target-verb">make it loud</em>
@@ -68,10 +68,10 @@
           </div>
         </section>
 
-        <section class="plate-cell is-live" aria-labelledby="drum-label">
+        <section class="plate-cell is-live" id="cell-drum" aria-labelledby="drum-label">
           <h2 class="cell-label" id="drum-label">
-            <span>the drum</span>
-            <em>strike it</em>
+            <span id="drum-title">the drum</span>
+            <em id="drum-verb">strike it</em>
           </h2>
           <div class="plate-frame">
             <canvas
@@ -83,18 +83,48 @@
               aria-describedby="drum-help"
             ></canvas>
             <p class="visually-hidden" id="drum-help">
-              A drumhead. Move the crosshair with the arrow keys and press Enter to strike, or click
-              and tap directly.
+              A drumhead. Move the crosshair with the arrow keys and hold Enter to charge a strike,
+              or click and tap directly. In draw mode, drag to trace an outline.
             </p>
             <p class="plate-note" id="drum-note">tap anywhere</p>
           </div>
         </section>
       </main>
 
+      <!-- The workbench, shown only in draw and free mode. -->
+      <div class="tray" id="tray" hidden>
+        <div class="tray-group" id="tray-shapes-group">
+          <h2 class="tray-label">drum</h2>
+          <div class="tray-row" id="tray-shapes"></div>
+        </div>
+        <div class="tray-group">
+          <h2 class="tray-label">mallet</h2>
+          <div class="tray-row" id="tray-mallets"></div>
+        </div>
+        <div class="tray-group">
+          <h2 class="tray-label">what the shape does not decide</h2>
+          <div class="tray-row tray-dials">
+            <label class="dial"
+              ><span>pitch</span><input type="range" id="dial-pitch" min="70" max="330" step="1" value="138" /></label
+            >
+            <label class="dial"
+              ><span>ring</span
+              ><input type="range" id="dial-decay" min="0.4" max="3.5" step="0.05" value="1.35" /></label
+            >
+          </div>
+        </div>
+        <div class="tray-group">
+          <h2 class="tray-label">view</h2>
+          <div class="tray-row">
+            <button type="button" class="chip" id="btn-sand" aria-pressed="false">sand</button>
+            <button type="button" class="chip" id="btn-wav" hidden>save sound</button>
+          </div>
+        </div>
+      </div>
+
       <footer class="foot">
         <div class="brief">
           <p class="brief-line" id="brief">Strike the drum.</p>
-          <!-- The result is what should be announced, not the twelve strip cells. -->
           <p class="verdict" id="verdict" role="status" aria-live="polite" hidden></p>
           <button type="button" id="btn-next" hidden>next</button>
         </div>
@@ -108,6 +138,46 @@
           <ol class="strip" id="strip"></ol>
         </div>
       </footer>
+
+      <!-- Three ways in. Not a splash screen: it is the first playable surface. -->
+      <div class="home" id="home">
+        <div class="home-body">
+          <h1 class="home-title">nodal</h1>
+          <p class="home-strap">
+            Every shape has its own set of standing waves, and its own sound. Hit one and find out.
+          </p>
+          <ul class="home-ways">
+            <li>
+              <button type="button" class="way" id="way-play">
+                <span class="way-n">01</span>
+                <span class="way-name">play</span>
+                <span class="way-copy">Twenty-six drums. Strike each one where a mode cannot hear you.</span>
+                <span class="way-meta" id="way-play-meta">start at the beginning</span>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="way" id="way-draw">
+                <span class="way-n">02</span>
+                <span class="way-name">draw</span>
+                <span class="way-copy">Trace any outline and hear the drum it would actually be.</span>
+                <span class="way-meta">no scoring, no rules</span>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="way" id="way-free">
+                <span class="way-n">03</span>
+                <span class="way-name">free</span>
+                <span class="way-copy">Every built-in shape, every control, including the two drums that sound identical.</span>
+                <span class="way-meta">the whole instrument</span>
+              </button>
+            </li>
+          </ul>
+          <p class="home-foot">
+            Sound is a reward, never a requirement: everything a level asks can be read from the plate
+            and the strip.
+          </p>
+        </div>
+      </div>
 
       <div class="curtain" id="curtain" hidden>
         <div class="curtain-body" role="dialog" aria-modal="true" aria-labelledby="curtain-title">
