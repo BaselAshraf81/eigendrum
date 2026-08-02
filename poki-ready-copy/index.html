@@ -131,8 +131,14 @@
 
       <footer class="foot">
         <div class="brief">
-          <p class="brief-line" id="brief">Strike the drum.</p>
-          <p class="verdict" id="verdict" role="status" aria-live="polite" hidden></p>
+          <div class="brief-text">
+            <p class="brief-line" id="brief">Strike the drum.</p>
+            <!-- The slot always occupies its space, so a verdict appearing cannot
+                 resize the band and shove the drum upwards. -->
+            <div class="verdict-slot">
+              <p class="verdict" id="verdict" role="status" aria-live="polite" hidden></p>
+            </div>
+          </div>
           <button type="button" id="btn-next" hidden>next</button>
         </div>
         <div class="gauge">

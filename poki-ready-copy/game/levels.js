@@ -29,14 +29,16 @@ const MIN_LOUDNESS = 0.3;
 const TUTORIAL = {
   tap: {
     brief: 'Tap the drum anywhere.',
-    pass: 'That is the drum ringing. The bars on the right are every way this shape can vibrate, and how much of each one you just woke.',
+    // Verdicts are kept to two lines on purpose: the band reserves exactly that much,
+    // so anything longer resizes the foot and shoves the drum upwards mid-read.
+    pass: 'That is the drum ringing. The bars are every way this shape can vibrate.',
     retry: 'Tap somewhere on the drum itself.',
     score: ({ peak }) => ({ value: peak, stars: peak > 0 ? 3 : 0 }),
   },
   elsewhere: {
     brief: 'Now tap somewhere well away from your first hit.',
-    pass: 'Different spot, different mixture, same drum. Where you hit decides what you hear.',
-    retry: 'Too close to the last hit, so the mixture barely changed. Try much further away.',
+    pass: 'Different spot, different mixture. Where you hit decides what you hear.',
+    retry: 'Too close to the last hit. Try much further away.',
     score: ({ amps, peak, previous }) => {
       if (!(peak > 0)) return { value: 0, stars: 0 };
       if (!previous) return { value: 1, stars: 3 };
@@ -58,8 +60,8 @@ const TUTORIAL = {
   },
   quiet: {
     brief: 'Same again, but softly: press and let go straight away.',
-    pass: 'Quieter, and otherwise identical. Hitting harder scales every mode by the same amount, so force is loudness and nothing else. Position is the part that changes the sound.',
-    retry: 'Still too hard. Tap and release immediately, without holding.',
+    pass: 'Quieter, same chord. Force is loudness only; position is what changes the sound.',
+    retry: 'Still too hard. Tap and release at once, without holding.',
     score: ({ peak, force }) => ({ value: force, stars: peak > 0 && force < 0.55 ? 3 : 0 }),
   },
 };

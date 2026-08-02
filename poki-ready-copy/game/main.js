@@ -349,7 +349,9 @@ async function loadLevel() {
     // and the ears half was simply false: nobody can hear whether one particular mode
     // out of twelve is silent inside a chord. The strip half is true and is the whole
     // technique, so it says that and nothing more.
-    els.targetNote.textContent = 'withheld - hunt it with the marked bar';
+    // Say what the squares are, on the plate the player is looking at for help. An
+    // unexplained mark is worse than no mark.
+    els.targetNote.textContent = 'withheld - each square is a strike you made, smaller means quieter';
     els.drumNote.textContent = 'strike, read the marked bar, move, strike again';
   }
 
@@ -493,10 +495,14 @@ function strikeAt(x, y, force = 1) {
   }
   state.previousAmps = unit;
 
-  // Keep the measurement on the plate. `miss` is normalised so that 0 is a perfect
-  // answer for whichever objective this is, which lets one visual encoding serve all
-  // of them: the smaller the mark, the better that spot was.
-  if (state.level.kind !== 'tutorial') {
+  // Keep the measurement on the plate, but only where the diagram is withheld.
+  //
+  // These marks exist to replace information the player cannot see. On a level that
+  // shows the mode's pattern they replace nothing, and a trail of unexplained squares
+  // accumulating over a diagram that already gives the answer is just litter. `miss`
+  // is normalised so 0 is perfect for whichever objective this is, which lets one
+  // encoding serve them all: the smaller the mark, the better that spot was.
+  if (state.level.blind && state.level.kind !== 'tutorial') {
     const miss =
       state.level.kind === 'silence' || state.level.kind === 'double'
         ? Math.min(1, result.value / 0.12)
