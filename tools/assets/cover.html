@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>cover</title>
+    <link rel="stylesheet" href="/styles/font.css" />
+    <style>
+      /*
+        Purpose-built cover art, not a screenshot.
+        Same tokens as the game so the store page and the game look like one thing.
+        Size and layout come from ?variant=landscape|portrait|square.
+      */
+      :root {
+        --plaster: #f0ede6;
+        --ink: #14120f;
+        --ink-soft: #55504a;
+        --vermilion: #c62d1a;
+        --chrome: #f2c300;
+      }
+      * { box-sizing: border-box; margin: 0; }
+      html, body { background: var(--plaster); }
+      body {
+        font-family: Jost, Futura, 'Century Gothic', system-ui, sans-serif;
+        color: var(--ink);
+        overflow: hidden;
+      }
+      .cover { position: relative; display: grid; overflow: hidden; }
+      .plate { position: relative; display: grid; place-items: center; overflow: hidden; }
+      canvas { display: block; }
+      .copy { display: flex; flex-direction: column; justify-content: center; }
+      h1 {
+        font-weight: 600;
+        letter-spacing: -0.04em;
+        line-height: 0.85;
+        text-transform: lowercase;
+      }
+      p {
+        color: var(--ink-soft);
+        font-weight: 500;
+        line-height: 1.25;
+      }
+      .rule { background: var(--ink); }
+
+      /* Landscape 16:9 - copy left, drum right */
+      .landscape { width: 1920px; height: 1080px; grid-template-columns: 1fr 1.05fr; }
+      .landscape .copy { padding: 0 0 0 120px; gap: 34px; }
+      .landscape h1 { font-size: 210px; }
+      .landscape p { font-size: 52px; max-width: 15ch; }
+      .landscape .rule { height: 14px; width: 300px; }
+
+      /* Portrait 2:3 - drum above, copy below */
+      .portrait { width: 800px; height: 1200px; grid-template-rows: 1fr auto; }
+      .portrait .copy { padding: 0 60px 90px; gap: 22px; }
+      .portrait h1 { font-size: 150px; }
+      .portrait p { font-size: 34px; max-width: 20ch; }
+      .portrait .rule { height: 10px; width: 190px; }
+
+      /* Square 1:1 - drum above, copy below, tighter */
+      .square { width: 800px; height: 800px; grid-template-rows: 1fr auto; }
+      .square .copy { padding: 0 54px 56px; gap: 16px; }
+      .square h1 { font-size: 132px; }
+      .square p { font-size: 30px; max-width: 20ch; }
+      .square .rule { height: 9px; width: 165px; }
+    </style>
+  </head>
+  <body>
+    <div class="cover" id="cover">
+      <div class="plate" id="plate"><canvas id="board"></canvas></div>
+      <div class="copy">
+        <div class="rule"></div>
+        <h1>nodal</h1>
+        <p id="strap">draw a shape, hear the drum it becomes</p>
+      </div>
+    </div>
+
+    <script type="module">
+      import { solveDrum } from '/src/fem/solve.js';
+      import { PRESETS_BY_ID, normalizeShape } from '/src/app/presets.js';
+      import { Board } from '/src/app/canvas.js';
+
+      const params = new URLSearchParams(location.search);
+      const variant = params.get('variant') || 'landscape';
+      const shapeId = params.get('shape') || 'star';
+      const mode = Number(params.get('mode') ?? 8);
+
+      const cover = document.getElementById('cover');
+      cover.classList.add(variant);
+      // Landscape puts the drum second in the DOM order it already has; for the
+      // stacked variants the drum must come first, which it does.
+      if (variant === 'landscape') cover.style.gridTemplateAreas = 'none';
+
+      const box = document.getElementById('plate');
+      const canvas = document.getElementById('board');
+      // Square canvas sized to the shorter axis of its cell, so the drum is never cropped.
+      const rect = box.getBoundingClientRect();
+      const side = Math.floor(Math.min(rect.width, rect.height) * 0.86);
+      canvas.style.width = `${side}px`;
+      canvas.style.height = `${side}px`;
+
+      const preset = PRESETS_BY_ID.get(shapeId);
+      const { polygon, align } = normalizeShape(preset.polygon, preset.latticePitch || 0);
+      const drum = solveDrum(polygon, { modes: 12, targetNodes: 2400, align });
+
+      const board = new Board(canvas);
+      board.setDrum({ mesh: drum.mesh, modes: drum.modes, eigenvalues: drum.eigenvalues });
+      board.resize();
+
+      // A high mode: the most striking thing the physics produces, and the one that
+      // reads as "this is not a generic drawing toy" at thumbnail size.
+      const phi = drum.modes[Math.min(mode, drum.modes.length - 1)];
+      let peak = 0;
+      for (let i = 0; i < phi.length; i++) peak = Math.max(peak, Math.abs(phi[i]));
+      const field = new Float64Array(phi.length);
+      for (let i = 0; i < phi.length; i++) field[i] = phi[i] / (peak || 1);
+
+      board.clear();
+      board.drawField(field, 1);
+      board.drawOutline('#14120f', Math.max(3, Math.round(side / 190)));
+
+      document.title = 'cover-ready';
+    </script>
+  </body>
+</html>
