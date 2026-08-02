@@ -26,6 +26,7 @@
     "poki:check": "node tools/poki-sync.mjs --check",
     "poki:levels": "node tools/poki-levels.mjs",
     "poki:survey": "node tools/poki-survey.mjs",
+    "target": "node tools/set-target.mjs",
     "poki:smoke": "node tools/poki-smoke.mjs"
   },
   "engines": {

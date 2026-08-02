@@ -58,7 +58,17 @@ const MANIFEST = [
   'styles/font.css',
 ];
 
-const sha = (buf) => createHash('sha256').update(buf).digest('hex').slice(0, 16);
+/**
+ * Hashed on content with line endings normalised, not on raw bytes.
+ *
+ * Git rewrites line endings on checkout, so a byte comparison reports every vendored
+ * file as drifted the first time the working copy is touched on a machine with a
+ * different `core.autocrlf`. That is a false alarm about a real guarantee, which is the
+ * worst kind: it trains you to run the sync reflexively and stop reading the output.
+ * What matters is whether the *code* differs.
+ */
+const sha = (buf) =>
+  createHash('sha256').update(buf.toString('utf8').replace(/\r\n/g, '\n')).digest('hex').slice(0, 16);
 
 /** src/foo/bar.js -> engine/foo/bar.js, styles/font.css -> engine/styles/font.css */
 const destFor = (rel) => join(DEST, rel.startsWith('src/') ? rel.slice(4) : rel);

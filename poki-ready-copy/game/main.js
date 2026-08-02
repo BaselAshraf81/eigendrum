@@ -37,7 +37,7 @@ import { Sandbox } from './sandbox.js';
 import { requestDrum, setProgressHandler } from './solve.js';
 import * as hud from './hud.js';
 import * as audio from './audio.js';
-import * as poki from './poki.js';
+import * as portal from './platform.js';
 import { loadProgress, saveProgress, isPersistent } from './store.js';
 
 const MODE_COUNT = 12;
@@ -196,7 +196,7 @@ function goHome() {
   sandbox.leave();
   state.ringing = false;
   state.busy = false;
-  poki.gameplayStop();
+  portal.gameplayStop();
   setMode('home');
   const resume = firstUnfinished();
   els.chapterName.textContent = 'nodal';
@@ -217,7 +217,7 @@ async function enterSandbox(kind) {
   setMode(kind);
   buildTrayForPlay(false);
   await sandbox.enter(kind);
-  poki.gameplayStart();
+  portal.gameplayStart();
 }
 
 /**
@@ -359,7 +359,7 @@ async function loadLevel() {
   showSolving(false);
   els.hint.disabled = winners.length === 0;
   state.busy = false;
-  poki.gameplayStart();
+  portal.gameplayStart();
 }
 
 function shapePolygon(id) {
@@ -410,7 +410,7 @@ function centroidOf(poly) {
 }
 
 function fail(message) {
-  poki.captureError(message);
+  portal.captureError(message);
   showSolving(false);
   state.busy = false;
   curtain({
@@ -565,14 +565,14 @@ async function advance() {
 }
 
 function adBreak() {
-  return poki.commercialBreak({
+  return portal.commercialBreak({
     onStart: () => audio.setSuspended(true),
     onEnd: () => audio.setSuspended(false),
   });
 }
 
 function curtain({ kind, title, copy, action, onward, replay = null, replayLabel = 'play it again' }) {
-  poki.gameplayStop();
+  portal.gameplayStop();
   els.curtainKind.textContent = kind;
   els.curtainTitle.textContent = title;
   els.curtainCopy.textContent = copy;
@@ -673,7 +673,7 @@ async function loadCapstone() {
   );
   hud.paintStrip(els.strip, amps, [], 0, ra.freqs);
   audio.playStrike(ra.freqs, amps);
-  poki.gameplayStart();
+  portal.gameplayStart();
 }
 
 function answerCapstone() {
@@ -926,15 +926,15 @@ async function boot() {
 
   // The SDK and the game load concurrently. Awaiting the SDK first would put its
   // whole advertising stack, measured at about 1.8s of network, in front of the menu.
-  poki.loadingStart();
-  const sdkReady = poki.initPoki();
+  portal.loadingStart();
+  const sdkReady = portal.initPlatform();
   goHome();
   requestAnimationFrame(frame);
   await sdkReady;
-  poki.loadingFinished();
+  portal.loadingFinished();
 }
 
 boot().catch((err) => {
-  poki.captureError(err);
+  portal.captureError(err);
   fail(String((err && err.message) || err));
 });

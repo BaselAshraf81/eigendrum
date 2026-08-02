@@ -41,8 +41,10 @@ const note = (s) => console.log(s);
     }
   })(GAME);
 
-  // The platform's own SDK is the single permitted off-origin reference.
-  const ALLOWED = /^https:\/\/game-cdn\.poki\.com\//;
+  // A portal's own SDK is the only permitted off-origin reference, and only the one
+  // this build is targeted at is actually injected. Both are listed because
+  // platform.js carries an adapter for each; game/target.js decides which loads.
+  const ALLOWED = /^https:\/\/(sdk\.crazygames\.com|game-cdn\.poki\.com)\//;
   let refs = 0;
   for (const file of files) {
     const text = readFileSync(file, 'utf8');
@@ -126,6 +128,14 @@ async function open({ width, height, mobile = false, killStorage = false }) {
       errors.push({ text: m.text(), stack: m.stackTrace?.().map?.((f) => f.url).join(' ') || '' });
     }
   });
+  // Never load a real portal SDK during tests. An advertising stack costs seconds of
+  // network, serves overlays that steal the pointer, and makes the suite depend on a
+  // third party being up. Absence is a supported production state, so this is a path
+  // that has to work anyway.
+  await page.evaluateOnNewDocument(() => {
+    window.__noPortal = true;
+  });
+
   if (killStorage) {
     // Stand in for a private window, where touching localStorage throws.
     await page.evaluateOnNewDocument(() => {
@@ -151,7 +161,8 @@ const ours = (errors) =>
   errors
     .filter((e) => {
       const where = `${e.stack} ${e.text}`;
-      if (/poki\.(com|io)|doubleclick|googlesyndication|adtrafficquality|gpt\.js|ima3/i.test(where)) return false;
+      if (/poki\.(com|io)|crazygames\.com|doubleclick|googlesyndication|adtrafficquality|gpt\.js|ima3/i.test(where))
+        return false;
       if (/ERR_|net::|Failed to load resource/i.test(e.text)) return false;
       // Anything with no frame in our own files cannot be attributed to us.
       return /poki-ready-copy\/(game|engine|styles)\//.test(e.stack) || e.stack === '';
