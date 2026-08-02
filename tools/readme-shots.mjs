@@ -92,7 +92,7 @@ await sleep(450);
 await shotBoard('nodal-lines');
 
 // 3. The isospectral pair. Waits for the background partner solve, because that is
-//    what puts the measured match line and the overlaid comb on screen — without it
+//    what puts the measured match line and the overlaid comb on screen. Without it
 //    the image would be claiming something it does not show.
 await page.evaluate(() => {
   [...document.querySelectorAll('#presets .form-chip')].find((c) => c.dataset.id === 'gww-a').click();

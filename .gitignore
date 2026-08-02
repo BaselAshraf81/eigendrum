@@ -24,3 +24,13 @@ dist/
 coverage/
 tmp/
 *.local
+DESIGN.md
+PRODUCT.md
+.kiro/steering/10-codebase-map.md
+.kiro/steering/00-project.md
+.kiro/steering/20-memory.md
+poki-ready-copy/
+tools/poki-levels.mjs
+tools/poki-smoke.mjs
+tools/poki-survey.mjs
+tools/poki-sync.mjs
