@@ -122,6 +122,30 @@ solves it numerically:
 4. **Listen.** Frequencies from `√λ`, per-mode amplitudes from projecting the
    mallet onto the mode shapes, then a sum of decaying sinusoids.
 
+The step from projection to amplitude is where a struck membrane gets its voice,
+and it is easy to get wrong. Three factors apply, and only the last is a choice:
+
+- **Mass normalisation.** `c_k = ∫φ_k g` is the modal coefficient only when the
+  modes are orthonormal in the mass inner product. The solver normalises them to
+  unit *peak* instead, for the colour map's sake, so the projection is divided by
+  `∫φ_k²`. That varies by a factor of about two across the first sixteen modes of
+  a disk.
+- **`1/ω_k`.** A mallet delivers an impulse of *force*, which sets the membrane's
+  initial velocity, not its displacement. Solving `u_k(0) = 0`, `u_k'(0) = a_k`
+  gives `u_k(t) = (a_k/ω_k) sin ω_k t`, a 6 dB/octave rolloff.
+- **Contact time.** No beater is an impulse. A force pulse lasting `T` cannot pump
+  a mode whose period is far shorter than `T`, modelled here as a one-pole rolloff
+  fixed at a ratio of the fundamental so the timbre does not shift with the pitch
+  control.
+
+Damping is **Rayleigh damping**, `C = αM + βK`, which is the standard proportional
+model for a system like this one and in modal coordinates reads
+`1/τ_k = α + βω_k²`. Loss growing with the *square* of frequency is why a drum's
+high inharmonic partials vanish in tens of milliseconds while the fundamental
+rings on, and that fast darkening is most of what makes a drum read as a pitched
+thud rather than a chord. The brightness control moves weight between the two
+terms.
+
 The eigensolver needs a few hundred solves of `K y = b`, so `K` is reordered with
 reverse Cuthill–McKee and factorised once with a banded Cholesky. After that each
 solve is two triangular sweeps. A 2000-unknown drum solves in about 700 ms in a
@@ -165,6 +189,10 @@ shapes. Which modes a given strike position can excite.
 **Not determined by the shape, so exposed as controls.** Absolute pitch (that is
 size and tension). How fast each overtone fades (material and air). Shapes are
 scaled to equal area before solving, so what you hear is shape rather than size.
+
+**Modelled, and neither of the above.** The mallet: its width, which is a control,
+and its contact time, which is fixed. Both decide how much of each mode a strike
+can reach, never at what frequency a mode sits.
 
 ## Layout
 

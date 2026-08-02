@@ -13,13 +13,16 @@ import { strokeToPolygon } from './draw.js';
 import { readHash, shareUrl, writeHash } from './share.js';
 import { freqToNote, harmonicity } from '../audio/notes.js';
 import {
+  audibleAmps,
   decayTimes,
   encodeWav,
   fieldAtTime,
   frequencies,
+  modeNorms,
   nodeWeights,
   renderStrike,
   strikeAmplitudes,
+  strikeHeadroom,
 } from '../audio/synth.js';
 import {
   diskSpectrum,
@@ -204,6 +207,8 @@ function onSolved(msg) {
   state.drum = { mesh: msg.mesh, modes: msg.modes, eigenvalues: msg.eigenvalues };
   state.diagnostics = msg.diagnostics;
   state.weights = nodeWeights(msg.mesh);
+  state.norms = modeNorms(msg.mesh, msg.modes, state.weights);
+  state.headroom = null;
   state.fieldBuf = new Float64Array(msg.mesh.nodeCount);
   state.strike = null;
   state.view = 'mode';
@@ -289,6 +294,34 @@ function ensureAudio() {
 const malletRadius = () => Number(els.mallet.value) / 100;
 const brightness = () => Number(els.bright.value) / 100;
 
+// Mallet contact time, expressed as the harmonic number where its rolloff turns
+// over. 2.2 corresponds to roughly 3.5 ms of contact against a 130 Hz
+// fundamental, which is a felt beater rather than a stick. See audibleAmps.
+const CONTACT_RATIO = 2.2;
+// Where the hardest strike on this drum should land. Well under 1 so the tanh in
+// renderStrike stays a safety net rather than a distortion stage.
+const TARGET_PEAK = 0.72;
+
+/** One loudness scale per (drum, mallet), so relative strike loudness survives. */
+function headroom() {
+  const r = malletRadius();
+  if (!state.headroom || state.headroom.radius !== r) {
+    state.headroom = {
+      radius: r,
+      value: strikeHeadroom(
+        state.drum.mesh,
+        state.drum.modes,
+        state.norms,
+        state.freqs,
+        state.weights,
+        r,
+        CONTACT_RATIO,
+      ),
+    };
+  }
+  return state.headroom.value;
+}
+
 /** |a_k| normalised to the loudest: how much of the sound each mode actually is. */
 function driveProfile(amps) {
   let peak = 0;
@@ -307,7 +340,7 @@ function driveProfile(amps) {
  * one mode by itself. The second is not something a mallet can do; it exists
  * because you cannot understand a mixture without first hearing its ingredients.
  */
-function ring({ amps, taus, kind, x = 0, y = 0, gain = 3.2 }) {
+function ring({ amps, taus, kind, x = 0, y = 0, gain = 1 }) {
   const { drum, freqs } = state;
 
   // Reference amplitude for the colour bands: peak displacement near the moment
@@ -374,8 +407,26 @@ function ring({ amps, taus, kind, x = 0, y = 0, gain = 3.2 }) {
 function strike(x, y) {
   const { drum } = state;
   if (!drum) return;
-  const amps = strikeAmplitudes(drum.mesh, drum.modes, x, y, malletRadius(), state.weights);
-  ring({ amps, taus: decayTimes(state.freqs, 1.7, brightness()), kind: 'strike', x, y });
+  // The projection is pure geometry; audibleAmps turns it into what a mallet
+  // impulse actually leaves ringing. Zeros survive, so a strike on a nodal line
+  // still cannot wake that mode.
+  const projected = strikeAmplitudes(
+    drum.mesh,
+    drum.modes,
+    x,
+    y,
+    malletRadius(),
+    state.weights,
+  );
+  const amps = audibleAmps(projected, state.norms, state.freqs, CONTACT_RATIO);
+  ring({
+    amps,
+    taus: decayTimes(state.freqs, 1.7, brightness()),
+    kind: 'strike',
+    x,
+    y,
+    gain: TARGET_PEAK / headroom(),
+  });
   // Say what is actually on screen. Leaving the readout on "Mode 8" while sixteen
   // modes ring together would be the interface lying about the physics.
   showStruckReadout(amps);
