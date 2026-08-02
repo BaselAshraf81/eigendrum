@@ -24,7 +24,7 @@
     {
       "rel": "src/geom/polygon.js",
       "to": "/poki-ready-copy/engine/geom/polygon.js",
-      "hash": "b9528e44520b825a"
+      "hash": "57b89eb96caaf350"
     },
     {
       "rel": "src/geom/mesh.js",
@@ -59,7 +59,7 @@
     {
       "rel": "src/app/draw.js",
       "to": "/poki-ready-copy/engine/app/draw.js",
-      "hash": "a4871325ebb2f4cb"
+      "hash": "d3d22b632394063e"
     },
     {
       "rel": "src/app/canvas.js",
