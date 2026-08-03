@@ -151,22 +151,25 @@ h3 {
   justify-content: flex-end;
 }
 
-/* The source, written out. A chip with an icon would be tidier and would tell a
-   viewer of a recording nothing; the point of this one is that it can be read off
-   the screen and typed in. Underlined with a hairline rather than coloured, because
-   there is no job left for a fourth hue. */
-.repo {
-  font-size: 0.82rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  color: var(--ink-soft);
-  text-decoration: none;
-  border-bottom: var(--hair) solid rgba(20, 18, 15, 0.4);
-  white-space: nowrap;
+/* The source address and the support link are chips, not underlined text. They were
+   underlined text, which was readable but did not look pressable, and on this sheet a
+   thing you can do carries a keyline. `.chip` already resets text-decoration and
+   inverts on hover, so an <a> needs nothing beyond it. Neither takes a hue: vermilion
+   is the bench, ultramarine the ledger and chrome yellow selection, and a link in the
+   masthead is none of those. */
+
+/* The address is spelled out where there is room, so a viewer of a screen recording
+   can read it and type it in, and collapses to one word where there is not. */
+.narrow-only {
+  display: none;
 }
-.repo:hover {
-  color: var(--ink);
-  border-bottom-color: var(--ink);
+@media (max-width: 78rem) {
+  .wide-only {
+    display: none;
+  }
+  .narrow-only {
+    display: inline;
+  }
 }
 
 /* ------------------------------------------------------------------- chips */
@@ -179,6 +182,10 @@ h3 {
   font-size: 0.85rem;
   font-weight: 500;
   letter-spacing: 0.01em;
+  /* Chips are also used on <a>, where the UA underline has to go: the keyline is
+     already carrying "this is pressable", and both marks together reads as a link
+     wearing a button. */
+  text-decoration: none;
   padding: 0.4rem 0.75rem;
   border: var(--hair) solid var(--ink);
   background: transparent;
@@ -1172,9 +1179,10 @@ dialog form {
   .masthead-titles p {
     display: none;
   }
-  /* The full repo path will not fit beside the controls on a phone, and the controls
-     win. It is still in the explainer. */
-  .repo {
+  /* Four chips do not fit beside the wordmark on a phone, and the controls win. The
+     source is the one to drop, because it is also in the explainer's colophon and the
+     support link is not reachable any other way. */
+  #link-source {
     display: none;
   }
   /* Only the explainer loses its label. The sound button keeps its words, because
