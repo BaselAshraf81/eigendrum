@@ -21,7 +21,8 @@
     "isospectral": "node tools/isospectral.mjs",
     "smoke": "node tools/smoke.mjs",
     "mobile": "node tools/mobile.mjs",
-    "readme-shots": "node tools/readme-shots.mjs"
+    "readme-shots": "node tools/readme-shots.mjs",
+    "pack-docs": "node tools/pack-docs.mjs"
   },
   "engines": {
     "node": ">=20"

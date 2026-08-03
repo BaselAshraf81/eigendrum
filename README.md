@@ -297,6 +297,26 @@ and no environment to configure. GitHub Pages, Netlify, S3, a USB stick.
 - [Hearing the shape of a drum](https://en.wikipedia.org/wiki/Hearing_the_shape_of_a_drum)
   on Wikipedia, for the wider history.
 
+## The working documents
+
+The reasoning behind this project - the product charter, the design system, a codebase
+map and a memory file recording every dead end and the verified reason it was killed -
+is not in the repo as plain text. Those are working notes rather than documentation,
+and a public repo is better off carrying the runnable build.
+
+They are archived at [`docs/working-docs.zip`](docs/working-docs.zip), AES-256
+encrypted. Rebuild it after editing any of them:
+
+```bash
+DOCS_PASSWORD='...' npm run pack-docs
+```
+
+The password is not in the repo, because a password stored next to its own ciphertext
+is decoration rather than encryption. AES-256 rather than the classic zip cipher for
+the same reason: ZipCrypto is broken well enough to treat as plaintext, and this
+archive sits in public. The cost is that Windows Explorer cannot open it; 7-Zip,
+WinRAR, Keka and p7zip all can.
+
 ## Support
 
 Free, with no ads, no accounts and no analytics, and it will stay that way. If you
