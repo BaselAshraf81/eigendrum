@@ -317,6 +317,10 @@ the same reason: ZipCrypto is broken well enough to treat as plaintext, and this
 archive sits in public. The cost is that Windows Explorer cannot open it; 7-Zip,
 WinRAR, Keka and p7zip all can.
 
+The archive is never byte-reproducible, since AES draws a fresh salt on every run, so
+re-packing unchanged notes still shows up as a modified file. That is expected rather
+than a sign anything changed.
+
 ## Support
 
 Free, with no ads, no accounts and no analytics, and it will stay that way. If you
