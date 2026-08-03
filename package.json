@@ -27,7 +27,8 @@
     "poki:levels": "node tools/poki-levels.mjs",
     "poki:survey": "node tools/poki-survey.mjs",
     "target": "node tools/set-target.mjs",
-    "poki:smoke": "node tools/poki-smoke.mjs"
+    "poki:smoke": "node tools/poki-smoke.mjs",
+    "pack-docs": "node tools/pack-docs.mjs"
   },
   "engines": {
     "node": ">=20"
