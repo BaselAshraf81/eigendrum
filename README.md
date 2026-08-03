@@ -29,7 +29,7 @@ No dependencies, no build step, no backend. Clone it and open `index.html`, or:
 
 ```bash
 npm run serve     # http://localhost:8080
-npm test          # 35 tests, including the accuracy proofs below
+npm test          # 57 tests, including the accuracy proofs below
 ```
 
 ## What you can do with it
@@ -296,6 +296,11 @@ and no environment to configure. GitHub Pages, Netlify, S3, a USB stick.
   the coordinates used for the two Kac drums.
 - [Hearing the shape of a drum](https://en.wikipedia.org/wiki/Hearing_the_shape_of_a_drum)
   on Wikipedia, for the wider history.
+
+## Support
+
+Free, with no ads, no accounts and no analytics, and it will stay that way. If you
+would like to put something towards it: [ko-fi.com/baselashraf](https://ko-fi.com/baselashraf).
 
 ## Licence
 

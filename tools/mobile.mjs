@@ -55,6 +55,32 @@ for (const [name, width, height] of [
   }
   if (metrics.boardWidth < 200) problems.push(`${name}: canvas too small (${metrics.boardWidth})`);
 
+  // The support link must survive every width. Four chips do not fit beside the
+  // wordmark on a phone, so the source chip is dropped there - it is still in the
+  // explainer's colophon - but the support link is not reachable any other way, so it
+  // has to stay, and it has to stay big enough to hit with a thumb.
+  const support = await page.evaluate(() => {
+    const a = document.getElementById('link-support');
+    if (!a) return null;
+    const r = a.getBoundingClientRect();
+    const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+    return {
+      w: Math.round(r.width),
+      h: Math.round(r.height),
+      inView: r.x >= 0 && r.right <= window.innerWidth + 1,
+      reachable: !!hit && (hit === a || a.contains(hit)),
+    };
+  });
+  if (!support) problems.push(`${name}: the support link is gone`);
+  else {
+    if (!support.inView) problems.push(`${name}: the support link is off screen`);
+    if (!support.reachable) problems.push(`${name}: the support link is not tappable`);
+    // 24px is the WCAG 2.2 target-size minimum for a pointer target.
+    if (support.h < 24 || support.w < 24) {
+      problems.push(`${name}: the support link is ${support.w}x${support.h}, under 24px`);
+    }
+  }
+
   // Strike via touch.
   const box = await page.$eval('#board', (c) => {
     const r = c.getBoundingClientRect();

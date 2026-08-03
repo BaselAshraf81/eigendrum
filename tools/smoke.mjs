@@ -79,6 +79,45 @@ async function main() {
   if (first.modeRows === 0) problems.push('no modes were listed after solving');
   if (!/Lowest mode/.test(first.readout)) problems.push('readout did not describe the drum');
 
+  // The masthead links. Both were plain underlined text and did not look pressable,
+  // so they are chips now. Hit-tested rather than counted: a link that exists in the
+  // DOM but has something painted over it is not a link anybody can use.
+  const links = await page.evaluate(() => {
+    const probe = (id) => {
+      const a = document.getElementById(id);
+      if (!a) return { present: false };
+      const r = a.getBoundingClientRect();
+      const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+      return {
+        present: true,
+        href: a.getAttribute('href'),
+        rel: a.getAttribute('rel'),
+        label: a.textContent.replace(/\s+/g, ' ').trim(),
+        keyline: getComputedStyle(a).borderTopWidth,
+        reachable: !!hit && (hit === a || a.contains(hit)),
+        width: Math.round(r.width),
+      };
+    };
+    return { source: probe('link-source'), support: probe('link-support') };
+  });
+  console.log('source  :', links.source.label, `-> ${links.source.href}`);
+  console.log('support :', links.support.label, `-> ${links.support.href}`);
+
+  for (const [name, a, href] of [
+    ['source', links.source, 'https://github.com/BaselAshraf81/eigendrum'],
+    ['support', links.support, 'https://ko-fi.com/baselashraf'],
+  ]) {
+    if (!a.present) problems.push(`the ${name} link is missing from the masthead`);
+    else {
+      if (a.href !== href) problems.push(`the ${name} link points at ${a.href}`);
+      if (!/noopener/.test(a.rel || '')) problems.push(`the ${name} link has no rel=noopener`);
+      if (!a.reachable) problems.push(`the ${name} link is not clickable where it is drawn`);
+      // A chip's keyline is what makes it read as pressable rather than as prose.
+      if (a.keyline === '0px') problems.push(`the ${name} link has no keyline, so it reads as text`);
+      if (a.width < 40) problems.push(`the ${name} link is too small to hit (${a.width}px)`);
+    }
+  }
+
   // Every listed mode has to be pressable, because pressing one plays it. The
   // ledger used to be sticky over the foot of this column, which left the last five
   // rows painted over: elementFromPoint on mode 16 returned a ledger term, so the
