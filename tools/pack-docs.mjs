@@ -18,6 +18,11 @@
  * p7zip all can, and that is the right trade when the alternative is no real
  * protection at all.
  *
+ * Note that the output is never byte-reproducible: AES uses a fresh random salt each
+ * run, so re-packing unchanged documents still produces a different file and git will
+ * report the archive as modified. That is expected. `git checkout -- docs` if the
+ * contents genuinely did not change.
+ *
  * Usage:
  *   $env:DOCS_PASSWORD = '...'; npm run pack-docs
  */
