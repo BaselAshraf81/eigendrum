@@ -693,6 +693,31 @@ h2 {
   font-size: 0.72rem;
   letter-spacing: 0.02em;
   color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+/* Small key caps for the shortcut map. A hairline box rather than a soft
+   drop-shadow "keycap", to stay inside this sheet's flat, ruled vocabulary. The
+   whole run sits in its own inline-flex block so the sixteen keys wrap together
+   as a strip instead of splitting mid-run onto two lines. */
+.modes-hint .keymap {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  vertical-align: middle;
+  margin-top: 0.3rem;
+}
+.modes-hint kbd {
+  display: inline-block;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0.05rem 0.32rem;
+  border: var(--hair) solid var(--ink-soft);
+  border-radius: 2px;
+  color: var(--ink);
+  background: rgba(20, 18, 15, 0.05);
 }
 
 .spectrum {

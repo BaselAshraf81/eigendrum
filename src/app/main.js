@@ -1102,6 +1102,37 @@ function download(blob, filename) {
 window.addEventListener('resize', () => board.resize());
 
 /**
+ * Keys play modes directly, matching the row numbers shown in the index: 1
+ * through 9 on either the top row or the numpad for modes 1-9, then Q W E R T Y
+ * U continue the same row of the keyboard for modes 10-16 (MODES tops out at 16,
+ * so this reaches exactly the last one without needing two more rows). Ignored
+ * while typing into a text field (the equation box) or while tracing.
+ */
+const MODE_KEYCODES = [
+  'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9',
+  'KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU',
+];
+const NUMPAD_KEYCODES = [
+  'Numpad1', 'Numpad2', 'Numpad3', 'Numpad4', 'Numpad5', 'Numpad6', 'Numpad7', 'Numpad8', 'Numpad9',
+];
+
+window.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const active = document.activeElement;
+  if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return;
+  if (state.drawMode || state.drawing) return;
+  if (!state.drum || !state.freqs) return;
+
+  let i = MODE_KEYCODES.indexOf(e.code);
+  if (i < 0) i = NUMPAD_KEYCODES.indexOf(e.code);
+  if (i < 0) return;
+  if (i >= state.freqs.length) return;
+
+  e.preventDefault();
+  selectMode(i);
+});
+
+/**
  * Follow the URL when it changes under us.
  *
  * The formula format exists so that a shape is readable text you can retype and
