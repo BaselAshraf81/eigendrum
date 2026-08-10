@@ -1204,14 +1204,12 @@ dialog form {
   .masthead-titles p {
     display: none;
   }
-  /* Four chips do not fit beside the wordmark on a phone, and the controls win. The
-     source is the one to drop, because it is also in the explainer's colophon and the
-     support link is not reachable any other way. */
-  #link-source {
-    display: none;
-  }
-  /* Only the explainer loses its label. The sound button keeps its words, because
-     a 2px diagonal inside a 17px glyph is not a visible mute. */
+  /* Four chips do not fit beside the wordmark on a phone with their labels intact, so
+     source and explainer both shed theirs and shrink to an icon-only square. The
+     source chip stays reachable rather than vanishing: it is the only link off the
+     page that a mobile visitor could otherwise miss entirely, since the explainer's
+     colophon copy is easy to skip past without opening the dialog. */
+  #link-source span,
   #btn-about span {
     position: absolute;
     width: 1px;
@@ -1219,6 +1217,10 @@ dialog form {
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;
+  }
+  #link-source,
+  #btn-about {
+    padding: 0.4rem;
   }
   #btn-sound {
     font-size: 0.8rem;
