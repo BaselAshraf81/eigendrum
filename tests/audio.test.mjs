@@ -175,6 +175,53 @@ test('a physically scaled strike never reaches the soft limiter', () => {
   assert.ok(peak > 0.1, `pre-limiter peak was only ${peak}; the strike would be inaudible`);
 });
 
+test('overlapping voices can exceed full scale even though a single strike never does', () => {
+  // main.js caps a fast series of taps at MAX_VOICES = 6, each independently
+  // scaled so its OWN peak sits near TARGET_PEAK = 0.72 and tanh-limited on its
+  // own. Nothing in that per-voice math looks at what else is ringing, so voices
+  // simply sum at the destination. This reproduces that summation directly - no
+  // AudioContext needed, since it is pure arithmetic - to pin the fact that
+  // motivates routing every voice through one shared limiter (`masterBus` in
+  // main.js) rather than trusting the per-voice tanh alone.
+  const { mesh, modes, eigenvalues } = solveDrum(regularPolygon(160, 1), {
+    modes: 16,
+    targetNodes: 2200,
+  });
+  const freqs = frequencies(eigenvalues, 130);
+  const w = nodeWeights(mesh);
+  const norms = modeNorms(mesh, modes, w);
+  const taus = decayTimes(freqs, 1.7, 0.5);
+  const CONTACT_RATIO = 2.2;
+  const TARGET_PEAK = 0.72;
+  const OUT_GAIN = 0.85; // main.js: out.gain.value
+  const MAX_VOICES = 6;
+  const SR = 48000;
+
+  const head = strikeHeadroom(mesh, modes, norms, freqs, w, 0.09, CONTACT_RATIO);
+  const gain = TARGET_PEAK / head;
+  const amps = audibleAmps(strikeAmplitudes(mesh, modes, 0.22, 0, 0.09, w), norms, freqs, CONTACT_RATIO);
+  const voice = renderStrike({ freqs, amps, taus, sampleRate: SR, gain });
+
+  let singlePeak = 0;
+  for (const v of voice) singlePeak = Math.max(singlePeak, Math.abs(v * OUT_GAIN));
+  assert.ok(singlePeak < 0.95, `a single voice should sit well under full scale, got ${singlePeak}`);
+
+  // Six taps 30ms apart is a fast but ordinary tapping cadence, not an
+  // adversarial one.
+  const interval = Math.round(0.03 * SR);
+  const sum = new Float64Array(voice.length + interval * (MAX_VOICES - 1));
+  for (let v = 0; v < MAX_VOICES; v++) {
+    const offset = v * interval;
+    for (let n = 0; n < voice.length; n++) sum[offset + n] += voice[n] * OUT_GAIN;
+  }
+  let stackedPeak = 0;
+  for (const s of sum) stackedPeak = Math.max(stackedPeak, Math.abs(s));
+  assert.ok(
+    stackedPeak > 1,
+    `expected overlapping voices to exceed full scale without a shared limiter, got ${stackedPeak}`,
+  );
+});
+
 test('decay times follow Rayleigh damping, so loss grows with frequency squared', () => {
   // C = alpha M + beta K gives 1/tau = alpha + beta omega^2. The old law used a
   // tunable power of the frequency ratio which sat below 1 at the default, leaving
