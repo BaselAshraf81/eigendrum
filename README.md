@@ -25,7 +25,7 @@ mathematical ancestors of the sand figures Ernst Chladni was drawing in 1787.
 
 <p align="center"><em>Left: mode 9 of a star. Right: something drawn by hand, struck once.<br />Neither has a closed-form spectrum. Both were solved from the outline alone.</em></p>
 
-**Live at [eigendrum.com](https://eigendrum.com).**
+**Live at [eigendrum.com](https://eigendrum.com).** For advertising inquiries: [u2679054@uel.ac.uk](mailto:u2679054@uel.ac.uk)
 
 No dependencies, no build step, no backend. Clone it and open `index.html`, or:
 
