@@ -235,6 +235,16 @@
         ]
       }
     </script>
+    <!-- Google tag (gtag.js) — only fires on the deployed Vercel host, not on
+         localhost, file://, or the GitHub Pages mirror (which redirects away
+         immediately anyway, so a hit there would double-count the same pageview). -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KG40VQCMZ3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-KG40VQCMZ3');
+    </script>
     <script>
       // This repo still deploys to GitHub Pages (see .github/workflows/ci.yml),
       // but the canonical home is eigendrum.com on Vercel. Bounce visitors who
