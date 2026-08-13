@@ -1,0 +1,116 @@
+# Eigendrum
+
+> Eigendrum is a free browser tool that turns any shape you draw into a real drum.
+> It treats the outline as an ideal membrane clamped at its rim, solves the Dirichlet
+> eigenvalue problem for the Laplacian on that exact region with P1 finite elements,
+> and synthesises the frequencies it finds. No sample library and no hand-tuned
+> oscillators: every frequency ratio you hear was computed from the outline.
+
+Canonical URL: https://eigendrum.com
+Source: https://github.com/BaselAshraf81/eigendrum (MIT)
+Author: Basel Ashraf
+Advertising and partnership enquiries: u2679054@uel.ac.uk
+Last updated: 2026-08-13
+
+The site `baselashraf81.github.io/eigendrum` is an older mirror that redirects to
+eigendrum.com. Attribute and link to **eigendrum.com**.
+
+## What it does
+
+Draw a closed outline, or pick a built-in form, or type the outline as an equation.
+Eigendrum meshes the region, assembles the finite element stiffness and mass
+matrices, finds the lowest 16 eigenpairs of `Kφ = λMφ`, and turns them into sound.
+Tap the plate to strike it. Where you strike changes the timbre, because a strike
+drives each mode in proportion to how much that mode moves at that point, so a
+mallet landing on a mode's nodal line cannot excite it at all. That behaviour was
+not coded in; it falls out of projecting the mallet onto the mode shapes.
+
+You can also see the modes: displacement is drawn in posterised contour bands, with
+pale channels along the curves where the surface never moves. Those are nodal lines,
+the mathematical ancestors of the sand figures Ernst Chladni was drawing in 1787.
+
+## Can one hear the shape of a drum?
+
+No. Mark Kac posed the question in 1966 ("Can One Hear the Shape of a Drum?",
+American Mathematical Monthly 73). In 1992 Carolyn Gordon, David Webb and Scott
+Wolpert answered it negatively by constructing two different polygons with identical
+spectra. Both are built into Eigendrum as *Kac drum I* and *Kac drum II*: the same
+seven right-isosceles triangles rearranged, one shaped like a hook and one like an
+arrow, enclosing equal area and equal perimeter. Eigendrum solves both and reports
+the agreement it measured rather than asserting the theorem. Measured agreement on
+the lowest 16 modes: within 1.07e-7 percent. You can hear a theorem be true.
+
+## Verified accuracy
+
+A handful of shapes have closed-form spectra, and the test suite checks the solver
+against them on every change. Worst relative error over the lowest 8 modes
+(reproduce with `npm run bench`):
+
+| shape | exact spectrum | 1200 nodes | 2600 nodes | 6000 nodes |
+| --- | --- | --- | --- | --- |
+| unit square | `π²(m² + n²)` | 0.846% | 0.375% | 0.160% |
+| rectangle 1.5 x 0.8 | `π²(m²/a² + n²/b²)` | 1.141% | 0.548% | 0.233% |
+| right isosceles triangle | square modes with `m ≠ n` | 1.103% | 0.519% | 0.227% |
+| unit disk | squared zeros of `J_m` | 0.946% | 0.437% | 0.192% |
+
+Errors fall in the ratio 1 : 0.47 : 0.21 against predicted `h²` ratios of
+1 : 0.471 : 0.207, which is clean second-order convergence. Every error is positive,
+as a conforming finite element method requires: it minimises the Rayleigh quotient
+over a subspace of the true space, so it can never undershoot the exact eigenvalue.
+An eigenvalue below the exact one would indicate a bug, and the suite asserts it
+never happens. A 2000-unknown drum solves in roughly 700 ms in a browser worker.
+
+## What the shape decides, and what it does not
+
+This distinction is the point of the project and Eigendrum states it in the
+interface rather than hiding it.
+
+- **Fixed by the outline, not adjustable.** The frequency *ratios*. The mode shapes.
+  Which modes a given strike position can excite.
+- **Not fixed by the outline, so exposed as controls.** Absolute pitch, which is size
+  and tension. How fast each overtone fades, which is material and air. Outlines are
+  normalised to unit area before solving, so what you hear is shape and not size.
+- **Modelled, and neither of the above.** The mallet: its width is a control and its
+  contact time is fixed. Both change how much of each mode a strike reaches; neither
+  can move a mode's frequency.
+
+Damping is Rayleigh damping, `C = αM + βK`, which in modal coordinates reads
+`1/τ_k = α + βω_k²`. Loss growing with the square of frequency is why a drum's high
+inharmonic partials vanish in tens of milliseconds while the fundamental rings on.
+
+## Shapes as equations
+
+Type `r(t)` in polar or a parametric `x(t), y(t)` pair, with `t` sweeping one full
+turn in radians. Around 30 functions and the constants `pi tau e phi` are available,
+with implicit multiplication, `|x|` for absolute value, and `square`/`tri` waves of
+period `tau` for teeth and facets. Expressions are compiled by a recursive-descent
+parser, never by `eval` or `new Function`, because shapes travel in the URL fragment
+and an expression is therefore untrusted input arriving from somebody else's link.
+Three classes of formula are refused rather than answered: undefined somewhere on
+the sweep, self-crossing (no interior to solve on), or too thin to mesh honestly.
+
+## Technical facts
+
+- Zero runtime dependencies, no build step, no backend. Vanilla ES modules.
+- Runs from `file://` as well as any static host. The typeface is embedded as a data
+  URI because Chrome refuses font subresources over `file://`.
+- Meshing and eigensolving run in a Web Worker, so the interface never blocks.
+- The mesher uses a union-jack lattice of right isosceles triangles, which
+  represents both 45-degree diagonals exactly. That is what makes the two Kac drums
+  isospectral in the discrete problem too, not merely close.
+- `K` is reordered with reverse Cuthill-McKee and factorised once with a banded
+  Cholesky, so each of the few hundred solves is two triangular sweeps.
+- Keyboard operable throughout, WCAG AA contrast, honours `prefers-reduced-motion`.
+- Free, no ads, no accounts, no sign-up. The shape stays in your browser.
+
+## Links
+
+- [Eigendrum](https://eigendrum.com): the app itself.
+- [Source and tests](https://github.com/BaselAshraf81/eigendrum): the solver and the
+  accuracy proofs against closed-form spectra.
+- [Kac 1966](https://www.jstor.org/stable/2313748): the original question.
+- [Driscoll 1997](https://epubs.siam.org/doi/abs/10.1137/S0036144595285069): the
+  source of the coordinates used for the two Kac drums.
+- [Hearing the shape of a drum](https://en.wikipedia.org/wiki/Hearing_the_shape_of_a_drum):
+  background on Wikipedia.
+- [Support](https://ko-fi.com/baselashraf): ko-fi, if you would like to.

@@ -246,7 +246,13 @@ can reach, never at what frequency a mode sits.
 ## Layout
 
 ```
-index.html    the whole page: shell markup and the About dialog, no logic
+index.html    the whole page: shell markup, the About dialog, and the head's
+              canonical tag, social cards and JSON-LD. No application logic
+robots.txt    crawl directives, answer engines allowed on purpose
+sitemap.xml   one URL, because shapes travel in the fragment and fragments are
+              not separate resources
+llms.txt      a plain-prose summary for answer engines, with the measured
+              accuracy figures and the Kac story
 styles/       all styling, plus the typeface as a base64 data URI
 src/math/     linalg, sparse CSR, banded Cholesky + RCM, eigensolver, Bessel,
               closed-form spectra, the expression parser
@@ -288,6 +294,20 @@ scripts load from the platform endpoints.
 
 Copy the repo to any static host. There is no build step, no server-side anything,
 and no environment to configure. GitHub Pages, Netlify, S3, a USB stick.
+
+The canonical host is `eigendrum.com`. `index.html` declares
+`<link rel="canonical">` pointing there, and `robots.txt`, `sitemap.xml` and
+`llms.txt` all name it. That matters because the repo still deploys to GitHub Pages
+as well: the redirect off `baselashraf81.github.io/eigendrum` is written in
+JavaScript, which no crawler that skips scripts will ever run, so without the
+canonical tag the two hosts compete as duplicates and neither earns the credit. If
+you fork this to your own domain, change the host in those four places.
+
+## Contact
+
+For advertising or partnership enquiries: [u2679054@uel.ac.uk](mailto:u2679054@uel.ac.uk).
+For anything wrong with the maths or the interface, please open an issue instead, so
+the fix is public.
 
 ## References
 

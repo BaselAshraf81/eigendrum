@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Eigendrum is a single indexable document. Shapes travel in the URL fragment
+  (#p=circle, #f=p:1 + 0.3cos(5t), #s=...), and fragments are not separate
+  resources, so listing them here would be inventing URLs that do not exist.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://eigendrum.com/</loc>
+    <lastmod>2026-08-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

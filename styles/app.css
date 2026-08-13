@@ -1234,6 +1234,7 @@ dialog form {
      page that a mobile visitor could otherwise miss entirely, since the explainer's
      colophon copy is easy to skip past without opening the dialog. */
   #link-source span,
+  #link-contact span,
   #btn-about span {
     position: absolute;
     width: 1px;
@@ -1243,6 +1244,7 @@ dialog form {
     white-space: nowrap;
   }
   #link-source,
+  #link-contact,
   #btn-about {
     padding: 0.4rem;
   }

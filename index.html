@@ -3,13 +3,238 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Eigendrum - draw a shape, hear the sound it would actually make</title>
+    <title>Eigendrum - draw a shape and hear it as a real drum</title>
     <meta
       name="description"
-      content="Draw any shape and hear it as a drum. Eigendrum solves the Laplacian eigenvalue problem on the shape you drew with real finite elements, so every frequency you hear was computed, not sampled."
+      content="Draw any shape and hear it as a drum. Eigendrum solves its real vibration modes with finite elements, so every frequency comes from your outline, not a sample."
     />
+
+    <!-- The canonical host. This repo also deploys to baselashraf81.github.io/eigendrum,
+         and the script below bounces browsers off it, but a redirect written in
+         JavaScript is invisible to any crawler that does not execute scripts - which is
+         most of them. Without this tag the two hosts compete as duplicates and neither
+         accumulates the credit. Declaring it is the only way every crawler learns that
+         eigendrum.com is the address to index, cite and attribute. -->
+    <link rel="canonical" href="https://eigendrum.com/" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <meta name="author" content="Basel Ashraf" />
     <meta name="color-scheme" content="light" />
     <meta name="theme-color" content="#f0ede6" />
+
+    <!-- Copying a link is a headline feature here, so every shared drum deserves a
+         preview card rather than a bare URL. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Eigendrum" />
+    <meta property="og:url" content="https://eigendrum.com/" />
+    <meta property="og:title" content="Eigendrum - draw a shape and hear it as a real drum" />
+    <meta
+      property="og:description"
+      content="Draw any shape and hear it as a drum. Every frequency is solved from your outline with finite elements, never sampled. Includes the two drums that sound identical but are not the same shape."
+    />
+    <meta property="og:image" content="https://eigendrum.com/docs/hero.png" />
+    <meta property="og:image:width" content="2010" />
+    <meta property="og:image:height" content="1410" />
+    <meta
+      property="og:image:alt"
+      content="The Eigendrum interface: a circular drum ringing after a strike, its displacement drawn in red and blue contour bands, with the modes it excited listed beside it"
+    />
+    <meta property="og:locale" content="en_GB" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Eigendrum - draw a shape and hear it as a real drum" />
+    <meta
+      name="twitter:description"
+      content="Draw any shape and hear it as a drum. Every frequency is solved from your outline with finite elements, never sampled."
+    />
+    <meta name="twitter:image" content="https://eigendrum.com/docs/hero.png" />
+
+    <!-- Machine-readable summary for crawlers and answer engines. The questions below
+         are the ones people actually type, and each answer is the same claim the page
+         makes in "how it works" - schema that contradicts the page is worse than none.
+         The measured figures are here on purpose: a number with a method behind it is
+         what makes an answer engine willing to cite a source rather than paraphrase it. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://eigendrum.com/#website",
+            "url": "https://eigendrum.com/",
+            "name": "Eigendrum",
+            "alternateName": "Eigendrum - a study of the vibrating plane",
+            "description": "Draw a shape and hear the sound it would actually make, solved from the outline with finite elements.",
+            "inLanguage": "en",
+            "author": { "@id": "https://eigendrum.com/#author" },
+            "publisher": { "@id": "https://eigendrum.com/#author" },
+            "license": "https://opensource.org/licenses/MIT"
+          },
+          {
+            "@type": "Person",
+            "@id": "https://eigendrum.com/#author",
+            "name": "Basel Ashraf",
+            "email": "u2679054@uel.ac.uk",
+            "url": "https://github.com/BaselAshraf81",
+            "sameAs": ["https://github.com/BaselAshraf81", "https://ko-fi.com/baselashraf"]
+          },
+          {
+            "@type": ["WebApplication", "SoftwareApplication"],
+            "@id": "https://eigendrum.com/#app",
+            "name": "Eigendrum",
+            "url": "https://eigendrum.com/",
+            "applicationCategory": ["EducationalApplication", "MultimediaApplication"],
+            "applicationSubCategory": "Physics simulation and modal synthesis",
+            "operatingSystem": "Any (runs in a web browser)",
+            "browserRequirements": "Requires JavaScript, Web Audio and Web Workers",
+            "isAccessibleForFree": true,
+            "inLanguage": "en",
+            "author": { "@id": "https://eigendrum.com/#author" },
+            "license": "https://opensource.org/licenses/MIT",
+            "softwareHelp": "https://github.com/BaselAshraf81/eigendrum#readme",
+            "codeRepository": "https://github.com/BaselAshraf81/eigendrum",
+            "programmingLanguage": "JavaScript",
+            "screenshot": "https://eigendrum.com/docs/hero.png",
+            "description": "Eigendrum treats any outline you draw as an ideal drumhead clamped at its rim, solves the Dirichlet eigenvalue problem for the Laplacian on that exact region using P1 finite elements, and synthesises the frequencies it finds. Nothing is sampled and no overtone is faked.",
+            "featureList": [
+              "Draw a freehand outline and hear it as a drum",
+              "Write the outline as a polar r(t) or parametric x(t), y(t) equation",
+              "Eleven built-in forms including both halves of the Gordon-Webb-Wolpert isospectral pair",
+              "Strike anywhere: timbre changes with position, and modes with a nodal line under the mallet stay silent",
+              "Play any single mode alone, which no real mallet can do",
+              "Watch the vibration modes and their nodal lines, the ancestors of Chladni figures",
+              "See the finite element mesh the solver actually used",
+              "Share a drum as a link, export the strike as WAV or the plate as PNG",
+              "Keyboard operable throughout, WCAG AA contrast, honours prefers-reduced-motion"
+            ],
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "description": "Free, with no ads, no accounts and no sign-up."
+            },
+            "about": [
+              { "@type": "Thing", "name": "Spectral geometry", "sameAs": "https://en.wikipedia.org/wiki/Spectral_geometry" },
+              { "@type": "Thing", "name": "Hearing the shape of a drum", "sameAs": "https://en.wikipedia.org/wiki/Hearing_the_shape_of_a_drum" },
+              { "@type": "Thing", "name": "Chladni figures", "sameAs": "https://en.wikipedia.org/wiki/Ernst_Chladni" },
+              { "@type": "Thing", "name": "Finite element method", "sameAs": "https://en.wikipedia.org/wiki/Finite_element_method" },
+              { "@type": "Thing", "name": "Modal synthesis", "sameAs": "https://en.wikipedia.org/wiki/Physical_modelling_synthesis" }
+            ],
+            "citation": [
+              {
+                "@type": "ScholarlyArticle",
+                "name": "Can One Hear the Shape of a Drum?",
+                "author": "Mark Kac",
+                "datePublished": "1966",
+                "isPartOf": "American Mathematical Monthly 73",
+                "url": "https://www.jstor.org/stable/2313748"
+              },
+              {
+                "@type": "ScholarlyArticle",
+                "name": "One cannot hear the shape of a drum",
+                "author": "Carolyn Gordon, David Webb, Scott Wolpert",
+                "datePublished": "1992",
+                "isPartOf": "Bulletin of the American Mathematical Society 27"
+              },
+              {
+                "@type": "ScholarlyArticle",
+                "name": "Eigenmodes of Isospectral Drums",
+                "author": "Tobin Driscoll",
+                "datePublished": "1997",
+                "isPartOf": "SIAM Review 39",
+                "url": "https://epubs.siam.org/doi/abs/10.1137/S0036144595285069"
+              }
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://eigendrum.com/#faq",
+            "isPartOf": { "@id": "https://eigendrum.com/#website" },
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "What is Eigendrum?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Eigendrum is a free browser tool that turns any shape you draw into a drum you can hear. It treats the outline as an ideal drumhead clamped at its rim, solves the Laplacian eigenvalue problem on that exact region with finite elements, and synthesises the frequencies it finds. Nothing is sampled and no overtone is faked."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can one hear the shape of a drum?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. Mark Kac posed the question in 1966, and in 1992 Carolyn Gordon, David Webb and Scott Wolpert answered it negatively by constructing two different shapes with identical spectra. Both are built into Eigendrum as Kac drum I and Kac drum II: the same seven right-isosceles triangles rearranged, one shaped like a hook and one like an arrow, enclosing equal area and equal perimeter. Eigendrum solves both and reports that all 16 frequencies agree to within 1.07e-7 percent, so you can switch between them and hear that the theorem is true."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How does Eigendrum compute the frequencies?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "It meshes your outline with right-isosceles triangles, assembles the P1 finite element stiffness matrix K and consistent mass matrix M, imposes the clamped edge by never assembling rows for boundary nodes, then finds the lowest 16 eigenpairs of Kφ = λMφ by block inverse iteration with a Rayleigh-Ritz projection. Each frequency is proportional to the square root of its eigenvalue. A 2000-unknown drum solves in roughly 700 milliseconds in a browser worker."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Are the frequencies real or just samples?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Every frequency ratio is computed from your outline. Draw a circle and the overtones come out as ratios of Bessel function zeros, because that is what a circular drum does. The solver is tested against the shapes whose spectra can be written in closed form and reproduces them to better than a fifth of a percent at 6000 nodes: 0.160 percent for the unit square, 0.192 percent for the unit disk, 0.227 percent for the right triangle and 0.233 percent for a 1.5 by 0.8 rectangle, measured over the lowest 8 modes."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Why does a drum sound different depending on where you hit it?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Striking a spot drives each mode in proportion to how much that mode moves at that point. Hit a line where a mode stands still and you cannot excite it at all, so that mode is missing from the sound. Eigendrum does not special-case this; it falls out of projecting the mallet onto the mode shapes, and it is covered by a test that strikes a circle dead centre and checks the two modes with a nodal diameter stay silent."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What are nodal lines and Chladni figures?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "A nodal line is a curve on a vibrating surface that never moves while the rest of it flexes. Eigendrum draws them as pale channels between the red and blue contour bands. They are what Ernst Chladni made visible in 1787 by bowing a metal plate covered in sand: the sand bounces away from the moving regions and collects along the lines that stay still."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Which parts of the sound does the shape decide?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "The shape fixes the frequency ratios, the mode shapes, and which modes a given strike position can excite. None of those are adjustable. The shape does not fix absolute pitch, which is size and tension, or how fast each overtone fades, which is material and air, so both are exposed as sliders. Outlines are scaled to equal area before solving, so what you hear is shape rather than size."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can I write a drum shape as an equation?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. Type a polar r(t) or a parametric x(t), y(t) pair, with t sweeping one full turn in radians. That reaches shapes no hand traces accurately, such as eleven even lobes or a superellipse partway between a circle and a square, and it makes a shape something you can vary: change one number and hear what moved. Expressions are compiled by a recursive-descent parser and never evaluated as JavaScript, because a formula arriving from a shared link is untrusted input."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is Eigendrum free, and does it need an account?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "It is free, with no ads, no accounts and no sign-up, and the source is MIT licensed. There is no application backend and the shape you draw stays in your browser. The deployed site uses Vercel Analytics and Speed Insights for aggregate page-view and performance measurements, with no cookies required."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Where is Eigendrum hosted, and how do I get in touch?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Eigendrum is hosted at eigendrum.com. The older baselashraf81.github.io/eigendrum address is a mirror that redirects there, so eigendrum.com is the URL to link to and cite. For advertising and partnership enquiries, contact the developer, Basel Ashraf, at u2679054@uel.ac.uk."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
     <script>
       // This repo still deploys to GitHub Pages (see .github/workflows/ci.yml),
       // but the canonical home is eigendrum.com on Vercel. Bounce visitors who
@@ -64,6 +289,20 @@
     -->
     <a class="skip" href="#bench">Skip to the controls</a>
 
+    <!-- Off-screen rather than deleted. The visible masthead is a wordmark, which is the
+         right call typographically and useless to anything reading the document: a
+         crawler, a screen reader landing on the H1, or an answer engine deciding what
+         this page is. Two facts also need stating in prose for the same audience, since
+         one lives only in a <link> tag and the other only in a dialog: which host is
+         canonical, and how to reach the developer. Everything here is true and is said
+         somewhere visible too. -->
+    <p class="visually-hidden">
+      Eigendrum is hosted at eigendrum.com. The older address
+      baselashraf81.github.io/eigendrum is a mirror that redirects there, so eigendrum.com
+      is the canonical URL to link to and to cite. For advertising and partnership
+      enquiries, contact the developer, Basel Ashraf, at u2679054@uel.ac.uk.
+    </p>
+
     <header class="masthead">
       <svg class="mark" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
         <circle cx="20" cy="20" r="13" fill="#d8321c" />
@@ -71,7 +310,14 @@
         <rect x="17" y="17" width="6" height="6" fill="#14120f" />
       </svg>
       <div class="masthead-titles">
-        <h1>eigendrum</h1>
+        <!-- The only H1 on the page, and on its own it says nothing about what this is.
+             The continuation is off-screen so the sheet still reads as a wordmark while
+             the heading carries the subject for anyone parsing the document. -->
+        <h1>
+          eigendrum<span class="visually-hidden">
+            - draw a shape and hear it as a real drum</span
+          >
+        </h1>
         <p>a study of the vibrating plane</p>
       </div>
       <div class="masthead-actions">
@@ -110,6 +356,16 @@
             <path d="M4 19h14" stroke="currentColor" stroke-width="2" fill="none" />
           </svg>
           <span>support this</span>
+        </a>
+        <!-- Emailing is a thing you can do, so on this sheet it gets a keyline like every
+             other thing you can do. It is here rather than only in the explainer because
+             an address nobody finds is an address that does not exist. -->
+        <a class="chip" id="link-contact" href="mailto:u2679054@uel.ac.uk">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <rect x="3" y="5" width="18" height="14" stroke="currentColor" stroke-width="2" fill="none" />
+            <path d="M3 6l9 7 9-7" stroke="currentColor" stroke-width="2" fill="none" />
+          </svg>
+          <span>contact</span>
         </a>
         <button type="button" id="btn-sound" class="chip" aria-pressed="true">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -410,6 +666,20 @@
           frequency: the high overtones die away first, which is why a drum darkens as it rings.
         </p>
 
+        <h3>where it lives, and how to reach me</h3>
+        <p>
+          Eigendrum is hosted at
+          <a href="https://eigendrum.com">eigendrum.com</a>. That is the address to link
+          to and to cite; the older <span class="tex">baselashraf81.github.io/eigendrum</span>
+          is a mirror that now redirects there.
+        </p>
+        <p>
+          For advertising or partnership enquiries, write to
+          <a href="mailto:u2679054@uel.ac.uk">u2679054@uel.ac.uk</a>. For anything wrong
+          with the maths or the interface, an issue on the repository is better, because
+          then the fix is public.
+        </p>
+
         <h3>colophon</h3>
         <p>
           No dependencies, no build step, no backend. The deployed site uses Vercel Analytics and
@@ -424,12 +694,6 @@
           <a href="https://github.com/BaselAshraf81/eigendrum" target="_blank" rel="noopener"
             >github.com/BaselAshraf81/eigendrum</a
           >
-        </p>
-        <p>
-          Now hosted at
-          <a href="https://eigendrum.com" target="_blank" rel="noopener">eigendrum.com</a>.
-          For advertising inquiries:
-          <a href="mailto:u2679054@uel.ac.uk">u2679054@uel.ac.uk</a>
         </p>
         <p>
           This is free and has no ads and no accounts. If you would like to put something towards

@@ -29,6 +29,11 @@ PRODUCT.md
 .kiro/steering/10-codebase-map.md
 .kiro/steering/00-project.md
 .kiro/steering/20-memory.md
+# Installed agent skill packs. Vendored tooling for whoever is working on the repo,
+# not part of the build, and not this project's code to redistribute.
+.kiro/skills/
+.agents/skills/
+skills-lock.json
 poki-ready-copy/
 tools/poki-levels.mjs
 tools/poki-smoke.mjs
