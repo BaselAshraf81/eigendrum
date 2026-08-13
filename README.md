@@ -65,7 +65,9 @@ npm test          # 57 tests, including the accuracy proofs below
   meets WCAG AA, and `prefers-reduced-motion` holds the peak displacement instead of
   animating.
 
-Nothing is uploaded, stored or tracked. There is no backend to upload it to.
+The shape stays in your browser. The deployed site uses Vercel Analytics and Speed Insights
+for aggregate page-view and performance measurements; local and GitHub Pages copies do not load
+those scripts. There is no application backend.
 
 ## Writing a shape as an equation
 
@@ -278,9 +280,9 @@ npm run readme-shots  # regenerates the images above
 ```
 
 Puppeteer is a dev dependency, used only by the browser tests, and never loads in
-the browser. The shipped app has zero runtime dependencies in the literal sense:
-every import and every asset reference in `index.html`, `styles/` and `src/`
-resolves inside this repo, with no network fetch at any point.
+the browser. The shipped app has zero runtime packages: every application module and local asset
+resolves inside this repo. On the deployed Vercel site, the two first-party Vercel telemetry
+scripts load from the platform endpoints.
 
 ## Deploying
 
@@ -325,7 +327,8 @@ than a sign anything changed.
 
 ## Support
 
-Free, with no ads and no accounts. If you would like to put something towards it:
+Free, with no ads or accounts. The deployed site uses privacy-focused Vercel Analytics and Speed
+Insights for aggregate usage and performance measurements. If you would like to put something towards it:
 [ko-fi.com/baselashraf](https://ko-fi.com/baselashraf).
 
 ## Licence

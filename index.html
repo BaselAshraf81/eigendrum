@@ -19,6 +19,24 @@
         location.replace('https://eigendrum.com' + location.pathname.replace(/^\/eigendrum/, '') + location.search + location.hash);
       }
     </script>
+    <script>
+      // Vercel serves these first-party telemetry endpoints when Web Analytics
+      // and Speed Insights are enabled for the project. Keep local development,
+      // file:// use, and the legacy GitHub Pages host free of dead requests.
+      const isDeployedHost =
+        location.hostname &&
+        location.hostname !== 'localhost' &&
+        location.hostname !== '127.0.0.1' &&
+        !location.hostname.endsWith('github.io');
+      if (isDeployedHost) {
+        for (const path of ['/_vercel/insights/script.js', '/_vercel/speed-insights/script.js']) {
+          const script = document.createElement('script');
+          script.defer = true;
+          script.src = path;
+          document.head.appendChild(script);
+        }
+      }
+    </script>
     <link rel="stylesheet" href="styles/font.css" />
     <link rel="stylesheet" href="styles/app.css" />
     <link
@@ -394,7 +412,8 @@
 
         <h3>colophon</h3>
         <p>
-          No dependencies, no build step, no backend, nothing sent anywhere. Set in Jost* by
+          No dependencies, no build step, no backend. The deployed site uses Vercel Analytics and
+          Speed Insights, with no cookies or accounts required. Set in Jost* by
           indestructible type*. After Kac, <em>Can One Hear the Shape of a Drum?</em> (1966);
           Gordon, Webb and Wolpert (1992); and Driscoll, <em>Eigenmodes of Isospectral Drums</em>
           (1997), whose coordinates the two Kac drums use.
