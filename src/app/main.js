@@ -6,6 +6,7 @@
  * nothing here is allowed to invent a frequency.
  */
 
+import { injectSpeedInsights } from '@vercel/speed-insights';
 import { Board } from './canvas.js';
 import { PRESETS, PRESETS_BY_ID, normalizeShape } from './presets.js';
 import { renderComb, renderSpectrum, setDrive, setSelected } from './spectrum.js';
@@ -31,6 +32,9 @@ import {
   rectangleSpectrum,
   rightIsoscelesTriangleSpectrum,
 } from '../math/analytic.js';
+
+// Initialize Vercel Speed Insights
+injectSpeedInsights();
 
 const MODES = 16;
 // Accuracy against the exact answers is around half a percent here, far finer

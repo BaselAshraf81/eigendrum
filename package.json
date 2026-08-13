@@ -28,7 +28,9 @@
     "node": ">=20"
   },
   "comment": "The shipped app has zero runtime dependencies. Puppeteer is used only by the browser smoke tests in tools/ and never loads in the browser.",
-  "dependencies": {},
+  "dependencies": {
+    "@vercel/speed-insights": "^2.0.0"
+  },
   "devDependencies": {
     "puppeteer": "^25.4.0"
   }
