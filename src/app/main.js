@@ -514,8 +514,11 @@ function frame(now) {
   board.resize();
   board.clear();
 
-  if (state.drawing || (state.drawMode && state.stroke.length)) {
-    board.drawStroke(state.stroke, false);
+  if (state.drawMode) {
+    // The plate is now a blank sheet, not the previous drum: draw a guide
+    // showing where a stroke actually lands, so it's clear where to draw.
+    board.drawDrawGuide();
+    if (state.stroke.length) board.drawStroke(state.stroke, false);
     requestAnimationFrame(frame);
     return;
   }
@@ -533,7 +536,7 @@ function frame(now) {
       fieldAtTime(drum.modes, state.strike.amps, state.freqs, state.strike.taus, t, state.fieldBuf);
       refAmp = state.strike.refAmp;
       ringing = true;
-      board.drawField(state.fieldBuf, refAmp);
+      if (!els.mesh.checked) board.drawField(state.fieldBuf, refAmp);
       if (elapsed > state.strike.maxTau * 3.2) {
         state.view = 'mode';
         restoreModeView();
@@ -543,11 +546,15 @@ function frame(now) {
       // At rest. Nothing is vibrating, so nothing may move or change colour: the
       // resting view is the selected mode as a still figure.
       state.fieldBuf.set(drum.modes[state.selectedMode] || drum.modes[0]);
-      board.drawField(state.fieldBuf, 1);
+      if (!els.mesh.checked) board.drawField(state.fieldBuf, 1);
     }
 
     if (els.mesh.checked) {
-      board.drawMesh(undefined, ringing ? state.fieldBuf : null, refAmp, ringing);
+      // The red/blue displacement field and the mesh compete for attention, and
+      // the whole point of switching the mesh on is to see the mesh. Show the
+      // triangulation on the plain plate instead, in solid ink so it reads
+      // clearly, rather than as faint hairlines drifting over a coloured field.
+      board.drawMesh('rgba(20,18,15,0.55)', ringing ? state.fieldBuf : null, refAmp, ringing);
     }
     board.drawOutline();
 

@@ -360,6 +360,25 @@ export class Board {
     return { x: (px - this.canvas.width / 2) / s, y: (this.canvas.height / 2 - py) / s };
   }
 
+  /**
+   * A dashed boundary marking the region `fromClientDraw` actually maps to
+   * -1..1 in. Drawing mode used to leave whatever drum was on screen fully
+   * rendered underneath the plate, so people had no idea the whole plate was
+   * now a blank sheet waiting for a stroke. This says so.
+   */
+  drawDrawGuide() {
+    const ctx = this.ctx;
+    const half = this.drawSpaceScale();
+    const cx = this.canvas.width / 2;
+    const cy = this.canvas.height / 2;
+    ctx.save();
+    ctx.setLineDash([6 * this.dpr, 6 * this.dpr]);
+    ctx.lineWidth = 1.5 * this.dpr;
+    ctx.strokeStyle = 'rgba(20, 18, 15, 0.38)';
+    ctx.strokeRect(cx - half, cy - half, half * 2, half * 2);
+    ctx.restore();
+  }
+
   /** In-progress freehand stroke, in draw space. */
   drawStroke(points, closed) {
     if (points.length < 2) return;

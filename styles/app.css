@@ -551,10 +551,25 @@ h2 {
   color: var(--ink);
   font-weight: 600;
 }
-/* Solid, because on this surface drawing your own is the real invitation. */
+/* Solid, because on this surface drawing your own is the real invitation.
+   #btn-draw additionally takes vermilion, the bench's own colour and the one
+   the system already assigns to "where you act", so the real call to action
+   stands out from the ink-and-plaster gallery around it rather than blending
+   into every other form chip. #btn-formula stays ink: two vermilion chips side
+   by side would dilute the one-job rule this colour exists to enforce. */
 .form-chip-draw {
   background: var(--ink);
   color: var(--plaster);
+}
+#btn-draw.form-chip-draw {
+  background: var(--vermilion);
+  border-color: var(--vermilion);
+  color: #fff;
+}
+#btn-draw.form-chip-draw:hover {
+  background: var(--vermilion-bright);
+  border-color: var(--vermilion-bright);
+  color: #fff;
 }
 .form-chip-draw:hover {
   background: var(--vermilion);
