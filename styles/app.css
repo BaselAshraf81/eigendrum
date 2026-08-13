@@ -509,6 +509,15 @@ h2 {
   gap: 0.4rem;
 }
 
+/* Forces the wrap: everything after it starts a new line, so "draw your own" and
+   "from an equation" read as their own row above the preset gallery rather than
+   blending into a wall of a dozen similarly-shaped chips. A zero-size flex item
+   that is 100% wide does this without any JS layout logic. */
+.forms-break {
+  flex: 0 0 100%;
+  height: 0;
+}
+
 /* Preset buttons carry a drawn glyph of the form itself. */
 .form-chip {
   display: inline-flex;

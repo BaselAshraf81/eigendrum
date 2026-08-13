@@ -6,7 +6,6 @@
  * nothing here is allowed to invent a frequency.
  */
 
-import { injectSpeedInsights } from '@vercel/speed-insights';
 import { Board } from './canvas.js';
 import { PRESETS, PRESETS_BY_ID, normalizeShape } from './presets.js';
 import { renderComb, renderSpectrum, setDrive, setSelected } from './spectrum.js';
@@ -33,9 +32,6 @@ import {
   rightIsoscelesTriangleSpectrum,
 } from '../math/analytic.js';
 
-// Initialize Vercel Speed Insights
-injectSpeedInsights();
-
 const MODES = 16;
 // Accuracy against the exact answers is around half a percent here, far finer
 // than the ear can hear, and it keeps the solve fast enough that drawing a shape
@@ -53,6 +49,7 @@ const els = {
   notice: el('notice'),
   readout: el('readout'),
   presets: el('presets'),
+  formsBreak: document.querySelector('.forms-break'),
   spectrum: el('spectrum'),
   modesCount: el('modes-count'),
   staleNote: el('stale-note'),
@@ -319,12 +316,37 @@ function recomputeFrequencies() {
 // ---------------------------------------------------------------------- audio
 
 let audioCtx = null;
+let masterBus = null;
 
+/**
+ * One shared limiter that every voice routes through before the destination.
+ *
+ * `renderStrike`'s tanh is a safety net for a single voice, evaluated before
+ * that voice is ever mixed with another. Overlapping strikes - a fast series of
+ * taps, several drums ringing in the demo, or just two hits close together -
+ * sum *after* that, straight at ctx.destination, which has no limiter of its
+ * own: the browser just hard-clamps to [-1, 1]. Measured with real strike
+ * cadences, six overlapping voices reach a destination peak of 1.0-1.7, so this
+ * was actually clipping, and hard-clamping is worse than tanh's soft knee - it
+ * is a flat ceiling rather than a curve, which is where the harshness came from.
+ *
+ * The threshold sits at -1 dB, just under full scale, so an ordinary single
+ * strike (measured peak around -5 dBFS post-gain) never touches it and the
+ * "quieter near the rim" information stays intact. It only engages when the
+ * sum of voices actually threatens to clip.
+ */
 function ensureAudio() {
   if (!audioCtx) {
     const Ctor = window.AudioContext || window.webkitAudioContext;
     if (!Ctor) return null;
     audioCtx = new Ctor();
+    masterBus = audioCtx.createDynamicsCompressor();
+    masterBus.threshold.value = -1;
+    masterBus.knee.value = 0;
+    masterBus.ratio.value = 20;
+    masterBus.attack.value = 0.001;
+    masterBus.release.value = 0.1;
+    masterBus.connect(audioCtx.destination);
   }
   if (audioCtx.state === 'suspended') audioCtx.resume();
   return audioCtx;
@@ -421,7 +443,7 @@ function ring({ amps, taus, kind, x = 0, y = 0, gain = 1 }) {
   src.buffer = buffer;
   const out = ctx.createGain();
   out.gain.value = 0.85;
-  src.connect(out).connect(ctx.destination);
+  src.connect(out).connect(masterBus);
 
   // Overlapping strikes are natural - a real drum does not mute itself when you
   // hit it again - but the pile-up has to be bounded.
@@ -786,8 +808,10 @@ function buildPresetChips() {
       setDrawMode(false);
       solve({ kind: 'preset', id: preset.id });
     });
-    // The draw button shares this row and lives at its end.
-    els.presets.insertBefore(chip, els.drawBtn);
+    // Draw and equation lead the row (markup order); the break element after them
+    // forces a line, and every preset is inserted before it so the gallery reads
+    // as the alternative rather than the default.
+    els.presets.insertBefore(chip, els.formsBreak);
   }
 }
 

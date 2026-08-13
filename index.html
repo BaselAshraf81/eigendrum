@@ -10,6 +10,15 @@
     />
     <meta name="color-scheme" content="light" />
     <meta name="theme-color" content="#f0ede6" />
+    <script>
+      // This repo still deploys to GitHub Pages (see .github/workflows/ci.yml),
+      // but the canonical home is eigendrum.com on Vercel. Bounce visitors who
+      // land on the old github.io link straight there, preserving the path and
+      // hash so deep links (e.g. #s=... shape shares) keep working.
+      if (location.hostname.endsWith('github.io')) {
+        location.replace('https://eigendrum.com' + location.pathname.replace(/^\/eigendrum/, '') + location.search + location.hash);
+      }
+    </script>
     <link rel="stylesheet" href="styles/font.css" />
     <link rel="stylesheet" href="styles/app.css" />
     <link
@@ -144,6 +153,11 @@
           <div class="forms">
             <h2>forms</h2>
             <div class="chips" id="presets">
+              <!-- These two lead the row rather than trailing it: making your own drum,
+                   by trace or by equation, is the real invitation and the built-in
+                   shapes are the alternative, not the other way round. The break below
+                   forces a line so the pair reads as its own group rather than blending
+                   into a wall of a dozen similarly-shaped buttons. -->
               <button type="button" id="btn-draw" class="form-chip form-chip-draw" aria-pressed="false">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                   <path d="M4 20L17 7" stroke="currentColor" stroke-width="2" fill="none" />
@@ -158,6 +172,7 @@
                 </svg>
                 <span id="formula-label">from an equation</span>
               </button>
+              <span class="forms-break" aria-hidden="true"></span>
             </div>
           </div>
 
@@ -392,8 +407,8 @@
           >
         </p>
         <p>
-          This is free and has no ads, no accounts and no analytics, and it will stay that way.
-          If you would like to put something towards it:
+          This is free and has no ads and no accounts. If you would like to put something towards
+          it:
           <a href="https://ko-fi.com/baselashraf" target="_blank" rel="noopener"
             >ko-fi.com/baselashraf</a
           >
