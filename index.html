@@ -658,7 +658,13 @@
           </li>
         </ul>
       </nav>
-      <div>
+      <!-- The side column stretches and its last block is pushed to the foot, so the
+           leftover height beside the three "read more" entries becomes a deliberate
+           interval rather than a hole. The ad holder above collapses to nothing whenever
+           the active provider does not fill containers - Monetag's In-Page Push places
+           its own banner - and without something anchored at the bottom the column read
+           as an empty box under the meta text. -->
+      <div class="colophon-side">
         <div class="ad ad-home" data-ad="home-footer" data-ad-format="horizontal">
           <span class="ad-label">advertisement</span>
           <div class="ad-frame"></div>
@@ -668,9 +674,23 @@
           domain and keeps it that way.<br />
           <a href="/privacy">Privacy</a> ·
           <a href="mailto:u2679054@uel.ac.uk">Contact</a> ·
-          <a href="https://github.com/BaselAshraf81/eigendrum" target="_blank" rel="noopener">Source</a> ·
-          <a href="https://ko-fi.com/baselashraf" target="_blank" rel="noopener">Support</a>
+          <a href="https://github.com/BaselAshraf81/eigendrum" target="_blank" rel="noopener">Source</a>
         </p>
+
+        <!-- Takes no hue, on purpose. The One Job Rule in DESIGN.md: vermilion is the
+             bench, ultramarine the ledger, chrome yellow selection-and-the-remarkable
+             thing, and asking for money is none of those. Same reasoning that kept the
+             masthead support chip un-tinted. -->
+        <section class="colophon-support" aria-labelledby="colophon-support-h">
+          <h2 id="colophon-support-h">Support this</h2>
+          <p>
+            Eigendrum is free, has no account, and shows one advert. If it was worth
+            something to you, that is the way to say so.
+          </p>
+          <a class="chip" href="https://ko-fi.com/baselashraf" target="_blank" rel="noopener">
+            ko-fi.com/baselashraf
+          </a>
+        </section>
       </div>
     </footer>
 

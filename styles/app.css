@@ -1378,6 +1378,32 @@ dialog form {
   border: 0;
 }
 
+/* Stretches against the taller nav column so the support block can be pushed to the
+   foot. `align-self` rather than changing the grid's `align-items`, which would also
+   stretch the nav and pull its rule away from its content. */
+.colophon-side {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* A region, not a card: plaster ground, told apart by a rule and by adjacency, like
+   every other region on the sheet. `margin-top: auto` is what turns the leftover
+   height into an interval instead of a gap. */
+.colophon-support {
+  margin-top: auto;
+  padding-top: 0.95rem;
+  border-top: var(--rule) solid var(--ink);
+}
+
+.colophon-support p {
+  margin: 0 0 0.8rem;
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+  max-width: 34ch;
+}
+
 .colophon-meta {
   margin: 0.9rem 0 0;
   font-size: 0.86rem;
