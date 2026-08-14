@@ -99,7 +99,12 @@ if (provider === 'none') {
   if (!['adsense', 'medianet', 'newor', 'monetag'].includes(provider)) {
     problems.push(`src/app/ads.js: unknown PROVIDER '${provider}'`);
   }
-  if (!declared.length) {
+  /* Monetag sell their own inventory directly and do not participate in ads.txt, so an
+     empty sellers file is the correct state for them - not the missed-revenue mistake it
+     would be for the header-bidding providers, where every absent line is demand that
+     silently will not bid. */
+  const needsAdsTxt = !['monetag'].includes(provider);
+  if (needsAdsTxt && !declared.length) {
     problems.push(`PROVIDER is '${provider}' but ads.txt declares no sellers`);
   }
   if (saysAdsOff) {

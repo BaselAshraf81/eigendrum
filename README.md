@@ -353,12 +353,15 @@ Free to use, with no account and nothing to install. The deployed site uses Verc
 Analytics and Google Analytics for aggregate usage and performance measurements, and is
 built to be ad-supported — that is what pays for the domain.
 
-Advertising is **not live yet**: `src/app/ads.js` ships with `PROVIDER = 'none'`, which
-collapses every slot. The module is provider-agnostic because the choice of network is
-still open; adapters for AdSense, Media.net and Newor Media are written, and switching is
-one constant plus the IDs. Whichever is used, the placement rules are the same — labelled
-slots, in the footer band and within the written pages, reserving their height so nothing
-shifts, and never overlaying the plate or the drawing surface.
+Advertising is served by **Monetag**, set by one constant (`PROVIDER`) in
+`src/app/ads.js`. The module stays provider-agnostic — adapters for AdSense, Media.net and
+Newor Media are also written, and switching is that constant plus the IDs.
+
+The format is a single in-page banner, which Monetag position themselves rather than
+filling a reserved slot. Every format that hijacks a click was rejected outright:
+no pop-ups, pop-unders, interstitials, full-screen overlays, or notification prompts.
+Drawing here *is* clicking and dragging, so an advert that redirects mid-stroke would
+break the only thing the site does.
 
 None of it applies to a local clone. `ads.js` and the analytics tag both gate on
 `location.hostname`, so running this yourself pulls no third-party script at all and still

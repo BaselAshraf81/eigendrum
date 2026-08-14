@@ -19,10 +19,10 @@
  *    one of them ends up wrong.
  */
 
-/** 'none' | 'adsense' | 'medianet' | 'newor'
- *  Leave as 'none' until an application is approved: every slot then collapses and the
- *  site ships without ad markup, which is the correct state while under review. */
-export const PROVIDER = 'none';
+/** 'none' | 'adsense' | 'medianet' | 'newor' | 'monetag'
+ *  Set to 'none' while an application is under review: every slot then collapses and the
+ *  site ships without ad markup, which is the correct state before approval. */
+export const PROVIDER = 'monetag';
 
 /* Per-provider credentials. Only the active provider's entry is read.
  *
@@ -50,20 +50,20 @@ export const PROVIDERS = {
     script: '',
     slots: { 'home-footer': '', 'article-top': '', 'article-foot': '' },
   },
-  /* Monetag issues one numeric zone ID per placement, from a "Banner" zone in their
-     dashboard - NOT In-Page Push, Vignette, Interstitial, Social Bar or Direct Link.
-     Those trigger on click or on a timer rather than sitting still in a slot, and on a
-     site whose whole interaction model is click-and-drag, a redirect firing off an
-     accidental click would break the one thing a visitor came to do. Only "Banner" is
-     wired up here on purpose; there is no code path in this file that could show the
-     others even if a zone ID for one were pasted in by mistake.
-     `scriptSrc` is deliberately left blank rather than guessed: Monetag's delivery
-     domain is issued per-account inside the exact <script src> the dashboard hands
-     you for that zone, and it is not the same for every publisher. Copy it verbatim
-     from "Get tag" - do not reuse a URL seen in a blog post or Stack Overflow answer. */
+  /* Monetag, as an In-Page Push (Banner) zone.
+     That format was chosen out of the seven Monetag offer because it is the only one
+     that neither hijacks a click nor covers the page. Onclick (Popunder) and MultiTag
+     (which bundles Onclick) fire on any click, and this site's entire interaction is
+     clicking and dragging to trace an outline. Vignette and Interstitial are overlays
+     that would land on top of the instrument. Push Notifications prompt for a browser
+     subscription. Direct Link is a link you place by hand, not a display unit.
+     Unlike the other three providers here this is NOT slot-based: one zone covers the
+     whole site, and Monetag's own tag appends itself to <body> and positions its banner
+     itself rather than filling a container. So `zones` does not exist for this provider
+     and the page's reserved ad frames go unused - see the `siteWide` adapter below. */
   monetag: {
-    scriptSrc: '',
-    zones: { 'home-footer': '', 'article-top': '', 'article-foot': '' },
+    scriptSrc: 'https://nap5k.com/tag.min.js',
+    zone: '11572692',
   },
 };
 
@@ -80,14 +80,16 @@ export function adsAllowed() {
 
 let scriptRequested = false;
 
-function loadScript(src, { crossOrigin } = {}) {
+function loadScript(src, { crossOrigin, target, zone } = {}) {
   if (scriptRequested) return;
   scriptRequested = true;
   const s = document.createElement('script');
   s.async = true;
   if (crossOrigin) s.crossOrigin = crossOrigin;
+  // Monetag identifies the zone by attribute rather than by query string.
+  if (zone) s.dataset.zone = zone;
   s.src = src;
-  document.head.appendChild(s);
+  (target || document.head).appendChild(s);
 }
 
 /* Each adapter answers the same two questions: what does a unit look like, and what
@@ -161,25 +163,18 @@ const ADAPTERS = {
     },
   },
 
-  /* Monetag banner zones are self-contained: one script tag per zone ID, and that
-     script renders straight into the div it finds itself inside - no shared queue, no
-     window-scoped handle to coordinate across zones. So `done` has nothing left to do;
-     everything happens per-unit, which is also why a failed zone cannot take a
-     surviving one down with it. */
+  /* Monetag's In-Page Push tag is one script for the entire site, appended to <body>,
+     which then injects and positions its own banner. There is nothing per-placement to
+     do, so this adapter opts out of the slot machinery entirely via `siteWide` and the
+     page's reserved frames are collapsed instead of filled. Reproduces exactly what the
+     dashboard's snippet does - set data-zone on a fresh <script>, point it at the
+     account's delivery domain, append to body - just without the inline <script> that
+     the snippet would otherwise add to five HTML files. */
   monetag: {
-    ready: (c) => Boolean(c.scriptSrc) && Object.values(c.zones).some(Boolean),
-    unit(frame, name, cfg) {
-      const zone = cfg.zones[name];
-      if (!zone) return false;
-      const s = document.createElement('script');
-      s.async = true;
-      s.dataset.zone = zone;
-      s.src = cfg.scriptSrc;
-      frame.appendChild(s);
-      return true;
-    },
-    done() {
-      /* no-op: each zone's own script tag is the whole integration. */
+    siteWide: true,
+    ready: (c) => Boolean(c.scriptSrc) && Boolean(c.zone),
+    boot(cfg) {
+      loadScript(cfg.scriptSrc, { target: document.body, zone: cfg.zone });
     },
   },
 };
@@ -199,6 +194,16 @@ export function mountAds() {
     // Collapse the reserved space rather than leaving labelled empty frames on a page
     // that is never going to fill them.
     for (const holder of holders) holder.hidden = true;
+    return;
+  }
+
+  /* A site-wide provider injects and places its own unit, so there is nothing to put in
+     the reserved frames. Collapse them: leaving labelled empty boxes on the page would
+     be worse than having no frames at all, and reserving height for a banner that never
+     arrives is a layout hole rather than the layout-shift protection it was meant to be. */
+  if (adapter.siteWide) {
+    for (const holder of holders) holder.hidden = true;
+    adapter.boot(cfg);
     return;
   }
 
