@@ -1,8 +1,24 @@
 # Authorized Digital Sellers for eigendrum.com — https://iabtechlab.com/ads-txt/
 #
-# Declares who is allowed to sell this site's ad inventory. Without it, a growing
-# share of demand simply will not bid, so the file is worth as much as the ad code.
-# Replace pub-0000000000000000 with the publisher ID from AdSense once approved
-# (Account -> Settings -> Account information), keeping the "pub-" prefix and
-# dropping the "ca-" that appears in the ad tag.
-google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+# Declares who may sell this site's ad inventory. Without it a growing share of demand
+# simply will not bid, so this file is worth as much as the ad code is. It must be served
+# at the domain root as text/plain, which vercel.json already pins.
+#
+# NOTHING BELOW IS ACTIVE YET. Uncomment the block for whichever network approves the
+# site, and paste the exact lines from their dashboard rather than editing these by hand
+# — most networks add reseller and intermediary lines beyond the DIRECT one, and a
+# missing line means unfilled inventory rather than a visible error.
+
+# --- Google AdSense -------------------------------------------------------------
+# Publisher ID from AdSense > Account > Settings > Account information. Note the "pub-"
+# prefix here, without the "ca-" that appears in the ad tag itself.
+# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+
+# --- Media.net ------------------------------------------------------------------
+# Media.net issue a full block, typically including Yahoo/Bing reseller lines. Copy
+# theirs verbatim from the dashboard; this single line is only a shape reminder.
+# media.net, 8CU000000, DIRECT
+
+# --- Newor Media ----------------------------------------------------------------
+# Newor run managed header bidding, so their block is long and lists every demand
+# partner they bid into. It must be pasted whole or most of those partners drop out.

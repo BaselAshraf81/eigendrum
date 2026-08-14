@@ -71,9 +71,42 @@ for (const [file, expectedCanonical] of PAGES) {
 const readme = readFileSync('README.md', 'utf8');
 if (/\bno ads\b/i.test(readme)) problems.push('README.md still claims "no ads"');
 
-const ads = readFileSync('ads.txt', 'utf8');
-if (!/^google\.com, pub-\d{16}, DIRECT, f08c47fec0942fa0$/m.test(ads)) {
-  console.log('note: ads.txt still holds the placeholder publisher ID');
+/* The advertising config and the pages have to agree, and the ways they can disagree are
+   all expensive: a live provider with no ads.txt entry loses most of the demand, and a
+   privacy notice that names the wrong partner - or claims ads are off while they are
+   running - is the exact prose-drift failure this file exists to catch. */
+const adsjs = readFileSync('src/app/ads.js', 'utf8');
+const provider = adsjs.match(/^export const PROVIDER = '([a-z]+)';/m)?.[1];
+if (!provider) problems.push('src/app/ads.js: could not read PROVIDER');
+
+const adstxt = readFileSync('ads.txt', 'utf8');
+const declared = adstxt
+  .split('\n')
+  .filter((l) => l.trim() && !l.trim().startsWith('#'));
+
+const privacy = readFileSync('privacy.html', 'utf8');
+const saysAdsOff = /no advertising is running on this site yet/i.test(privacy);
+
+if (provider === 'none') {
+  if (declared.length) {
+    problems.push(`ads.txt declares ${declared.length} seller line(s) but PROVIDER is 'none'`);
+  }
+  if (!saysAdsOff) {
+    problems.push('PROVIDER is \'none\' but privacy.html no longer says advertising is off');
+  }
+  console.log("note: advertising is off (PROVIDER = 'none'); every slot collapses.");
+} else {
+  if (!['adsense', 'medianet', 'newor'].includes(provider)) {
+    problems.push(`src/app/ads.js: unknown PROVIDER '${provider}'`);
+  }
+  if (!declared.length) {
+    problems.push(`PROVIDER is '${provider}' but ads.txt declares no sellers`);
+  }
+  if (saysAdsOff) {
+    problems.push(
+      `PROVIDER is '${provider}' but privacy.html still says no advertising is running`,
+    );
+  }
 }
 
 if (problems.length) {

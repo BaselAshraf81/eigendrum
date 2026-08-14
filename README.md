@@ -349,15 +349,20 @@ than a sign anything changed.
 
 ## Support
 
-Free to use, with no account and nothing to install. The deployed site is ad-supported
-via Google AdSense, and uses Vercel Analytics and Google Analytics for aggregate usage
-and performance measurements — that is what pays for the domain. Ad slots are labelled,
-sit in the footer band and on the written pages, and never overlay the plate or the
-drawing surface. See [`privacy.html`](privacy.html) for the full notice.
+Free to use, with no account and nothing to install. The deployed site uses Vercel
+Analytics and Google Analytics for aggregate usage and performance measurements, and is
+built to be ad-supported — that is what pays for the domain.
 
-None of that applies to a local clone: `src/app/ads.js` only initialises on
-`eigendrum.com`, so running this yourself pulls no third-party script at all and still
-works from `file://`.
+Advertising is **not live yet**: `src/app/ads.js` ships with `PROVIDER = 'none'`, which
+collapses every slot. The module is provider-agnostic because the choice of network is
+still open; adapters for AdSense, Media.net and Newor Media are written, and switching is
+one constant plus the IDs. Whichever is used, the placement rules are the same — labelled
+slots, in the footer band and within the written pages, reserving their height so nothing
+shifts, and never overlaying the plate or the drawing surface.
+
+None of it applies to a local clone. `ads.js` and the analytics tag both gate on
+`location.hostname`, so running this yourself pulls no third-party script at all and still
+works from `file://`. See [`privacy.html`](privacy.html) for the full notice.
 
 If you would like to put something towards it, or would rather it were not ad-supported:
 [ko-fi.com/baselashraf](https://ko-fi.com/baselashraf).
