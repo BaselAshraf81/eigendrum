@@ -60,7 +60,13 @@ export const PROVIDERS = {
      Unlike the other three providers here this is NOT slot-based: one zone covers the
      whole site, and Monetag's own tag appends itself to <body> and positions its banner
      itself rather than filling a container. So `zones` does not exist for this provider
-     and the page's reserved ad frames go unused - see the `siteWide` adapter below. */
+     and the page's reserved ad frames go unused - see the `siteWide` adapter below.
+
+     These two values are duplicated in the inline head snippet of all five HTML pages,
+     which is what actually loads the tag; they are kept here so `ready()` can tell a
+     configured provider from an unconfigured one, and so there is still one documented
+     place recording which zone the site runs. If the zone ever changes, change it in the
+     pages - this entry alone does not load anything. */
   monetag: {
     scriptSrc: 'https://nap5k.com/tag.min.js',
     zone: '11572692',
@@ -80,16 +86,14 @@ export function adsAllowed() {
 
 let scriptRequested = false;
 
-function loadScript(src, { crossOrigin, target, zone } = {}) {
+function loadScript(src, { crossOrigin } = {}) {
   if (scriptRequested) return;
   scriptRequested = true;
   const s = document.createElement('script');
   s.async = true;
   if (crossOrigin) s.crossOrigin = crossOrigin;
-  // Monetag identifies the zone by attribute rather than by query string.
-  if (zone) s.dataset.zone = zone;
   s.src = src;
-  (target || document.head).appendChild(s);
+  document.head.appendChild(s);
 }
 
 /* Each adapter answers the same two questions: what does a unit look like, and what
@@ -163,19 +167,17 @@ const ADAPTERS = {
     },
   },
 
-  /* Monetag's In-Page Push tag is one script for the entire site, appended to <body>,
-     which then injects and positions its own banner. There is nothing per-placement to
-     do, so this adapter opts out of the slot machinery entirely via `siteWide` and the
-     page's reserved frames are collapsed instead of filled. Reproduces exactly what the
-     dashboard's snippet does - set data-zone on a fresh <script>, point it at the
-     account's delivery domain, append to body - just without the inline <script> that
-     the snippet would otherwise add to five HTML files. */
+  /* Monetag's In-Page Push tag is one script for the entire site, and it injects and
+     positions its own banner rather than filling a container. So there is nothing
+     per-placement to do, and this adapter opts out of the slot machinery via `siteWide`.
+     It also loads nothing: the tag is inline in every page's <head>, because Monetag's
+     installation checker reads the served HTML and cannot see a script an ES module adds
+     later. Injecting here as well would fetch the tag twice and bill a double impression.
+     So the only job left is to collapse the reserved frames, which the siteWide branch of
+     mountAds does on its own - hence no `boot`. */
   monetag: {
     siteWide: true,
     ready: (c) => Boolean(c.scriptSrc) && Boolean(c.zone),
-    boot(cfg) {
-      loadScript(cfg.scriptSrc, { target: document.body, zone: cfg.zone });
-    },
   },
 };
 
@@ -203,7 +205,7 @@ export function mountAds() {
      arrives is a layout hole rather than the layout-shift protection it was meant to be. */
   if (adapter.siteWide) {
     for (const holder of holders) holder.hidden = true;
-    adapter.boot(cfg);
+    adapter.boot?.(cfg);
     return;
   }
 

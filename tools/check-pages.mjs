@@ -107,6 +107,29 @@ if (provider === 'none') {
   if (needsAdsTxt && !declared.length) {
     problems.push(`PROVIDER is '${provider}' but ads.txt declares no sellers`);
   }
+
+  /* Monetag's tag is inline in every page's head, because their installation checker
+     reads the served HTML and cannot see a script an ES module appends later. That means
+     the zone ID lives in six places instead of one, so it gets checked: a page missing
+     the tag earns nothing, and a page carrying a stale zone earns for the wrong one. */
+  if (provider === 'monetag') {
+    const zone = adsjs.match(/zone: '(\d+)'/)?.[1];
+    const src = adsjs.match(/scriptSrc: '([^']+)'/)?.[1];
+    if (!zone || !src) {
+      problems.push('src/app/ads.js: monetag zone or scriptSrc missing');
+    } else {
+      for (const [file] of PAGES) {
+        const html = readFileSync(file, 'utf8');
+        if (!html.includes(`dataset.zone = '${zone}'`) || !html.includes(src)) {
+          problems.push(`${file}: missing or stale inline Monetag tag (zone ${zone})`);
+        }
+        // The gate is the whole reason a local clone pulls no third-party script.
+        if (html.includes(src) && !html.includes("location.hostname === 'eigendrum.com'")) {
+          problems.push(`${file}: Monetag tag is not gated to the deployed host`);
+        }
+      }
+    }
+  }
   if (saysAdsOff) {
     problems.push(
       `PROVIDER is '${provider}' but privacy.html still says no advertising is running`,
