@@ -1335,12 +1335,18 @@ dialog form {
    have to scroll past a full viewport of drum to reach it. Plaster ground, because
    the three primaries already have jobs and a fourth field competing with them
    would flatten the composition. This is the sheet's margin, not another panel. */
+/* Three columns: "read more", the ad, built-by/support - in that order, side by side.
+   "Between read more and built by" means between those two columns, not below the
+   taller of two stacked blocks, which is what a two-column layout with a full-width
+   row underneath actually produces. The ad column takes the width that is left over
+   once the other two claim what they need, since it is the one column with no fixed
+   content to size against. */
 .colophon {
   flex: none;
   border-top: var(--rule) solid var(--ink);
   padding: 1.6rem 1.5rem 2rem;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 22rem);
   gap: 1.75rem 2.5rem;
   align-items: start;
 }
@@ -1435,14 +1441,13 @@ dialog form {
   }
 }
 
-/* Stretches against the taller nav column so the support block can be pushed to the
-   foot. `align-self` rather than changing the grid's `align-items`, which would also
-   stretch the nav and pull its rule away from its content. */
+/* No longer needs to stretch against a sibling column now the footer is a single
+   stack, but the block still has its own internal layout: meta text, then the
+   support region pinned below it. */
 .colophon-side {
-  align-self: stretch;
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  max-width: 34rem;
 }
 
 /* A region, not a card: plaster ground, told apart by a rule and by adjacency, like
@@ -1505,22 +1510,28 @@ dialog form {
   width: 100%;
 }
 
-/* Spans the whole footer rather than sitting in the 22rem side column, which is the
-   difference between a band and a box in the corner. */
-.colophon > .ad-home {
-  grid-column: 1 / -1;
-}
-
-/* A wide, short band reads better under the sheet than a 250px block does, and
-   a footer unit that tall would push the real footer content out of reach. */
+/* The middle column of the footer, so it takes a squarer shape than the old
+   full-width band did - roughly the height of the nav and side columns beside it,
+   since all three sit in one row and should look like three columns, not a tall
+   box next to two short ones. */
 .ad-home .ad-frame {
-  min-height: 110px;
+  min-height: 280px;
 }
 
 @media (max-width: 62rem) {
   .colophon {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
     gap: 1.5rem;
+  }
+  /* Single column now, so the explicit rows from the two-column layout would stack the
+     nav and the side column on top of each other instead of one below the other.
+     auto falls back to source order: nav, ad, side column. */
+  .colophon-nav,
+  .colophon > .ad-home,
+  .colophon-side {
+    grid-row: auto;
+    grid-column: auto;
   }
   .ad-home .ad-frame {
     min-height: 250px;

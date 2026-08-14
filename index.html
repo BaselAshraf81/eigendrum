@@ -658,9 +658,15 @@
           </li>
         </ul>
       </nav>
-      <!-- The side column stretches and its last block is pushed to the foot, so the
-           leftover height beside the three "read more" entries becomes a deliberate
-           interval rather than a hole. -->
+
+      <!-- The middle of three columns: "read more" on the left, this, then built-by and
+           support on the right. Sits between the other two in the DOM as well as
+           visually, so its position in source order matches what a sighted reader sees. -->
+      <div class="ad ad-home" data-ad="home-footer" data-ad-format="horizontal">
+        <span class="ad-label">advertisement</span>
+        <div class="ad-frame"></div>
+      </div>
+
       <div class="colophon-side">
         <p class="colophon-meta">
           Built by Basel Ashraf. Free to use, MIT licensed. Advertising pays for the
@@ -684,16 +690,6 @@
             ko-fi.com/baselashraf
           </a>
         </section>
-      </div>
-
-      <!-- Spans both columns, at the foot. It used to sit inside the 22rem side column,
-           which is why it read as a narrow box in the corner rather than a band: a
-           horizontal unit in a narrow column is the wrong shape for the space. Placed
-           last in the DOM as well as last visually, so it is the final thing a screen
-           reader reaches and never interrupts the "read more" links. -->
-      <div class="ad ad-home" data-ad="home-footer" data-ad-format="horizontal">
-        <span class="ad-label">advertisement</span>
-        <div class="ad-frame"></div>
       </div>
     </footer>
 
