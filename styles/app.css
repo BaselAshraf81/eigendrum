@@ -1378,6 +1378,56 @@ dialog form {
   border: 0;
 }
 
+/* The Direct Link unit. It fills the reserved frame, so it inherits the frame's
+   min-height and there is no layout shift when it appears.
+   It deliberately does not look like the site's own controls. A visitor must be able to
+   tell an advert from the instrument at a glance, so this is a dashed keyline rather than
+   the solid 3px ink rule every real region uses, and it takes no primary hue - The One
+   Job Rule again. Hover fills ink, which is the same "this is pressable" language as the
+   chips, because it is in fact pressable. */
+.ad-direct {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.3rem;
+  /* The frame is a centring flex box, so the unit has to opt into filling it. Stretching
+     rather than setting a height keeps one source of truth for the reserved height: the
+     frame's own min-height, which differs between the footer band and the article slots. */
+  align-self: stretch;
+  flex: 1 1 auto;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 2px dashed var(--ink-soft);
+  color: var(--ink);
+  text-decoration: none;
+  transition: background-color 120ms linear, color 120ms linear;
+}
+.ad-direct strong {
+  font-weight: 600;
+  font-size: 0.94rem;
+  letter-spacing: 0.01em;
+}
+.ad-direct span {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+.ad-direct:hover,
+.ad-direct:focus-visible {
+  background: var(--ink);
+  color: var(--plaster);
+  border-style: solid;
+}
+.ad-direct:hover span,
+.ad-direct:focus-visible span {
+  color: var(--plaster);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ad-direct {
+    transition: none;
+  }
+}
+
 /* Stretches against the taller nav column so the support block can be pushed to the
    foot. `align-self` rather than changing the grid's `align-items`, which would also
    stretch the nav and pull its rule away from its content. */

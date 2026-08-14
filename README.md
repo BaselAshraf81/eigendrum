@@ -357,11 +357,17 @@ Advertising is served by **Monetag**, set by one constant (`PROVIDER`) in
 `src/app/ads.js`. The module stays provider-agnostic — adapters for AdSense, Media.net and
 Newor Media are also written, and switching is that constant plus the IDs.
 
-The format is a single in-page banner, which Monetag position themselves rather than
-filling a reserved slot. Every format that hijacks a click was rejected outright:
-no pop-ups, pop-unders, interstitials, full-screen overlays, or notification prompts.
-Drawing here *is* clicking and dragging, so an advert that redirects mid-stroke would
-break the only thing the site does.
+Two zones run. An in-page banner, which Monetag position themselves rather than filling a
+reserved slot, and a Direct Link filling the reserved footer and article frames — the only
+one of their formats that can occupy a container. That one is a plain anchor: no script, no
+iframe, nothing off-origin pulled into the page, so it costs nothing in layout shift and
+cannot execute anything.
+
+Every format that hijacks a click was rejected outright: no pop-ups, pop-unders,
+interstitials, full-screen overlays, or notification prompts. Drawing here *is* clicking
+and dragging, so an advert that redirects mid-stroke would break the only thing the site
+does. A per-click link in a footer cannot do that; nothing happens unless a visitor
+deliberately chooses it.
 
 Almost none of it applies to a local clone. The analytics tag gates on
 `location.hostname`, and `npm run serve` strips the ad tag out of every page it serves, so

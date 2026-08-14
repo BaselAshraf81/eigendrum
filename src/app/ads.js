@@ -56,20 +56,29 @@ export const PROVIDERS = {
      (which bundles Onclick) fire on any click, and this site's entire interaction is
      clicking and dragging to trace an outline. Vignette and Interstitial are overlays
      that would land on top of the instrument. Push Notifications prompt for a browser
-     subscription. Direct Link is a link you place by hand, not a display unit.
-     Unlike the other three providers here this is NOT slot-based: one zone covers the
-     whole site, and Monetag's own tag appends itself to <body> and positions its banner
-     itself rather than filling a container. So `zones` does not exist for this provider
-     and the page's reserved ad frames go unused - see the `siteWide` adapter below.
+     subscription.
+     Unlike the other three providers here the push zone is NOT slot-based: one zone
+     covers the whole site, and Monetag's own tag appends itself to <body> and positions
+     its banner itself rather than filling a container. The reserved ad frames are filled
+     by a second zone, the Direct Link, described below.
 
-     These two values are duplicated in the inline head snippet of all five HTML pages,
-     which is what actually loads the tag; they are kept here so `ready()` can tell a
+     scriptSrc and zone are duplicated in the inline head snippet of all five HTML pages,
+     which is what actually loads that tag; they are kept here so `ready()` can tell a
      configured provider from an unconfigured one, and so there is still one documented
      place recording which zone the site runs. If the zone ever changes, change it in the
-     pages - this entry alone does not load anything. */
+     pages - those two fields alone do not load anything.
+
+     `directLink` is the second zone, and it is the only one of Monetag's seven formats
+     that can fill a container: their own description is "place the Direct Link in any
+     element of your website: banners, buttons, and text". So it is what occupies the
+     page's reserved ad frames, which In-Page Push cannot do. It pays per click rather
+     than per impression, which is also why it is safe to sit in a footer: nothing fires
+     unless a visitor deliberately chooses it, so it cannot interrupt a drag on the
+     plate the way Onclick or a Vignette would. */
   monetag: {
     scriptSrc: 'https://nap5k.com/tag.min.js',
     zone: '11572692',
+    directLink: 'https://omg10.com/4/11572666',
   },
 };
 
@@ -167,17 +176,40 @@ const ADAPTERS = {
     },
   },
 
-  /* Monetag's In-Page Push tag is one script for the entire site, and it injects and
-     positions its own banner rather than filling a container. So there is nothing
-     per-placement to do, and this adapter opts out of the slot machinery via `siteWide`.
-     It also loads nothing: the tag is inline in every page's <head>, because Monetag's
-     installation checker reads the served HTML and cannot see a script an ES module adds
-     later. Injecting here as well would fetch the tag twice and bill a double impression.
-     So the only job left is to collapse the reserved frames, which the siteWide branch of
-     mountAds does on its own - hence no `boot`. */
+  /* Monetag runs two zones at once, and they occupy different space.
+     The In-Page Push tag is loaded inline from every page's <head>, not from here,
+     because their installation checker reads the served HTML and cannot see a script an
+     ES module adds later; injecting it again here would fetch it twice and bill a double
+     impression. It positions its own floating banner, so it needs no container.
+     What this adapter builds is the other zone: the Direct Link, which is the only
+     Monetag format that fills a container, so it is what makes the reserved ad frames
+     earn instead of collapsing. It is a plain anchor - no third-party script, nothing
+     off-origin loaded into the page, no iframe - which is why it costs nothing in layout
+     shift and cannot execute anything. `rel` carries `sponsored` because that is what it
+     is, and `noopener` because any target=_blank link to a third party should. */
   monetag: {
-    siteWide: true,
-    ready: (c) => Boolean(c.scriptSrc) && Boolean(c.zone),
+    ready: (c) => Boolean(c.directLink),
+    unit(frame, name, cfg) {
+      if (!cfg.directLink) return false;
+      const a = document.createElement('a');
+      a.className = 'ad-direct';
+      a.href = cfg.directLink;
+      a.target = '_blank';
+      a.rel = 'noopener sponsored nofollow';
+      a.append(Object.assign(document.createElement('strong'), {
+        textContent: 'See what our sponsor is offering',
+      }));
+      // The destination is chosen by the ad network per visitor, so the copy cannot
+      // promise what is on the other side. It says where it goes, and nothing more.
+      a.append(Object.assign(document.createElement('span'), {
+        textContent: 'Opens in a new tab. Supports the site at no cost to you.',
+      }));
+      frame.appendChild(a);
+      return true;
+    },
+    done() {
+      /* Nothing to load: the anchor is the whole unit, and the push tag is in the head. */
+    },
   },
 };
 
@@ -196,16 +228,6 @@ export function mountAds() {
     // Collapse the reserved space rather than leaving labelled empty frames on a page
     // that is never going to fill them.
     for (const holder of holders) holder.hidden = true;
-    return;
-  }
-
-  /* A site-wide provider injects and places its own unit, so there is nothing to put in
-     the reserved frames. Collapse them: leaving labelled empty boxes on the page would
-     be worse than having no frames at all, and reserving height for a banner that never
-     arrives is a layout hole rather than the layout-shift protection it was meant to be. */
-  if (adapter.siteWide) {
-    for (const holder of holders) holder.hidden = true;
-    adapter.boot?.(cfg);
     return;
   }
 
