@@ -660,15 +660,8 @@
       </nav>
       <!-- The side column stretches and its last block is pushed to the foot, so the
            leftover height beside the three "read more" entries becomes a deliberate
-           interval rather than a hole. The ad holder above collapses to nothing whenever
-           the active provider does not fill containers - Monetag's In-Page Push places
-           its own banner - and without something anchored at the bottom the column read
-           as an empty box under the meta text. -->
+           interval rather than a hole. -->
       <div class="colophon-side">
-        <div class="ad ad-home" data-ad="home-footer" data-ad-format="horizontal">
-          <span class="ad-label">advertisement</span>
-          <div class="ad-frame"></div>
-        </div>
         <p class="colophon-meta">
           Built by Basel Ashraf. Free to use, MIT licensed. Advertising pays for the
           domain and keeps it that way.<br />
@@ -691,6 +684,16 @@
             ko-fi.com/baselashraf
           </a>
         </section>
+      </div>
+
+      <!-- Spans both columns, at the foot. It used to sit inside the 22rem side column,
+           which is why it read as a narrow box in the corner rather than a band: a
+           horizontal unit in a narrow column is the wrong shape for the space. Placed
+           last in the DOM as well as last visually, so it is the final thing a screen
+           reader reaches and never interrupts the "read more" links. -->
+      <div class="ad ad-home" data-ad="home-footer" data-ad-format="horizontal">
+        <span class="ad-label">advertisement</span>
+        <div class="ad-frame"></div>
       </div>
     </footer>
 

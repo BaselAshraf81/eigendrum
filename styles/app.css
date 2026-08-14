@@ -1422,6 +1422,13 @@ dialog form {
   color: var(--plaster);
 }
 
+/* In the wide footer band the copy is centred; stacked hard left across 1200px of
+   plaster would leave the unit looking unfinished rather than deliberate. */
+.ad-home .ad-direct {
+  align-items: center;
+  text-align: center;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ad-direct {
     transition: none;
@@ -1496,6 +1503,12 @@ dialog form {
 }
 .ad-frame .adsbygoogle {
   width: 100%;
+}
+
+/* Spans the whole footer rather than sitting in the 22rem side column, which is the
+   difference between a band and a box in the corner. */
+.colophon > .ad-home {
+  grid-column: 1 / -1;
 }
 
 /* A wide, short band reads better under the sheet than a 250px block does, and
