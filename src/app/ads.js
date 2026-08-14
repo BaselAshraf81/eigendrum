@@ -50,6 +50,21 @@ export const PROVIDERS = {
     script: '',
     slots: { 'home-footer': '', 'article-top': '', 'article-foot': '' },
   },
+  /* Monetag issues one numeric zone ID per placement, from a "Banner" zone in their
+     dashboard - NOT In-Page Push, Vignette, Interstitial, Social Bar or Direct Link.
+     Those trigger on click or on a timer rather than sitting still in a slot, and on a
+     site whose whole interaction model is click-and-drag, a redirect firing off an
+     accidental click would break the one thing a visitor came to do. Only "Banner" is
+     wired up here on purpose; there is no code path in this file that could show the
+     others even if a zone ID for one were pasted in by mistake.
+     `scriptSrc` is deliberately left blank rather than guessed: Monetag's delivery
+     domain is issued per-account inside the exact <script src> the dashboard hands
+     you for that zone, and it is not the same for every publisher. Copy it verbatim
+     from "Get tag" - do not reuse a URL seen in a blog post or Stack Overflow answer. */
+  monetag: {
+    scriptSrc: '',
+    zones: { 'home-footer': '', 'article-top': '', 'article-foot': '' },
+  },
 };
 
 const HOST = 'eigendrum.com';
@@ -143,6 +158,28 @@ const ADAPTERS = {
     },
     done(_count, cfg) {
       loadScript(cfg.script);
+    },
+  },
+
+  /* Monetag banner zones are self-contained: one script tag per zone ID, and that
+     script renders straight into the div it finds itself inside - no shared queue, no
+     window-scoped handle to coordinate across zones. So `done` has nothing left to do;
+     everything happens per-unit, which is also why a failed zone cannot take a
+     surviving one down with it. */
+  monetag: {
+    ready: (c) => Boolean(c.scriptSrc) && Object.values(c.zones).some(Boolean),
+    unit(frame, name, cfg) {
+      const zone = cfg.zones[name];
+      if (!zone) return false;
+      const s = document.createElement('script');
+      s.async = true;
+      s.dataset.zone = zone;
+      s.src = cfg.scriptSrc;
+      frame.appendChild(s);
+      return true;
+    },
+    done() {
+      /* no-op: each zone's own script tag is the whole integration. */
     },
   },
 };

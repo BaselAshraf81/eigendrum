@@ -96,7 +96,7 @@ if (provider === 'none') {
   }
   console.log("note: advertising is off (PROVIDER = 'none'); every slot collapses.");
 } else {
-  if (!['adsense', 'medianet', 'newor'].includes(provider)) {
+  if (!['adsense', 'medianet', 'newor', 'monetag'].includes(provider)) {
     problems.push(`src/app/ads.js: unknown PROVIDER '${provider}'`);
   }
   if (!declared.length) {

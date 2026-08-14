@@ -22,3 +22,7 @@
 # --- Newor Media ----------------------------------------------------------------
 # Newor run managed header bidding, so their block is long and lists every demand
 # partner they bid into. It must be pasted whole or most of those partners drop out.
+
+# --- Monetag / PropellerAds -------------------------------------------------------
+# Monetag's own dashboard states its ads.txt line under Sites > Site settings.
+# propellerads.com, XXXXX, DIRECT
