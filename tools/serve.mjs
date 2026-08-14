@@ -6,7 +6,7 @@
  */
 
 import http from 'node:http';
-import { createReadStream, statSync } from 'node:fs';
+import { createReadStream, readFileSync, statSync } from 'node:fs';
 import { extname, join, normalize, resolve } from 'node:path';
 
 const ROOT = resolve(new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'));
@@ -29,6 +29,17 @@ const TYPES = {
   '.map': 'application/json',
 };
 
+/* The Monetag tag is pasted into the pages exactly as their dashboard issues it, which
+   means it is unconditional - their installation checker reads the served HTML and would
+   not recognise a rewritten or wrapped version. Unconditional is wrong locally, though:
+   impressions from a developer's machine or from the browser suites are traffic no real
+   visitor generated, and networks close accounts over that. So the gate moved from the
+   page to this server, which strips the tag out of any HTML it serves. Production is
+   untouched; localhost never contacts the ad network. */
+function stripAdTag(html) {
+  return html.replace(/[ \t]*<script>\(function\(s\)\{s\.dataset\.zone[\s\S]*?<\/script>\n?/g, '');
+}
+
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   let pathname = decodeURIComponent(url.pathname);
@@ -50,8 +61,23 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const ext = extname(target).toLowerCase();
+  const type = TYPES[ext] || 'application/octet-stream';
+
+  if (ext === '.html') {
+    // Rewritten, so the length changes and the file cannot simply be streamed.
+    const body = stripAdTag(readFileSync(target, 'utf8'));
+    res.writeHead(200, {
+      'content-type': type,
+      'content-length': Buffer.byteLength(body),
+      'cache-control': 'no-cache',
+    });
+    res.end(body);
+    return;
+  }
+
   res.writeHead(200, {
-    'content-type': TYPES[extname(target).toLowerCase()] || 'application/octet-stream',
+    'content-type': type,
     'content-length': stats.size,
     'cache-control': 'no-cache',
   });

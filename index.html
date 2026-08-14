@@ -24,25 +24,19 @@
          it does nothing once the site is verified. -->
     <meta name="monetag" content="dc652167d1ed92a3d315ac2924eb0314" />
 
-    <!-- Monetag In-Page Push, deployed host only.
-         Inline and in the head on purpose, for two separate reasons. Monetag ask for it
-         here, and their installation checker reads the served HTML - a tag injected
-         later by an ES module is invisible to it, so the first version of this looked
-         "not installed" from their side even though it worked in a browser. The gate is
-         the same condition as the gtag block below and as ads.js `adsAllowed()`, so a
-         local clone, a `file://` open, the github.io mirror and the browser suites all
-         still pull no third-party script. src/app/ads.js deliberately does NOT also
-         inject this tag - loading it twice would be two requests and a double
-         impression - it only collapses the reserved ad frames. -->
-    <script>
-      if (location.hostname === 'eigendrum.com' || location.hostname === 'www.eigendrum.com') {
-        const mt = document.createElement('script');
-        mt.async = true;
-        mt.dataset.zone = '11572692';
-        mt.src = 'https://nap5k.com/tag.min.js';
-        document.head.appendChild(mt);
-      }
-    </script>
+    <!-- Monetag In-Page Push, pasted exactly as their dashboard issues it.
+         Verbatim on purpose: their installation checker reads the served HTML and does
+         not recognise a rewritten or wrapped version, so an equivalent hand-written
+         gated copy left the site reading as "not installed" even while ads served.
+         Because it is verbatim it is also unconditional, and it must not run locally -
+         impressions from a developer's machine or from the browser suites are traffic no
+         visitor generated, which is what gets accounts closed. That gate now lives in
+         tools/serve.mjs, which strips this block out of any HTML it serves; a raw
+         `file://` open is the one case with no gate, and will contact the ad network.
+         src/app/ads.js deliberately does NOT also inject this tag - loading it twice
+         would be two requests and a double impression - it only collapses the reserved
+         ad frames, which this format does not fill. -->
+    <script>(function(s){s.dataset.zone='11572692',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 
     <!-- Copying a link is a headline feature here, so every shared drum deserves a
          preview card rather than a bare URL. -->

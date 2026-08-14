@@ -363,9 +363,17 @@ no pop-ups, pop-unders, interstitials, full-screen overlays, or notification pro
 Drawing here *is* clicking and dragging, so an advert that redirects mid-stroke would
 break the only thing the site does.
 
-None of it applies to a local clone. `ads.js` and the analytics tag both gate on
-`location.hostname`, so running this yourself pulls no third-party script at all and still
-works from `file://`. See [`privacy.html`](privacy.html) for the full notice.
+Almost none of it applies to a local clone. The analytics tag gates on
+`location.hostname`, and `npm run serve` strips the ad tag out of every page it serves, so
+development and the test suites contact no ad network — impressions from a developer's
+machine are not impressions.
+
+The one exception, stated plainly because it is the kind of thing that belongs in a README
+rather than in a footnote: the ad tag is pasted verbatim as Monetag issue it, which means
+it is unconditional, so opening a page **directly from `file://`** will request it. Their
+installation checker reads the served HTML and does not recognise a wrapped or rewritten
+copy, so verbatim is the only form that registers as installed. See
+[`privacy.html`](privacy.html) for the full notice.
 
 If you would like to put something towards it, or would rather it were not ad-supported:
 [ko-fi.com/baselashraf](https://ko-fi.com/baselashraf).

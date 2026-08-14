@@ -120,12 +120,27 @@ if (provider === 'none') {
     } else {
       for (const [file] of PAGES) {
         const html = readFileSync(file, 'utf8');
-        if (!html.includes(`dataset.zone = '${zone}'`) || !html.includes(src)) {
+        if (!html.includes(`s.dataset.zone='${zone}'`) || !html.includes(src)) {
           problems.push(`${file}: missing or stale inline Monetag tag (zone ${zone})`);
         }
-        // The gate is the whole reason a local clone pulls no third-party script.
-        if (html.includes(src) && !html.includes("location.hostname === 'eigendrum.com'")) {
-          problems.push(`${file}: Monetag tag is not gated to the deployed host`);
+      }
+      /* The tag is verbatim and therefore unconditional, so the only thing keeping local
+         pageviews and the browser suites from billing impressions is the dev server
+         stripping it. If that ever silently stops matching the snippet, every test run
+         becomes invalid traffic, so it is checked rather than trusted. */
+      const serve = readFileSync('tools/serve.mjs', 'utf8');
+      if (!serve.includes('stripAdTag')) {
+        problems.push('tools/serve.mjs no longer strips the ad tag for local requests');
+      } else {
+        const sample = readFileSync('index.html', 'utf8');
+        const stripRe = serve.match(/html\.replace\((\/[\s\S]*?\/g)/)?.[1];
+        if (!stripRe) {
+          problems.push('tools/serve.mjs: could not read the strip pattern');
+        } else {
+          const body = stripRe.slice(1, -2);
+          if (new RegExp(body, 'g').test(sample) === false) {
+            problems.push('tools/serve.mjs strip pattern no longer matches the tag in index.html');
+          }
         }
       }
     }

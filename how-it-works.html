@@ -15,17 +15,9 @@
     <meta name="theme-color" content="#f0ede6" />
     <meta name="monetag" content="dc652167d1ed92a3d315ac2924eb0314" />
 
-    <!-- Monetag In-Page Push, deployed host only. See index.html for why this is inline
-         in the head rather than left to src/app/ads.js. -->
-    <script>
-      if (location.hostname === 'eigendrum.com' || location.hostname === 'www.eigendrum.com') {
-        const mt = document.createElement('script');
-        mt.async = true;
-        mt.dataset.zone = '11572692';
-        mt.src = 'https://nap5k.com/tag.min.js';
-        document.head.appendChild(mt);
-      }
-    </script>
+    <!-- Monetag In-Page Push, verbatim from their dashboard. See index.html for why it is
+         unmodified, and why tools/serve.mjs strips it locally. -->
+    <script>(function(s){s.dataset.zone='11572692',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="Eigendrum" />
     <meta property="og:url" content="https://eigendrum.com/how-it-works" />
