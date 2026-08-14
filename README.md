@@ -65,9 +65,11 @@ npm test          # 57 tests, including the accuracy proofs below
   meets WCAG AA, and `prefers-reduced-motion` holds the peak displacement instead of
   animating.
 
-The shape stays in your browser. The deployed site uses Vercel Analytics and Speed Insights
-for aggregate page-view and performance measurements; local and GitHub Pages copies do not load
-those scripts. There is no application backend.
+The shape stays in your browser. It lives in the URL fragment, which browsers never send to
+a server, and analytics is configured to report the origin and path only so the shapes you
+make are not recorded. There is no application backend: the mesh, the solve and the audio all
+run on your machine. The deployed site loads Vercel Analytics, Google Analytics and Google
+AdSense; local clones and the GitHub Pages mirror load none of them.
 
 ## Writing a shape as an equation
 
@@ -347,8 +349,17 @@ than a sign anything changed.
 
 ## Support
 
-Free, with no ads or accounts. The deployed site uses privacy-focused Vercel Analytics and Speed
-Insights for aggregate usage and performance measurements. If you would like to put something towards it:
+Free to use, with no account and nothing to install. The deployed site is ad-supported
+via Google AdSense, and uses Vercel Analytics and Google Analytics for aggregate usage
+and performance measurements — that is what pays for the domain. Ad slots are labelled,
+sit in the footer band and on the written pages, and never overlay the plate or the
+drawing surface. See [`privacy.html`](privacy.html) for the full notice.
+
+None of that applies to a local clone: `src/app/ads.js` only initialises on
+`eigendrum.com`, so running this yourself pulls no third-party script at all and still
+works from `file://`.
+
+If you would like to put something towards it, or would rather it were not ad-supported:
 [ko-fi.com/baselashraf](https://ko-fi.com/baselashraf).
 
 ## Licence

@@ -1,14 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Eigendrum is a single indexable document. Shapes travel in the URL fragment
-  (#p=circle, #f=p:1 + 0.3cos(5t), #s=...), and fragments are not separate
-  resources, so listing them here would be inventing URLs that do not exist.
+  Shapes travel in the URL fragment (#p=circle, #f=p:1 + 0.3cos(5t), #s=...), and
+  fragments are not separate resources, so they are deliberately not listed here.
+  Everything below is a real document with its own crawlable prose.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://eigendrum.com/</loc>
-    <lastmod>2026-08-13</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://eigendrum.com/how-it-works</loc>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://eigendrum.com/hearing-the-shape-of-a-drum</loc>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://eigendrum.com/formulas</loc>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://eigendrum.com/privacy</loc>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
   </url>
 </urlset>

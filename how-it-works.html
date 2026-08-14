@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>How Eigendrum works: solving a drumhead's real vibration modes</title>
+    <meta
+      name="description"
+      content="How Eigendrum turns a shape into sound: meshing the outline, assembling finite element matrices, solving for the lowest eigenvalues, and why a strike on a nodal line is silent."
+    />
+    <link rel="canonical" href="https://eigendrum.com/how-it-works" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <meta name="author" content="Basel Ashraf" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f0ede6" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Eigendrum" />
+    <meta property="og:url" content="https://eigendrum.com/how-it-works" />
+    <meta property="og:title" content="How Eigendrum works: solving a drumhead's real vibration modes" />
+    <meta
+      property="og:description"
+      content="Meshing the outline, assembling finite element matrices, solving for the lowest eigenvalues, and why a strike on a nodal line is silent."
+    />
+    <meta property="og:image" content="https://eigendrum.com/docs/nodal-lines.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://eigendrum.com/docs/nodal-lines.png" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "How Eigendrum works: solving a drumhead's real vibration modes",
+        "description": "Meshing the outline, assembling P1 finite element matrices, solving the generalised eigenproblem, and why striking a nodal line excites nothing.",
+        "author": { "@type": "Person", "name": "Basel Ashraf" },
+        "publisher": { "@type": "Person", "name": "Basel Ashraf" },
+        "mainEntityOfPage": "https://eigendrum.com/how-it-works",
+        "image": "https://eigendrum.com/docs/nodal-lines.png",
+        "inLanguage": "en",
+        "about": [
+          { "@type": "Thing", "name": "Finite element method" },
+          { "@type": "Thing", "name": "Eigenvalue problem" },
+          { "@type": "Thing", "name": "Modal synthesis" }
+        ]
+      }
+    </script>
+
+    <link rel="stylesheet" href="styles/font.css" />
+    <link rel="stylesheet" href="styles/app.css" />
+    <link rel="stylesheet" href="styles/page.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f0ede6'/%3E%3Ccircle cx='16' cy='16' r='10' fill='%23d8321c'/%3E%3Cpath d='M0 16h32' stroke='%2314120f' stroke-width='3'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <header class="masthead">
+      <a class="mark-link" href="/" aria-label="Eigendrum home">
+        <svg class="mark" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+          <circle cx="20" cy="20" r="13" fill="#d8321c" />
+          <path d="M0 20h40" stroke="#14120f" stroke-width="3" />
+          <rect x="17" y="17" width="6" height="6" fill="#14120f" />
+        </svg>
+      </a>
+      <div class="masthead-titles">
+        <p class="masthead-eyebrow"><a href="/">eigendrum</a></p>
+        <p>a study of the vibrating plane</p>
+      </div>
+      <div class="masthead-actions">
+        <a class="chip chip-solid" href="/">open the instrument</a>
+      </div>
+    </header>
+
+    <main class="doc">
+      <article class="doc-inner">
+        <p class="doc-kicker">how it works</p>
+        <h1>How Eigendrum turns a shape into a sound</h1>
+        <p class="doc-standfirst">
+          Every frequency you hear is computed from the outline you drew. Nothing is
+          sampled and no overtone is faked. Here is the whole chain, from a closed
+          curve to a decaying sum of sinusoids.
+        </p>
+
+        <p>
+          A drumhead clamped at its rim cannot vibrate in just any shape. It can only
+          vibrate in a specific, discrete set of standing waves, each with its own
+          frequency, and both the shapes and the frequencies are decided entirely by
+          the outline. They are the solutions of
+        </p>
+        <p class="equation">−∇²u = λu &nbsp;inside the region,&nbsp; u = 0 on the boundary</p>
+        <p>
+          which is the Dirichlet eigenvalue problem for the Laplacian. Each solution
+          <span class="tex">u</span> is a mode: a fixed pattern of hills and valleys
+          that the membrane can hold. Each eigenvalue <span class="tex">λ</span> gives
+          that mode's frequency, proportional to <span class="tex">√λ</span>. The
+          <span class="tex">u = 0</span> condition is the clamp - the rim is glued down
+          and cannot move.
+        </p>
+        <p>
+          For a handful of shapes this can be solved with pencil and paper. For
+          everything else, including anything you draw by hand, it cannot. So
+          Eigendrum solves it numerically, in four steps.
+        </p>
+
+        <h2>1. Mesh the region</h2>
+        <p>
+          The outline is filled with a lattice of right-isosceles triangles. Triangles
+          whose centroid falls inside the shape are kept, the resulting jagged boundary
+          is projected onto the true outline, and then the mesh is repaired: boundary
+          nodes slide along the curve to even out their spacing, the degenerate
+          splinters that snapping leaves behind are dropped, and the interior is
+          smoothed.
+        </p>
+        <p>
+          There is deliberately no Delaunay triangulation here. A lattice has a property
+          Delaunay does not: it can represent particular directions <em>exactly</em>. The
+          mesher splits every lattice cell into four triangles around its centre - a
+          union-jack - rather than along a single diagonal. A single diagonal silently
+          staircases the other 45-degree direction, and that mattered enormously: it made
+          two shapes that should be indistinguishable differ by 0.13%. With both diagonals
+          represented exactly, they agree to every digit.
+        </p>
+
+        <div class="ad ad-article" data-ad="article-top" data-ad-format="auto">
+          <span class="ad-label">advertisement</span>
+          <div class="ad-frame"></div>
+        </div>
+
+        <h2>2. Assemble the matrices</h2>
+        <p>
+          Each triangle contributes to two matrices. The <strong>stiffness matrix</strong>
+          <span class="tex">K</span> encodes how much energy it costs to bend the
+          membrane; the <strong>mass matrix</strong> <span class="tex">M</span> encodes
+          how much inertia there is to move. Eigendrum uses P1 elements, meaning the
+          displacement is assumed to vary linearly across each triangle, which makes both
+          matrices computable in closed form per element.
+        </p>
+        <p>
+          The clamped rim is imposed by simply never assembling rows for boundary nodes.
+          There is no penalty term and no constraint equation - the boundary degrees of
+          freedom just do not exist, which is both the cheapest and the most exact way to
+          say "this cannot move".
+        </p>
+
+        <h2>3. Solve for the lowest eigenvalues</h2>
+        <p>
+          What is wanted is the smallest sixteen eigenvalues of
+          <span class="tex">Kφ = λMφ</span>. That "smallest" is the awkward part. The
+          standard workhorse for large sparse eigenproblems, Lanczos iteration,
+          naturally converges to the <em>largest</em> eigenvalues. So Eigendrum uses
+          block inverse iteration with a Rayleigh-Ritz projection, which converges to
+          the bottom of the spectrum instead.
+        </p>
+        <p>
+          Inverse iteration needs to solve <span class="tex">K y = b</span> a few hundred
+          times. Doing that iteratively would be painful, because the stiffness matrix has
+          a condition number around <span class="tex">1/h²</span>, so a conjugate gradient
+          solve would need hundreds of iterations of its own. Instead
+          <span class="tex">K</span> is reordered with reverse Cuthill-McKee to pull its
+          non-zeros close to the diagonal, then factorised <em>once</em> with a banded
+          Cholesky. After that, every solve is two triangular sweeps. A 2000-unknown drum
+          finishes in roughly 700 ms in a browser worker.
+        </p>
+
+        <h2>4. Turn eigenvectors into sound</h2>
+        <p>
+          Frequencies come straight from <span class="tex">√λ</span>. Amplitudes are
+          harder, and this is the step that is easy to get wrong - it was wrong here for a
+          while, and the result sounded like a gong rather than a drum. Three factors apply
+          between the geometry and the loudspeaker, and only the last is a modelling choice.
+        </p>
+        <h3>Mass normalisation</h3>
+        <p>
+          The projection <span class="tex">∫φ g</span> of the mallet onto a mode is that
+          mode's coefficient only if the modes are orthonormal in the mass inner product.
+          The solver normalises them to unit <em>peak</em> instead, because the colour map
+          needs a predictable range. So the projection has to be divided by
+          <span class="tex">∫φ²</span>, which varies by a factor of about two across the
+          first sixteen modes of a disk, and by up to 3.6× on some shapes. Skip it and modes
+          are mis-weighted essentially at random.
+        </p>
+        <h3>The 1/ω rolloff</h3>
+        <p>
+          A mallet delivers an impulse of <em>force</em>. Force sets initial velocity, not
+          initial displacement. Solving <span class="tex">u(0) = 0</span>,
+          <span class="tex">u′(0) = a</span> gives
+          <span class="tex">u(t) = (a/ω) sin ωt</span> - so displacement carries a
+          6 dB/octave rolloff that the raw projection knows nothing about.
+        </p>
+        <h3>Contact time</h3>
+        <p>
+          No real beater is instantaneous. A force pulse lasting <span class="tex">T</span>
+          cannot pump a mode whose period is far shorter than <span class="tex">T</span>,
+          which is modelled here as a one-pole rolloff. It is fixed at a ratio of the
+          fundamental rather than at an absolute frequency, so the timbre does not drift
+          when you move the pitch slider.
+        </p>
+        <p>
+          Decay is <strong>Rayleigh damping</strong>,
+          <span class="tex">C = αM + βK</span>, which in modal coordinates reads
+          <span class="tex">1/τ = α + βω²</span>. Loss rising with the <em>square</em> of
+          frequency is the physical case, and it is why a drum's high inharmonic partials
+          vanish in tens of milliseconds while the fundamental rings on. That fast
+          darkening is most of what makes a drum read as a pitched thud rather than a
+          chord.
+        </p>
+
+        <h2>Why striking a nodal line is silent</h2>
+        <p>
+          Hitting a spot drives each mode in proportion to how much that mode moves at
+          that point. A nodal line is a curve where a mode does not move at all, so a
+          mallet landing there cannot pump that mode, and it is simply absent from the
+          sound.
+        </p>
+        <p>
+          None of that was programmed in. It falls out of the projection, and it is
+          covered by a test: strike a circle dead centre and the radially symmetric
+          fundamental is driven hard, while the next two modes stay essentially silent,
+          because each has a nodal diameter running straight through the centre.
+        </p>
+        <figure class="doc-figure">
+          <img
+            src="docs/nodal-lines.png"
+            alt="Mode 9 of a five-pointed star: six lobes pushed alternately up and down, separated by pale nodal lines where the surface never moves"
+            width="1005"
+            height="705"
+            loading="lazy"
+          />
+          <figcaption>
+            Mode 9 of a star. The pale channels are nodal lines - the mathematical
+            ancestors of the sand figures Ernst Chladni was drawing in 1787.
+          </figcaption>
+        </figure>
+
+        <h2>Why you can trust the numbers</h2>
+        <p>
+          A few shapes do have spectra that can be written down exactly, and the solver is
+          checked against them on every change. Worst relative error over the lowest eight
+          modes:
+        </p>
+        <table>
+          <thead>
+            <tr><th>shape</th><th>1200 nodes</th><th>2600</th><th>6000</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>unit square</td><td>0.846%</td><td>0.375%</td><td>0.160%</td></tr>
+            <tr><td>rectangle 1.5 × 0.8</td><td>1.141%</td><td>0.548%</td><td>0.233%</td></tr>
+            <tr><td>right isosceles triangle</td><td>1.103%</td><td>0.519%</td><td>0.227%</td></tr>
+            <tr><td>unit disk</td><td>0.946%</td><td>0.437%</td><td>0.192%</td></tr>
+          </tbody>
+        </table>
+        <p>
+          The errors fall in the ratio 1 : 0.47 : 0.21 against predicted
+          <span class="tex">h²</span> ratios of 1 : 0.471 : 0.207. That is clean
+          second-order convergence, which is exactly what P1 elements should give.
+        </p>
+        <p>
+          Two further checks are worth naming. First, <strong>every error is
+          positive</strong>. A conforming finite element method minimises the Rayleigh
+          quotient over a restricted subspace of the true space, so it can never
+          undershoot the exact eigenvalue. An answer <em>below</em> the true one would
+          mean a bug, not a coarse mesh, and the test suite asserts it never happens.
+          Second, a circle's overtones come out as ratios of Bessel function zeros -
+          not because anyone typed Bessel zeros in, but because that is what a circular
+          drum does.
+        </p>
+
+        <h2>What the shape decides, and what it does not</h2>
+        <p>Being clear about this is the point of the whole project.</p>
+        <ul>
+          <li>
+            <strong>Fixed by the outline, not adjustable.</strong> The frequency
+            <em>ratios</em>. The mode shapes. Which modes a given strike position can
+            excite.
+          </li>
+          <li>
+            <strong>Not fixed by the outline, so exposed as sliders.</strong> Absolute
+            pitch, which is size and tension. How fast each overtone fades, which is
+            material and air. Outlines are scaled to equal area before solving, so what
+            you hear is shape and not size.
+          </li>
+          <li>
+            <strong>Modelled, and neither of the above.</strong> The mallet - its width is
+            a slider, its contact time is fixed. Both change how much of each mode a
+            strike reaches; neither can move a mode's frequency.
+          </li>
+        </ul>
+
+        <div class="ad ad-article" data-ad="article-foot" data-ad-format="auto">
+          <span class="ad-label">advertisement</span>
+          <div class="ad-frame"></div>
+        </div>
+
+        <a class="doc-cta" href="/">
+          <strong>Draw a shape and hear it</strong>
+          <span>The instrument runs in your browser. Nothing to install.</span>
+        </a>
+      </article>
+    </main>
+
+    <footer class="colophon">
+      <nav class="colophon-nav" aria-label="Site">
+        <h2>Read more</h2>
+        <ul>
+          <li>
+            <a href="/hearing-the-shape-of-a-drum">Can one hear the shape of a drum?</a>
+            <span>Two different shapes, identical spectra, and how to hear it</span>
+          </li>
+          <li>
+            <a href="/formulas">Writing a drum as an equation</a>
+            <span>Polar and parametric outlines, and what gets refused</span>
+          </li>
+          <li>
+            <a href="https://github.com/BaselAshraf81/eigendrum" rel="noopener">Source and tests</a>
+            <span>The solver, and the proofs against closed-form spectra</span>
+          </li>
+        </ul>
+      </nav>
+      <div>
+        <h2>Eigendrum</h2>
+        <p class="colophon-meta">
+          Built by Basel Ashraf. Free to use, MIT licensed.
+          <a href="/privacy">Privacy</a> ·
+          <a href="mailto:u2679054@uel.ac.uk">Contact</a> ·
+          <a href="https://ko-fi.com/baselashraf" rel="noopener">Support</a>
+        </p>
+      </div>
+    </footer>
+
+    <script type="module">
+      import { mountAds } from './src/app/ads.js';
+      mountAds();
+    </script>
+  </body>
+</html>

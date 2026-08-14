@@ -6,6 +6,7 @@
  * nothing here is allowed to invent a frequency.
  */
 
+import { mountAds } from './ads.js';
 import { Board } from './canvas.js';
 import { PRESETS, PRESETS_BY_ID, normalizeShape } from './presets.js';
 import { renderComb, renderSpectrum, setDrive, setSelected } from './spectrum.js';
@@ -1220,3 +1221,9 @@ else if (fromUrl?.kind === 'formula') {
 } else {
   solve({ kind: 'preset', id: 'circle' });
 }
+
+// Last, deliberately. The first solve is the only thing a visitor is waiting for, and
+// an ad script competing for the main thread while the mesher is running would show up
+// as a slower drum rather than as a slower advert. `mountAds` is a no-op off-origin,
+// so this line does nothing at all locally or in the test suites.
+mountAds();

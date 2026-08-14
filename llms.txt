@@ -106,6 +106,15 @@ the sweep, self-crossing (no interior to solve on), or too thin to mesh honestly
 ## Links
 
 - [Eigendrum](https://eigendrum.com): the app itself.
+- [How Eigendrum works](https://eigendrum.com/how-it-works): the full chain from a closed
+  curve to a decaying sum of sinusoids - meshing, P1 assembly, the eigensolve, and the
+  three factors between a geometric projection and what you actually hear.
+- [Can one hear the shape of a drum?](https://eigendrum.com/hearing-the-shape-of-a-drum):
+  Kac's 1966 question, the 1992 negative answer, and the measured agreement between the
+  two isospectral drums.
+- [Writing a drum as an equation](https://eigendrum.com/formulas): the expression
+  language, worked examples, and why formulas are parsed rather than evaluated.
+- [Privacy](https://eigendrum.com/privacy): what is collected and by whom.
 - [Source and tests](https://github.com/BaselAshraf81/eigendrum): the solver and the
   accuracy proofs against closed-form spectra.
 - [Kac 1966](https://www.jstor.org/stable/2313748): the original question.

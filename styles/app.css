@@ -124,6 +124,30 @@ h3 {
   flex: none;
 }
 
+/* On a prose page the h1 belongs to the article, so the wordmark demotes to a link
+   and the mark itself becomes the way home. Same size and weight as the instrument's
+   h1, because the masthead should not visibly change between pages. */
+.mark-link {
+  display: block;
+  flex: none;
+  line-height: 0;
+}
+
+.masthead-eyebrow {
+  margin: 0;
+  font-size: clamp(1.45rem, 2.4vw, 2rem);
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.masthead-eyebrow a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.masthead-eyebrow a:hover {
+  border-bottom: var(--rule) solid var(--vermilion);
+}
+
 .masthead-titles {
   min-width: 0;
 }
@@ -242,14 +266,30 @@ h3 {
   min-height: 0;
 }
 
-/* On a wide screen this is an instrument, not a document: pin it to the viewport
-   so the drum, the index and the bench are all present at once, and let the
-   columns scroll inside themselves. Below the breakpoint the page stacks and
-   scrolls normally. */
+/* On a wide screen this is an instrument, not a document: the drum, the index and
+   the bench are all present at once, and the columns scroll inside themselves.
+   Below the breakpoint the page stacks and scrolls normally.
+
+   The sheet is pinned to the viewport rather than the body, which is the whole
+   trick. `body { overflow: hidden }` used to do this job, and it did it by making
+   the document unscrollable - fine when the sheet was the entire site, fatal once
+   there is a footer under it. Giving the sheet a definite height keeps the first
+   viewport byte-identical (masthead, then a full-height study sheet, nothing else
+   visible) while letting the document scroll to reach what follows. `flex: none`
+   matters: the documented trap is that `flex: 1 1 auto` lets the shell grow past
+   the viewport and shoves the vermilion band off the bottom. */
 @media (min-width: 62.0625rem) {
-  body {
+  .screen {
     height: 100svh;
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  /* Takes whatever the masthead leaves, which is the original behaviour and the only
+     version that does not depend on knowing the masthead's height in advance. */
+  .sheet {
+    flex: 1 1 auto;
+    min-height: 0;
   }
 }
 
@@ -1286,5 +1326,126 @@ dialog form {
   .solving-rule {
     animation: none;
     transform: scaleX(1);
+  }
+}
+
+/* ------------------------------------------------------- the footer band */
+
+/* Below the study sheet, so it costs the instrument nothing: on a wide screen you
+   have to scroll past a full viewport of drum to reach it. Plaster ground, because
+   the three primaries already have jobs and a fourth field competing with them
+   would flatten the composition. This is the sheet's margin, not another panel. */
+.colophon {
+  flex: none;
+  border-top: var(--rule) solid var(--ink);
+  padding: 1.6rem 1.5rem 2rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
+  gap: 1.75rem 2.5rem;
+  align-items: start;
+}
+
+.colophon h2 {
+  font-size: 0.78rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 0.7rem;
+}
+
+.colophon-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.colophon-nav a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: var(--hair) solid var(--ink);
+  font-size: 1.02rem;
+}
+.colophon-nav a:hover {
+  background: var(--chrome);
+}
+
+.colophon-nav span {
+  display: block;
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+  border: 0;
+}
+
+.colophon-meta {
+  margin: 0.9rem 0 0;
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+  max-width: 52ch;
+}
+.colophon-meta a {
+  color: var(--ink);
+}
+
+/* ------------------------------------------------------------------- ads */
+
+/* Labelled, because an ad that could be mistaken for the instrument's own readout
+   would be dishonest and is also against the network's policy. Set in the same
+   uppercase micro-caps as every other field label on the sheet, so it reads as
+   part of the furniture rather than as an apology.
+   The frame reserves its height up front: `min-height` on the box means the ad
+   arrives into space that was always there, so nothing below it ever moves. */
+.ad {
+  margin: 0;
+}
+
+.ad-label {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 0.4rem;
+}
+
+.ad-frame {
+  min-height: 250px;
+  background: var(--plate);
+  border: var(--hair) solid var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.ad-frame .adsbygoogle {
+  width: 100%;
+}
+
+/* A wide, short band reads better under the sheet than a 250px block does, and
+   a footer unit that tall would push the real footer content out of reach. */
+.ad-home .ad-frame {
+  min-height: 110px;
+}
+
+@media (max-width: 62rem) {
+  .colophon {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+  .ad-home .ad-frame {
+    min-height: 250px;
+  }
+}
+
+@media (max-width: 34rem) {
+  .colophon {
+    padding: 1.35rem 1rem 1.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .colophon-nav a:hover {
+    background: transparent;
   }
 }

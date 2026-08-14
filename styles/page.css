@@ -1,0 +1,210 @@
+/* Prose pages, layered on app.css.
+ *
+ * Same world as the instrument - plaster ground, ink rules, Jost lowercase - but a
+ * document rather than a study sheet, so the constraint that governs it is measure
+ * rather than viewport. One column, capped near 68 characters, ruled headings.
+ * Nothing here is a card and nothing floats: a heading is a rule with words over it.
+ */
+
+.doc {
+  flex: 1 1 auto;
+  border-top: var(--rule) solid var(--ink);
+  padding: 2.25rem 1.5rem 3rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: center;
+}
+
+/* One measure, set once. Capping the heading at one width and the paragraphs at
+   another gave the column two different right edges, which reads as a mistake. */
+.doc-inner {
+  width: 100%;
+  max-width: 41rem;
+  margin: 0 auto;
+}
+
+/* The one place chrome yellow appears on a prose page: the eyebrow that says what
+   kind of document this is. It is the "remarkable thing" slot, used sparingly. */
+.doc-kicker {
+  display: inline-block;
+  background: var(--chrome);
+  color: var(--ink);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 0.28rem 0.55rem;
+  margin-bottom: 0.9rem;
+}
+
+.doc h1 {
+  font-size: clamp(1.9rem, 4.2vw, 2.9rem);
+  line-height: 1.08;
+  margin-bottom: 0.6rem;
+}
+
+.doc-standfirst {
+  font-size: 1.16rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 0 0 1.75rem;
+  padding-bottom: 1.4rem;
+  border-bottom: var(--rule) solid var(--ink);
+}
+
+/* app.css carries a bare `h2` selector for the instrument's panel labels - 0.72rem,
+   uppercase, 0.2em tracking, soft ink. That is right for a field label beside a dial
+   and wrong for a section heading in an article, and being an element selector it
+   reaches in here uninvited. Every inherited property it sets has to be named and
+   undone, not just the ones that happen to look wrong at this size. */
+.doc h2 {
+  font-size: 1.42rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--ink);
+  margin: 2.4rem 0 0.75rem;
+  padding-top: 0.85rem;
+  border-top: var(--hair) solid var(--ink);
+}
+
+.doc h3 {
+  font-size: 1.08rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--ink);
+  margin: 1.7rem 0 0.5rem;
+}
+
+.doc p {
+  margin: 0 0 1.05rem;
+}
+
+.doc ul,
+.doc ol {
+  margin: 0 0 1.15rem;
+  padding-left: 1.3rem;
+}
+.doc li {
+  margin-bottom: 0.5rem;
+}
+
+.doc a {
+  color: var(--ink);
+  text-decoration-thickness: var(--hair);
+  text-underline-offset: 0.18em;
+}
+.doc a:hover {
+  background: var(--chrome);
+}
+
+.doc strong {
+  font-weight: 600;
+}
+
+/* Ultramarine is the ledger colour on the instrument, so it keeps that job here:
+   anything that is a measured quantity sits in blue. */
+.doc .tex,
+.doc code {
+  font-family: 'Jost', var(--font);
+  font-feature-settings: 'tnum' 1;
+  background: var(--ultramarine-tint);
+  color: var(--ink);
+  padding: 0.05em 0.3em;
+  font-size: 0.97em;
+}
+
+.doc .equation {
+  background: var(--ultramarine);
+  color: #fff;
+  font-size: 1.12rem;
+  padding: 0.85rem 1rem;
+  margin: 0 0 1.2rem;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Ruled, not boxed, and figures right-aligned on tabular numerals so a column of
+   percentages can actually be compared down the page. */
+.doc table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 1.35rem;
+  font-size: 0.95rem;
+  font-feature-settings: 'tnum' 1;
+}
+.doc th,
+.doc td {
+  text-align: left;
+  padding: 0.45rem 0.7rem 0.45rem 0;
+  border-bottom: var(--hair) solid var(--ink);
+}
+.doc th {
+  font-weight: 600;
+  border-bottom: var(--rule) solid var(--ink);
+  font-size: 0.78rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.doc td + td,
+.doc th + th {
+  text-align: right;
+}
+
+.doc blockquote {
+  margin: 0 0 1.2rem;
+  padding-left: 1rem;
+  border-left: var(--rule) solid var(--vermilion);
+  color: var(--ink-soft);
+}
+
+/* A vermilion field, because this is the bench: the thing you can go and do. */
+.doc-cta {
+  display: block;
+  background: var(--vermilion);
+  color: #fff;
+  text-decoration: none;
+  padding: 1.1rem 1.25rem;
+  margin: 2.25rem 0 0;
+}
+.doc-cta:hover {
+  background: var(--vermilion-bright);
+}
+.doc-cta strong {
+  display: block;
+  font-size: 1.18rem;
+  font-weight: 500;
+  margin-bottom: 0.15rem;
+}
+.doc-cta span {
+  font-size: 0.9rem;
+  opacity: 0.92;
+}
+
+.doc .ad {
+  margin: 2rem 0;
+}
+
+.doc-figure {
+  margin: 0 0 1.35rem;
+}
+.doc-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: var(--hair) solid var(--ink);
+}
+.doc-figure figcaption {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin-top: 0.45rem;
+}
+
+@media (max-width: 34rem) {
+  .doc {
+    padding: 1.5rem 1rem 2.25rem;
+  }
+  .doc .equation {
+    font-size: 0.98rem;
+  }
+}

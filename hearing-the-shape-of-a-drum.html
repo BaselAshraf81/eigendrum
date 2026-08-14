@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Can one hear the shape of a drum? No, and you can hear why</title>
+    <meta
+      name="description"
+      content="Mark Kac asked in 1966 whether a drum's spectrum determines its shape. Gordon, Webb and Wolpert answered no in 1992. Both of their drums are built into Eigendrum, solved and compared."
+    />
+    <link rel="canonical" href="https://eigendrum.com/hearing-the-shape-of-a-drum" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <meta name="author" content="Basel Ashraf" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f0ede6" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Eigendrum" />
+    <meta property="og:url" content="https://eigendrum.com/hearing-the-shape-of-a-drum" />
+    <meta property="og:title" content="Can one hear the shape of a drum? The answer is no, and you can hear it" />
+    <meta
+      property="og:description"
+      content="Two visibly different shapes with identical spectra, both solved in your browser so you can switch between them and listen."
+    />
+    <meta property="og:image" content="https://eigendrum.com/docs/kac-pair.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://eigendrum.com/docs/kac-pair.png" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Can one hear the shape of a drum?",
+        "description": "Kac's 1966 question, the 1992 negative answer by Gordon, Webb and Wolpert, and an interactive demonstration of two isospectral drums.",
+        "author": { "@type": "Person", "name": "Basel Ashraf" },
+        "publisher": { "@type": "Person", "name": "Basel Ashraf" },
+        "mainEntityOfPage": "https://eigendrum.com/hearing-the-shape-of-a-drum",
+        "image": "https://eigendrum.com/docs/kac-pair.png",
+        "inLanguage": "en",
+        "citation": [
+          {
+            "@type": "ScholarlyArticle",
+            "name": "Can One Hear the Shape of a Drum?",
+            "author": "Mark Kac",
+            "datePublished": "1966",
+            "url": "https://www.jstor.org/stable/2313748"
+          },
+          {
+            "@type": "ScholarlyArticle",
+            "name": "One cannot hear the shape of a drum",
+            "author": "Carolyn Gordon, David Webb, Scott Wolpert",
+            "datePublished": "1992"
+          }
+        ],
+        "about": {
+          "@type": "Thing",
+          "name": "Hearing the shape of a drum",
+          "sameAs": "https://en.wikipedia.org/wiki/Hearing_the_shape_of_a_drum"
+        }
+      }
+    </script>
+
+    <link rel="stylesheet" href="styles/font.css" />
+    <link rel="stylesheet" href="styles/app.css" />
+    <link rel="stylesheet" href="styles/page.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f0ede6'/%3E%3Ccircle cx='16' cy='16' r='10' fill='%23d8321c'/%3E%3Cpath d='M0 16h32' stroke='%2314120f' stroke-width='3'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <header class="masthead">
+      <a class="mark-link" href="/" aria-label="Eigendrum home">
+        <svg class="mark" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+          <circle cx="20" cy="20" r="13" fill="#d8321c" />
+          <path d="M0 20h40" stroke="#14120f" stroke-width="3" />
+          <rect x="17" y="17" width="6" height="6" fill="#14120f" />
+        </svg>
+      </a>
+      <div class="masthead-titles">
+        <p class="masthead-eyebrow"><a href="/">eigendrum</a></p>
+        <p>a study of the vibrating plane</p>
+      </div>
+      <div class="masthead-actions">
+        <a class="chip chip-solid" href="/#p=gww-a">hear the pair</a>
+      </div>
+    </header>
+
+    <main class="doc">
+      <article class="doc-inner">
+        <p class="doc-kicker">the famous question</p>
+        <h1>Can one hear the shape of a drum?</h1>
+        <p class="doc-standfirst">
+          If you knew every frequency a drumhead could produce, could you work out its
+          outline? Mark Kac asked exactly that in 1966. The answer turned out to be no -
+          and both of the shapes that prove it are built into this site, so you can
+          switch between them and listen.
+        </p>
+
+        <p>
+          The question has an obvious appeal, because it sounds like it should be
+          answerable either way. A drum's spectrum is an enormous amount of information:
+          an infinite list of numbers, all determined by the shape. Surely somewhere in
+          that list is enough to reconstruct the outline?
+        </p>
+        <p>
+          And a lot <em>is</em> recoverable. From the spectrum alone you can deduce the
+          drum's area. You can deduce its perimeter. You can deduce how many holes it has.
+          These come out of the Weyl asymptotics and the heat-trace expansion - the way the
+          eigenvalues thin out at high frequency encodes the region's geometry in
+          surprisingly direct ways. By the mid-1960s enough of this was known that Kac's
+          paper, published in the <em>American Monthly</em> under the title
+          <a href="https://www.jstor.org/stable/2313748" rel="noopener">Can One Hear the
+          Shape of a Drum?</a>, made the full question feel within reach.
+        </p>
+
+        <h2>The answer, in 1992: no</h2>
+        <p>
+          Carolyn Gordon, David Webb and Scott Wolpert settled it by construction. They
+          built two polygons that are <strong>isospectral</strong> - they have precisely
+          the same infinite list of eigenvalues - and yet are not the same shape. Not
+          rotations or reflections of one another. Genuinely different regions.
+        </p>
+        <p>
+          Both are in Eigendrum's form list as <em>Kac drum I</em> and
+          <em>Kac drum II</em>. Each is assembled from the same seven right-isosceles
+          triangles, rearranged. One looks like a hook, the other like an arrow. They
+          enclose the same area and the same perimeter, which the spectrum already told us
+          had to be true. And every single frequency matches.
+        </p>
+
+        <div class="ad ad-article" data-ad="article-top" data-ad-format="auto">
+          <span class="ad-label">advertisement</span>
+          <div class="ad-frame"></div>
+        </div>
+
+        <h2>Not an approximation that happens to be close</h2>
+        <p>
+          This is the part worth being careful about, because "the frequencies match" is
+          the kind of claim that a numerical demo can fake by simply not looking closely
+          enough.
+        </p>
+        <p>
+          Eigendrum solves <em>both</em> drums and reports the agreement it measured,
+          rather than asserting the theorem and showing you one of them. When you select
+          either drum, the partner is solved in the background and its spectrum is drawn
+          above the same axis, so you can see the ticks land on top of each other. The
+          measured agreement across the lowest sixteen modes is within
+          <span class="tex">1.07 × 10⁻⁷</span> percent.
+        </p>
+        <table>
+          <thead>
+            <tr><th>mode</th><th>drum I</th><th>drum II</th><th>difference</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>2.54398772</td><td>2.54398772</td><td>0.00000%</td></tr>
+            <tr><td>2</td><td>3.66297335</td><td>3.66297335</td><td>0.00000%</td></tr>
+            <tr><td>3</td><td>5.19087452</td><td>5.19087452</td><td>0.00000%</td></tr>
+            <tr><td>12</td><td>15.95243552</td><td>15.95243552</td><td>0.00000%</td></tr>
+          </tbody>
+        </table>
+        <p>
+          There is a structural reason it comes out this clean rather than merely close.
+          Both drums have only axis-aligned and 45-degree edges, on integer coordinates.
+          Eigendrum's mesher is built on a union-jack lattice that reproduces
+          <em>both</em> diagonal directions exactly, so the two discretised problems are
+          isospectral in exact arithmetic too, not just to within meshing error.
+        </p>
+        <p>
+          That was not free. An earlier version of the mesher split each lattice cell
+          along a single diagonal, which silently staircased the other 45-degree
+          direction. Kac drum I meshed exactly and drum II did not, so their computed
+          spectra differed by 0.13% - small enough to look like rounding, large enough
+          that the headline demonstration would have been a fudge.
+        </p>
+
+        <figure class="doc-figure">
+          <img
+            src="docs/kac-pair.png"
+            alt="Kac drum I selected in Eigendrum. A panel reports that both drums were solved and all 16 frequencies agree, and the frequency comb shows the partner drum's ticks landing on top of this drum's"
+            width="1005"
+            height="705"
+            loading="lazy"
+          />
+          <figcaption>
+            The partner drum's spectrum drawn above the same axis. The ticks coincide.
+          </figcaption>
+        </figure>
+
+        <h2>What you can still hear</h2>
+        <p>
+          The negative answer is narrower than it first sounds, and that is what makes it
+          interesting rather than deflating. The spectrum still determines a great deal:
+        </p>
+        <ul>
+          <li><strong>Area.</strong> Recoverable from how the eigenvalues grow.</li>
+          <li><strong>Perimeter.</strong> Recoverable from the next term in the expansion.</li>
+          <li><strong>Number of holes.</strong> Also recoverable.</li>
+          <li>
+            <strong>The shape itself.</strong> Not recoverable in general - and the
+            Gordon-Webb-Wolpert pair is the counterexample that proves it.
+          </li>
+        </ul>
+        <p>
+          It is also worth noting what the pair does <em>not</em> claim. It does not say
+          that isospectral shapes are common; they are extremely rare and were hard to
+          construct. It does not say that hearing tells you nothing. It says the map from
+          shape to spectrum is not injective, which is exactly one thing, precisely
+          established.
+        </p>
+
+        <h2>Hearing a theorem</h2>
+        <p>
+          Reading that two shapes have identical spectra is one thing. Switching between
+          them and finding the sound does not change is another. That is the whole reason
+          this site exists: the pair is preloaded, both are solved from their outlines by
+          the same finite element pipeline as any shape you draw yourself, and the
+          agreement is a measurement on your screen rather than a claim in a paper.
+        </p>
+
+        <h3>References</h3>
+        <ul>
+          <li>
+            M. Kac, <em>Can One Hear the Shape of a Drum?</em>, American Mathematical
+            Monthly 73 (1966).
+            <a href="https://www.jstor.org/stable/2313748" rel="noopener">JSTOR</a>
+          </li>
+          <li>
+            C. Gordon, D. Webb, S. Wolpert, <em>One cannot hear the shape of a drum</em>,
+            Bulletin of the AMS 27 (1992).
+          </li>
+          <li>
+            T. Driscoll, <em>Eigenmodes of Isospectral Drums</em>, SIAM Review 39 (1997).
+            <a href="https://epubs.siam.org/doi/abs/10.1137/S0036144595285069" rel="noopener">SIAM</a>
+            - the source of the coordinates used here.
+          </li>
+          <li>
+            <a href="https://en.wikipedia.org/wiki/Hearing_the_shape_of_a_drum" rel="noopener">Hearing
+            the shape of a drum</a> on Wikipedia, for the wider history.
+          </li>
+        </ul>
+
+        <div class="ad ad-article" data-ad="article-foot" data-ad-format="auto">
+          <span class="ad-label">advertisement</span>
+          <div class="ad-frame"></div>
+        </div>
+
+        <a class="doc-cta" href="/#p=gww-a">
+          <strong>Hear the two drums yourself</strong>
+          <span>Both are preloaded. Switch between them and listen for a difference.</span>
+        </a>
+      </article>
+    </main>
+
+    <footer class="colophon">
+      <nav class="colophon-nav" aria-label="Site">
+        <h2>Read more</h2>
+        <ul>
+          <li>
+            <a href="/how-it-works">How Eigendrum works</a>
+            <span>Meshing, finite elements, and why a nodal strike is silent</span>
+          </li>
+          <li>
+            <a href="/formulas">Writing a drum as an equation</a>
+            <span>Polar and parametric outlines, and what gets refused</span>
+          </li>
+          <li>
+            <a href="https://github.com/BaselAshraf81/eigendrum" rel="noopener">Source and tests</a>
+            <span>Including the isospectral verification</span>
+          </li>
+        </ul>
+      </nav>
+      <div>
+        <h2>Eigendrum</h2>
+        <p class="colophon-meta">
+          Built by Basel Ashraf. Free to use, MIT licensed.
+          <a href="/privacy">Privacy</a> ·
+          <a href="mailto:u2679054@uel.ac.uk">Contact</a> ·
+          <a href="https://ko-fi.com/baselashraf" rel="noopener">Support</a>
+        </p>
+      </div>
+    </footer>
+
+    <script type="module">
+      import { mountAds } from './src/app/ads.js';
+      mountAds();
+    </script>
+  </body>
+</html>

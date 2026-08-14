@@ -1,0 +1,8 @@
+# Authorized Digital Sellers for eigendrum.com — https://iabtechlab.com/ads-txt/
+#
+# Declares who is allowed to sell this site's ad inventory. Without it, a growing
+# share of demand simply will not bid, so the file is worth as much as the ad code.
+# Replace pub-0000000000000000 with the publisher ID from AdSense once approved
+# (Account -> Settings -> Account information), keeping the "pub-" prefix and
+# dropping the "ca-" that appears in the ad tag.
+google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
