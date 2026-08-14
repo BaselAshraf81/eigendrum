@@ -1345,10 +1345,27 @@ dialog form {
   flex: none;
   border-top: var(--rule) solid var(--ink);
   padding: 1.6rem 1.5rem 2rem;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 22rem);
-  gap: 1.75rem 2.5rem;
-  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+/* Three simple flex children instead of a grid: nav on the left, the ad in the
+   middle, the built-by/support block on the right. Each has a comfortable minimum
+   width and grows to fill leftover space, and the whole row wraps to a stack once
+   it can no longer fit three abreast - no separate "collapse to one column" media
+   query needed, the box model does it. */
+.colophon-nav,
+.colophon-side {
+  flex: 1 1 15rem;
+  min-width: 15rem;
+}
+
+.ad-home {
+  flex: 1.2 1 18rem;
+  min-width: 15rem;
+  max-width: 26rem;
 }
 
 .colophon h2 {
@@ -1518,20 +1535,14 @@ dialog form {
   min-height: 280px;
 }
 
-@media (max-width: 62rem) {
-  .colophon {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: none;
-    gap: 1.5rem;
-  }
-  /* Single column now, so the explicit rows from the two-column layout would stack the
-     nav and the side column on top of each other instead of one below the other.
-     auto falls back to source order: nav, ad, side column. */
+/* Below this the three items can no longer sit side by side at a readable width,
+   so let them go full width and drop the ad back to its normal height. */
+@media (max-width: 48rem) {
   .colophon-nav,
-  .colophon > .ad-home,
+  .ad-home,
   .colophon-side {
-    grid-row: auto;
-    grid-column: auto;
+    flex-basis: 100%;
+    max-width: none;
   }
   .ad-home .ad-frame {
     min-height: 250px;
