@@ -272,7 +272,19 @@ export function mountAds() {
   let mounted = 0;
   for (const holder of holders) {
     const frame = holder.querySelector('.ad-frame');
-    if (frame && adapter.unit(frame, holder.dataset.ad, cfg, holder)) mounted += 1;
+    if (!frame) {
+      holder.hidden = true;
+      continue;
+    }
+
+    const fallback = frame.querySelector('.ad-fallback');
+    if (PROVIDER === 'sponsor-wanted' && fallback) {
+      mounted += 1;
+      continue;
+    }
+
+    frame.replaceChildren();
+    if (adapter.unit(frame, holder.dataset.ad, cfg, holder)) mounted += 1;
     else holder.hidden = true;
   }
 
