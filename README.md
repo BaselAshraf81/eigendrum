@@ -25,7 +25,7 @@ mathematical ancestors of the sand figures Ernst Chladni was drawing in 1787.
 
 <p align="center"><em>Left: mode 9 of a star. Right: something drawn by hand, struck once.<br />Neither has a closed-form spectrum. Both were solved from the outline alone.</em></p>
 
-**Live at [eigendrum.com](https://eigendrum.com).** For advertising inquiries: [u2679054@uel.ac.uk](mailto:u2679054@uel.ac.uk)
+**Live at [eigendrum.com](https://eigendrum.com).**
 
 No dependencies, no build step, no backend. Clone it and open `index.html`, or:
 
@@ -68,8 +68,7 @@ npm test          # 57 tests, including the accuracy proofs below
 The shape stays in your browser. It lives in the URL fragment, which browsers never send to
 a server, and analytics is configured to report the origin and path only so the shapes you
 make are not recorded. There is no application backend: the mesh, the solve and the audio all
-run on your machine. The deployed site loads Vercel Analytics, Google Analytics and Google
-AdSense; local clones and the GitHub Pages mirror load none of them.
+run on your machine. Local clones and the GitHub Pages mirror load no analytics or ads at all.
 
 ## Writing a shape as an equation
 
@@ -278,19 +277,18 @@ font subresources over `file://` and this has to work from a bare filesystem.
 ## Working on it
 
 ```bash
-npm run serve         # dev server on :8080
-npm test              # unit tests, including the accuracy proofs
-npm run bench         # accuracy and timing against closed-form spectra
-npm run isospectral   # verifies the two Kac drums really are isospectral
-npm run smoke         # headless browser test of the whole app
-npm run mobile        # narrow-viewport layout and touch checks
-npm run readme-shots  # regenerates the images above
+npm run serve   # dev server on :8080
+npm test        # unit tests, including the accuracy proofs
 ```
 
 Puppeteer is a dev dependency, used only by the browser tests, and never loads in
 the browser. The shipped app has zero runtime packages: every application module and local asset
 resolves inside this repo. On the deployed Vercel site, the two first-party Vercel telemetry
 scripts load from the platform endpoints.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the rest of the scripts (accuracy
+benchmarks, the isospectral check, browser smoke tests) and how advertising is
+wired up on the deployed site.
 
 ## Deploying
 
@@ -305,12 +303,6 @@ JavaScript, which no crawler that skips scripts will ever run, so without the
 canonical tag the two hosts compete as duplicates and neither earns the credit. If
 you fork this to your own domain, change the host in those four places.
 
-## Contact
-
-For advertising or partnership enquiries: [u2679054@uel.ac.uk](mailto:u2679054@uel.ac.uk).
-For anything wrong with the maths or the interface, please open an issue instead, so
-the fix is public.
-
 ## References
 
 - M. Kac, *Can One Hear the Shape of a Drum?*, American Mathematical Monthly 73
@@ -323,66 +315,17 @@ the fix is public.
 - [Hearing the shape of a drum](https://en.wikipedia.org/wiki/Hearing_the_shape_of_a_drum)
   on Wikipedia, for the wider history.
 
-## The working documents
-
-The reasoning behind this project - the product charter, the design system, a codebase
-map and a memory file recording every dead end and the verified reason it was killed -
-is not in the repo as plain text. Those are working notes rather than documentation,
-and a public repo is better off carrying the runnable build.
-
-They are archived at [`docs/working-docs.zip`](docs/working-docs.zip), AES-256
-encrypted. Rebuild it after editing any of them:
-
-```bash
-DOCS_PASSWORD='...' npm run pack-docs
-```
-
-The password is not in the repo, because a password stored next to its own ciphertext
-is decoration rather than encryption. AES-256 rather than the classic zip cipher for
-the same reason: ZipCrypto is broken well enough to treat as plaintext, and this
-archive sits in public. The cost is that Windows Explorer cannot open it; 7-Zip,
-WinRAR, Keka and p7zip all can.
-
-The archive is never byte-reproducible, since AES draws a fresh salt on every run, so
-re-packing unchanged notes still shows up as a modified file. That is expected rather
-than a sign anything changed.
-
 ## Support
 
-Free to use, with no account and nothing to install. The deployed site uses Vercel
-Analytics and Google Analytics for aggregate usage and performance measurements, and is
-built to be ad-supported — that is what pays for the domain.
+Free to use, with no account and nothing to install. The deployed site is ad-supported
+to cover the cost of the domain; see [`privacy.html`](privacy.html) for what runs and
+why, or [CONTRIBUTING.md](CONTRIBUTING.md) for how it's wired into the code. None of it
+applies to a local clone: `npm run serve` strips ad and analytics tags from every page.
 
-Advertising is served by **Monetag**, set by one constant (`PROVIDER`) in
-`src/app/ads.js`. The module stays provider-agnostic — adapters for AdSense, Media.net and
-Newor Media are also written, and switching is that constant plus the IDs.
-
-Two zones run. An in-page banner, which Monetag position themselves rather than filling a
-reserved slot, and a Direct Link filling the reserved footer and article frames — the only
-one of their formats that can occupy a container. That one is a plain anchor: no script, no
-iframe, nothing off-origin pulled into the page, so it costs nothing in layout shift and
-cannot execute anything.
-
-Every format that hijacks a click was rejected outright: no pop-ups, pop-unders,
-interstitials, full-screen overlays, or notification prompts. Drawing here *is* clicking
-and dragging, so an advert that redirects mid-stroke would break the only thing the site
-does. A per-click link in a footer cannot do that; nothing happens unless a visitor
-deliberately chooses it.
-
-Almost none of it applies to a local clone. The analytics tag gates on
-`location.hostname`, and `npm run serve` strips the ad tag out of every page it serves, so
-development and the test suites contact no ad network — impressions from a developer's
-machine are not impressions.
-
-The one exception, stated plainly because it is the kind of thing that belongs in a README
-rather than in a footnote: the ad tag is pasted verbatim as Monetag issue it, which means
-it is unconditional, so opening a page **directly from `file://`** will request it. Their
-installation checker reads the served HTML and does not recognise a wrapped or rewritten
-copy, so verbatim is the only form that registers as installed. See
-[`privacy.html`](privacy.html) for the full notice.
-
-If you would like to put something towards it, or would rather it were not ad-supported:
-[ko-fi.com/baselashraf](https://ko-fi.com/baselashraf).
+If you'd rather it stayed ad-free, or just want to put something toward it:
+[ko-fi.com/baselashraf](https://ko-fi.com/baselashraf). For anything wrong with the
+maths or the interface, open an issue. For advertising or partnership enquiries:
+[u2679054@uel.ac.uk](mailto:u2679054@uel.ac.uk).
 
 ## Licence
 
