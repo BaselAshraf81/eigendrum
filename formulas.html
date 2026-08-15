@@ -3,16 +3,9 @@
   <head>
     <meta charset="utf-8" />
 
-    <!-- Ezoic Incubator integration-detection scripts. See index.html for why. Must load
-         on every page, not just this one - that is Ezoic's own requirement. -->
-    <script data-cfasync="false" src="https://cmp.gatekeeperconsent.com/min.js"></script>
-    <script data-cfasync="false" src="https://the.gatekeeperconsent.com/cmp.min.js"></script>
-    <script async src="//www.ezojs.com/ezoic/sa.min.js"></script>
-    <script>
-      window.ezstandalone = window.ezstandalone || {};
-      ezstandalone.cmd = ezstandalone.cmd || [];
-    </script>
-    <script src="//ezoicanalytics.com/analytics.js"></script>
+    <!-- REMOVED 2026-08-15: the Ezoic Incubator integration-detection scripts and their
+         Gatekeeper CMP. See index.html for the reason - it rendered a real consent banner
+         with no working reject-all, reported live on Hacker News. -->
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Writing a drum as an equation: polar and parametric outlines</title>
@@ -25,15 +18,8 @@
     <meta name="author" content="Basel Ashraf" />
     <meta name="color-scheme" content="light" />
     <meta name="theme-color" content="#f0ede6" />
-    <meta name="monetag" content="dc652167d1ed92a3d315ac2924eb0314" />
-
-    <!-- Google AdSense site-ownership verification, alongside Monetag's. Under review;
-         does nothing until approved. -->
-    <meta name="google-adsense-account" content="ca-pub-9300393681996309" />
-
-    <!-- REMOVED: Monetag In-Page Push. Off across the site; see index.html for why.
-    <script>(function(s){s.dataset.zone='11572692',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-    -->
+    <!-- REMOVED 2026-08-15: Monetag and Google AdSense site-ownership verification tags.
+         All advertising is paused site-wide; see index.html for the fuller note. -->
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="Eigendrum" />
     <meta property="og:url" content="https://eigendrum.com/formulas" />

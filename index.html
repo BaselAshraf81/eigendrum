@@ -3,23 +3,14 @@
   <head>
     <meta charset="utf-8" />
 
-    <!-- Ezoic, for the Incubator programme application. This is integration-detection
-         only: their review dashboard needs to see these scripts live to move past
-         "Connect Your Site", and no ad actually serves until both their Platform Quality
-         review AND a separate Google MCM approval are complete - the same two-step gate
-         AdSense's own review sits behind. Privacy scripts load first, per Ezoic's own
-         ordering requirement, and both carry data-cfasync="false" so a CDN/Cloudflare
-         optimiser cannot reorder or defer them - Ezoic's docs are explicit that deferring
-         breaks detection. Verbatim from docs.ezoic.com so their checker recognises it;
-         see tools/serve.mjs for why localhost gets none of this. -->
-    <script data-cfasync="false" src="https://cmp.gatekeeperconsent.com/min.js"></script>
-    <script data-cfasync="false" src="https://the.gatekeeperconsent.com/cmp.min.js"></script>
-    <script async src="//www.ezojs.com/ezoic/sa.min.js"></script>
-    <script>
-      window.ezstandalone = window.ezstandalone || {};
-      ezstandalone.cmd = ezstandalone.cmd || [];
-    </script>
-    <script src="//ezoicanalytics.com/analytics.js"></script>
+    <!-- REMOVED 2026-08-15: the Ezoic Incubator integration-detection scripts and their
+         Gatekeeper CMP. The CMP rendered a real consent banner - reported live on Hacker
+         News as a 2000+-partner "legitimate interest" dark pattern with no working reject-
+         all, which is both a bad experience and a GDPR violation (a reject-all option is
+         required, not optional). No ad from this integration had actually served; the
+         cost of a broken consent banner was being paid for zero revenue. Removed outright
+         rather than reconfigured, since the CMP is what Ezoic's own script injects and
+         there is no supported way to keep the detection scripts without it. -->
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Eigendrum - draw a shape and hear it as a real drum</title>
@@ -39,32 +30,12 @@
     <meta name="author" content="Basel Ashraf" />
     <meta name="color-scheme" content="light" />
     <meta name="theme-color" content="#f0ede6" />
-    <!-- Monetag site-ownership verification. Safe to leave in place permanently;
-         it does nothing once the site is verified. -->
-    <meta name="monetag" content="dc652167d1ed92a3d315ac2924eb0314" />
-
-    <!-- Google AdSense site-ownership verification, alongside Monetag's. Under review;
-         does nothing until approved. -->
-    <meta name="google-adsense-account" content="ca-pub-9300393681996309" />
-
-    <!-- REMOVED: Monetag In-Page Push. Its own network served a fake-VPN scareware
-         creative to a visitor, reported publicly; that is the malvertising risk this
-         format always carried and the site is off it until a network can be trusted not
-         to do that. Left as a comment rather than deleted outright so a future switch
-         back is a deliberate, informed choice and not a paste from an old branch.
-         Verbatim on purpose: their installation checker reads the served HTML and does
-         not recognise a rewritten or wrapped version, so an equivalent hand-written
-         gated copy left the site reading as "not installed" even while ads served.
-         Because it is verbatim it is also unconditional, and it must not run locally -
-         impressions from a developer's machine or from the browser suites are traffic no
-         visitor generated, which is what gets accounts closed. That gate now lives in
-         tools/serve.mjs, which strips this block out of any HTML it serves; a raw
-         `file://` open is the one case with no gate, and will contact the ad network.
-         src/app/ads.js deliberately does NOT also inject this tag - loading it twice
-         would be two requests and a double impression - it only collapses the reserved
-         ad frames, which this format does not fill.
-    <script>(function(s){s.dataset.zone='11572692',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-    -->
+    <!-- REMOVED 2026-08-15, alongside the Ezoic/CMP removal above: the Monetag and
+         Google AdSense site-ownership verification tags, and the already-dead Monetag
+         In-Page Push comment (pulled earlier after that network served a fake-VPN
+         scareware creative to a real visitor). All advertising on this site is paused;
+         see src/app/ads.js, PROVIDER = 'sponsor-wanted', for the reserved slots that
+         still show a direct sponsorship pitch instead of a live ad. -->
 
 
     <!-- Copying a link is a headline feature here, so every shared drum deserves a
@@ -123,8 +94,7 @@
             "sameAs": [
               "https://github.com/BaselAshraf81",
               "https://x.com/BaselAshraf81",
-              "https://ko-fi.com/baselashraf",
-              "https://www.linkedin.com/in/basel-askar"
+              "https://ko-fi.com/baselashraf"
             ]
           },
           {
@@ -404,13 +374,6 @@
         </h1>
         <p>a study of the vibrating plane</p>
       </div>
-      <!-- A real concurrent-connection count from the standalone WebSocket server in
-           presence-server/, gated to the deployed host same as ads/analytics (see
-           adsAllowed() in main.js). Hidden until a real number arrives, and hidden
-           again the moment the connection drops - no placeholder, same honesty rule
-           as the footer's visit count. Sits between the wordmark and the action chips,
-           since a live headcount is the kind of thing worth seeing before you scroll. -->
-      <p class="masthead-live" id="online-count" hidden></p>
       <div class="masthead-actions">
         <!-- Both of these are chips rather than plain links: they are things you can
              do, and on this sheet a thing you can do has a keyline around it. The
@@ -718,12 +681,7 @@
           <a href="mailto:u2679054@uel.ac.uk">Contact</a> ·
           <a href="https://github.com/BaselAshraf81/eigendrum" target="_blank" rel="noopener">Source</a>
         </p>
-        <!-- A real number from Vercel's own Web Analytics API, fetched server-side by
-             api/visits.js so the token stays off the client. Hidden until it resolves,
-             rather than shown as "..." or a placeholder count, since a placeholder that
-             looks like a number is exactly the kind of thing this site elsewhere refuses
-             to fake. -->
-        <p class="colophon-meta" id="visit-count" hidden></p>
+
         <!-- Takes no hue, on purpose. The One Job Rule in DESIGN.md: vermilion is the
              bench, ultramarine the ledger, chrome yellow selection-and-the-remarkable
              thing, and asking for money is none of those. Same reasoning that kept the
@@ -846,10 +804,11 @@
         <h3>colophon</h3>
         <p>
           No build step and no application backend: the mesh, the solve and the audio all run
-          on your own machine. The deployed site uses Vercel Analytics, Google Analytics and
-          Google AdSense, which is what pays for the domain and keeps this free to use. The
-          shape you draw lives in the address bar after the <span class="tex">#</span>, which
-          browsers never send to a server, and analytics is configured not to record it.
+          on your own machine. The deployed site uses Vercel Analytics and Google Analytics;
+          it carries no advertising network and no consent banner. Support toward the domain
+          and hosting is voluntary, via the link above. The shape you draw lives in the
+          address bar after the <span class="tex">#</span>, which browsers never send to a
+          server, and analytics is configured not to record it.
           Details in the <a href="/privacy">privacy notice</a>. Set in Jost* by
           indestructible type*. After Kac, <em>Can One Hear the Shape of a Drum?</em> (1966);
           Gordon, Webb and Wolpert (1992); and Driscoll, <em>Eigenmodes of Isospectral Drums</em>

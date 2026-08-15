@@ -3,16 +3,11 @@
   <head>
     <meta charset="utf-8" />
 
-    <!-- Ezoic Incubator integration-detection scripts. See index.html for why. Must load
-         on every page, not just this one - that is Ezoic's own requirement. -->
-    <script data-cfasync="false" src="https://cmp.gatekeeperconsent.com/min.js"></script>
-    <script data-cfasync="false" src="https://the.gatekeeperconsent.com/cmp.min.js"></script>
-    <script async src="//www.ezojs.com/ezoic/sa.min.js"></script>
-    <script>
-      window.ezstandalone = window.ezstandalone || {};
-      ezstandalone.cmd = ezstandalone.cmd || [];
-    </script>
-    <script src="//ezoicanalytics.com/analytics.js"></script>
+    <!-- REMOVED 2026-08-15: the Ezoic Incubator integration-detection scripts and their
+         Gatekeeper CMP. See index.html for the reason - it rendered a real consent banner
+         with no working reject-all, reported live on Hacker News. This was the actual
+         source of that banner: it still loaded here even after being pulled from the home
+         page, because the two pages were edited separately. -->
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Privacy and cookies — Eigendrum</title>
@@ -25,15 +20,8 @@
     <meta name="author" content="Basel Ashraf" />
     <meta name="color-scheme" content="light" />
     <meta name="theme-color" content="#f0ede6" />
-    <meta name="monetag" content="dc652167d1ed92a3d315ac2924eb0314" />
-
-    <!-- Google AdSense site-ownership verification, alongside Monetag's. Under review;
-         does nothing until approved. -->
-    <meta name="google-adsense-account" content="ca-pub-9300393681996309" />
-
-    <!-- REMOVED: Monetag In-Page Push. Off across the site; see index.html for why.
-    <script>(function(s){s.dataset.zone='11572692',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-    -->
+    <!-- REMOVED 2026-08-15: Monetag and Google AdSense site-ownership verification tags.
+         All advertising is paused site-wide; see index.html for the fuller note. -->
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="Eigendrum" />
     <meta property="og:url" content="https://eigendrum.com/privacy" />
@@ -74,11 +62,11 @@
         <p class="doc-kicker">privacy</p>
         <h1>Privacy and cookies</h1>
         <p class="doc-standfirst">
-          Eigendrum has no accounts, no sign-up and no login. It does use analytics and
-          advertising, and this page says exactly what that means, who receives what, and
-          how to switch it off.
+          Eigendrum has no accounts, no sign-up and no login. It uses analytics but carries
+          no advertising and no advertising cookies, so there is nothing here to consent to.
+          This page says exactly what is collected, who receives it, and how to switch it off.
         </p>
-        <p><strong>Last updated:</strong> 14 August 2026.</p>
+        <p><strong>Last updated:</strong> 15 August 2026.</p>
 
         <h2>The short version</h2>
         <ul>
@@ -93,7 +81,7 @@
             other identifying detail in order to use the instrument.
           </li>
           <li>
-            <strong>There is advertising and there are analytics.</strong> Both involve
+            <strong>There are analytics, and no advertising.</strong> Analytics involves
             third parties who set cookies and receive your IP address. Details below.
           </li>
           <li>
@@ -147,50 +135,25 @@
 
         <h3>3. Advertising</h3>
         <p>
-          <strong>Current status: no ad network is running.</strong> Eigendrum previously
-          ran Monetag's In-Page Push format, and pulled it after their own network served
-          a fake-VPN scareware pop-up to a visitor, which is exactly the malvertising risk
-          that format always carried. No script from Monetag, or from any other ad
-          network, currently loads on this site.
+          <strong>No advertising runs on this site.</strong> There is no ad network, no ad
+          script, no ad iframe and no advertising cookie anywhere on Eigendrum. Two networks
+          were trialled and both are now off: Monetag's In-Page Push, pulled after their own
+          network served a fake-VPN scareware pop-up to a visitor, and Ezoic, whose consent
+          management script rendered a broken, non-compliant cookie banner with hundreds of
+          "legitimate interest" partners pre-selected and no working reject-all - reported
+          publicly and removed as soon as it was found.
         </p>
         <p>
-          The space that would carry an ad now carries a direct pitch instead: a plain
-          mailto link inviting a real sponsor to contact me. It loads no script and no
-          iframe, sets no cookie, and does nothing at all unless you choose to click it.
+          The space that would carry an ad instead carries a direct pitch: a plain mailto
+          link inviting a real sponsor to contact me. It loads no script and no iframe, sets
+          no cookie, and does nothing at all unless you choose to click it. Support toward
+          the domain and hosting is voluntary, via a Ko-fi link in the footer.
         </p>
         <p>
-          Eigendrum has no account and no paywall, so it needs some way to pay for the
-          domain. Whether that returns to a network, and which one, is not decided; if it
-          does, this section will say so plainly and name the network, and the same rule
-          that ruled out Monetag applies to whatever comes next: formats that hijack a
-          click are out, because drawing here <em>is</em> clicking and dragging, and an
-          advert that redirects you mid-stroke would break the only thing the site does.
-        </p>
-        <p>You can opt out of personalised advertising industry-wide at any time:</p>
-        <ul>
-          <li>
-            <a href="https://www.aboutads.info/choices/" rel="noopener">aboutads.info/choices</a>
-            (Digital Advertising Alliance)
-          </li>
-          <li>
-            <a href="https://optout.networkadvertising.org/" rel="noopener">NAI opt-out</a>
-            (Network Advertising Initiative)
-          </li>
-          <li>
-            <a href="https://www.youronlinechoices.com/" rel="noopener">Your Online Choices</a>
-            (Europe)
-          </li>
-          <li>
-            If the partner turns out to be Google, also
-            <a href="https://www.google.com/settings/ads" rel="noopener">Google Ads Settings</a>.
-          </li>
-        </ul>
-        <p>
-          If you are in the EEA, the UK or Switzerland, you are shown a consent choice before
-          personalised advertising cookies are set, and you can change or withdraw that choice
-          at any time. Where you decline, non-personalised ads may still be served; those
-          still require limited data such as your IP address and coarse location in order to
-          fight fraud and meet legal duties.
+          If advertising ever returns, this section will say so plainly and name the network,
+          and it must not repeat either failure above: no broken or non-compliant consent
+          flow, and no format that can hijack a click, because drawing here <em>is</em>
+          clicking and dragging.
         </p>
 
         <h3>4. Fonts and assets</h3>
@@ -207,9 +170,9 @@
             visitors and sessions.
           </li>
           <li>
-            <strong>Advertising cookies</strong>, once advertising begins, set by the
-            advertising partner and its vendors as described above, together with a record
-            of your consent choice where one applies. None are set today.
+            <strong>No advertising cookies.</strong> None are set, because no advertising
+            runs on this site. If that changes, this section will say so and this page's
+            date will move.
           </li>
         </ul>
         <p>
@@ -224,8 +187,8 @@
             <strong>Serving the site and keeping it secure:</strong> legitimate interests.
           </li>
           <li>
-            <strong>Analytics and advertising cookies:</strong> your consent, where consent
-            is required in your region. You may withdraw it at any time.
+            <strong>Analytics cookies:</strong> your consent, where consent is required in
+            your region. You may withdraw it at any time.
           </li>
         </ul>
 
@@ -278,7 +241,7 @@
         <ul>
           <li>
             <a href="https://policies.google.com/privacy" rel="noopener">Google Privacy Policy</a>
-            (Analytics and AdSense)
+            (Analytics)
           </li>
           <li>
             <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">How
