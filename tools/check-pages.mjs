@@ -76,7 +76,7 @@ if (/\bno ads\b/i.test(readme)) problems.push('README.md still claims "no ads"')
    privacy notice that names the wrong partner - or claims ads are off while they are
    running - is the exact prose-drift failure this file exists to catch. */
 const adsjs = readFileSync('src/app/ads.js', 'utf8');
-const provider = adsjs.match(/^export const PROVIDER = '([a-z]+)';/m)?.[1];
+const provider = adsjs.match(/^export const PROVIDER = '([a-z-]+)';/m)?.[1];
 if (!provider) problems.push('src/app/ads.js: could not read PROVIDER');
 
 const adstxt = readFileSync('ads.txt', 'utf8');
@@ -95,6 +95,15 @@ if (provider === 'none') {
     problems.push('PROVIDER is \'none\' but privacy.html no longer says advertising is off');
   }
   console.log("note: advertising is off (PROVIDER = 'none'); every slot collapses.");
+} else if (provider === 'sponsor-wanted') {
+  /* Not a network: every slot is a mailto pitch instead. No ads.txt entry to check,
+     and privacy.html is allowed to say ads are off, since none are running. */
+  if (declared.length) {
+    problems.push(
+      `ads.txt declares ${declared.length} seller line(s) but PROVIDER is 'sponsor-wanted'`,
+    );
+  }
+  console.log("note: PROVIDER is 'sponsor-wanted'; every slot pitches direct sponsorship instead of running a network.");
 } else {
   if (!['adsense', 'medianet', 'newor', 'monetag'].includes(provider)) {
     problems.push(`src/app/ads.js: unknown PROVIDER '${provider}'`);

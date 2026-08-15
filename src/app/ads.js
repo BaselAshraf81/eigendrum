@@ -19,10 +19,12 @@
  *    one of them ends up wrong.
  */
 
-/** 'none' | 'adsense' | 'medianet' | 'newor' | 'monetag'
+/** 'none' | 'adsense' | 'medianet' | 'newor' | 'monetag' | 'sponsor-wanted'
  *  Set to 'none' while an application is under review: every slot then collapses and the
- *  site ships without ad markup, which is the correct state before approval. */
-export const PROVIDER = 'monetag';
+ *  site ships without ad markup, which is the correct state before approval.
+ *  Set to 'sponsor-wanted' to replace every slot with a direct pitch for a real sponsor
+ *  instead of running a network - see the adapter below for why. */
+export const PROVIDER = 'sponsor-wanted';
 
 /* Per-provider credentials. Only the active provider's entry is read.
  *
@@ -80,6 +82,9 @@ export const PROVIDERS = {
     zone: '11572692',
     directLink: 'https://omg10.com/4/11572666',
   },
+  /* No credentials needed: a mailto link costs nothing and loads nothing off-origin,
+     so there is nothing here to configure. */
+  'sponsor-wanted': {},
 };
 
 const HOST = 'eigendrum.com';
@@ -211,6 +216,35 @@ const ADAPTERS = {
       /* Nothing to load: the anchor is the whole unit, and the push tag is in the head. */
     },
   },
+
+  /* Not a network. Every reserved slot instead makes its own pitch: a plain mailto
+     link, honest about what it is rather than dressed up as a live advertisement.
+     This exists because the alternative - leaving Monetag's placeholder copy
+     ("see what our sponsor is offering") live with no real sponsor behind it - is a
+     lie the frame is telling on the site's behalf. Ready whenever an application is
+     under review, or between networks, or - as now - while ads are paused entirely
+     because a network's own creative turned out to be malvertising: no third-party
+     script, nothing off-origin, and a real path for a sponsor to actually reach the
+     owner instead of a dead reserved box. */
+  'sponsor-wanted': {
+    ready: () => true,
+    unit(frame) {
+      const a = document.createElement('a');
+      a.className = 'ad-direct';
+      a.href = 'mailto:u2679054@uel.ac.uk?subject=Sponsoring%20Eigendrum';
+      a.append(Object.assign(document.createElement('strong'), {
+        textContent: 'This space is for rent',
+      }));
+      a.append(Object.assign(document.createElement('span'), {
+        textContent: 'Reach real people who draw and solve for fun. Email to sponsor it.',
+      }));
+      frame.appendChild(a);
+      return true;
+    },
+    done() {
+      /* Nothing to load: the anchor is the whole unit. */
+    },
+  },
 };
 
 /** Fill every `[data-ad]` placeholder on the page. Safe to call unconditionally: it
@@ -222,7 +256,11 @@ export function mountAds() {
 
   const adapter = ADAPTERS[PROVIDER];
   const cfg = PROVIDERS[PROVIDER];
-  const live = adapter && cfg && adapter.ready(cfg) && adsAllowed();
+  // adsAllowed() exists to stop a real network from billing a fake impression on
+  // localhost or file://. 'sponsor-wanted' bills nothing and loads nothing off-origin,
+  // so that gate does not apply to it - it should show wherever the site runs.
+  const hostGated = PROVIDER !== 'sponsor-wanted';
+  const live = adapter && cfg && adapter.ready(cfg) && (!hostGated || adsAllowed());
 
   if (!live) {
     // Collapse the reserved space rather than leaving labelled empty frames on a page

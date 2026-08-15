@@ -1363,9 +1363,9 @@ dialog form {
 }
 
 .ad-home {
-  flex: 1.2 1 18rem;
-  min-width: 15rem;
-  max-width: 26rem;
+  flex: 1.6 1 22rem;
+  min-width: 18rem;
+  max-width: 32rem;
 }
 
 .colophon h2 {
@@ -1516,6 +1516,7 @@ dialog form {
 
 .ad-frame {
   min-height: 250px;
+  width: 100%;
   background: var(--plate);
   border: var(--hair) solid var(--ink);
   display: flex;

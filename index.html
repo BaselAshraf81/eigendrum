@@ -28,7 +28,11 @@
          does nothing until approved. -->
     <meta name="google-adsense-account" content="ca-pub-9300393681996309" />
 
-    <!-- Monetag In-Page Push, pasted exactly as their dashboard issues it.
+    <!-- REMOVED: Monetag In-Page Push. Its own network served a fake-VPN scareware
+         creative to a visitor, reported publicly; that is the malvertising risk this
+         format always carried and the site is off it until a network can be trusted not
+         to do that. Left as a comment rather than deleted outright so a future switch
+         back is a deliberate, informed choice and not a paste from an old branch.
          Verbatim on purpose: their installation checker reads the served HTML and does
          not recognise a rewritten or wrapped version, so an equivalent hand-written
          gated copy left the site reading as "not installed" even while ads served.
@@ -39,8 +43,10 @@
          `file://` open is the one case with no gate, and will contact the ad network.
          src/app/ads.js deliberately does NOT also inject this tag - loading it twice
          would be two requests and a double impression - it only collapses the reserved
-         ad frames, which this format does not fill. -->
+         ad frames, which this format does not fill.
     <script>(function(s){s.dataset.zone='11572692',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+    -->
+
 
     <!-- Copying a link is a headline feature here, so every shared drum deserves a
          preview card rather than a bare URL. -->
