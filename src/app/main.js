@@ -71,6 +71,10 @@ const els = {
   malletOut: el('out-mallet'),
   mesh: el('ctl-mesh'),
   sound: el('btn-sound'),
+  iosSoundHint: el('ios-sound-hint'),
+  iosSoundHintDismiss: el('ios-sound-hint-dismiss'),
+  statusBanner: el('status-banner'),
+  statusBannerDismiss: el('status-banner-dismiss'),
   soundLabel: el('sound-label'),
   soundCut: el('sound-cut'),
   formulaBtn: el('btn-formula'),
@@ -102,6 +106,32 @@ const combEls = {
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const board = new Board(els.board);
+
+/* iOS Safari's AudioContext silently obeys the hardware ring/silent switch and the
+ * media volume, and there is no web API that can read either one - a strike can
+ * succeed in every way this code can observe and still be inaudible. `navigator.platform`
+ * is deprecated and unreliable; iPadOS also reports its platform as a Mac, which
+ * `maxTouchPoints` distinguishes from an actual Mac (a real Mac reports 0). userAgent's
+ * "iPhone|iPad|iPod" still catches the iPhone/iPod case directly. */
+const isIOS =
+  /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+// sessionStorage throws in some private-browsing modes; a hint that fails to
+// remember being dismissed is a cosmetic annoyance, not a reason to break the page.
+let iosSoundHintShown = false;
+try {
+  iosSoundHintShown = sessionStorage.getItem('eigendrum-ios-hint-dismissed') === '1';
+} catch {
+  /* ignore */
+}
+
+/** Reveal the iOS hint once, after a strike has had a chance to make sound. */
+function maybeShowIosSoundHint() {
+  if (!isIOS || iosSoundHintShown || state.muted || !els.iosSoundHint) return;
+  iosSoundHintShown = true;
+  els.iosSoundHint.hidden = false;
+}
 
 const state = {
   source: { kind: 'preset', id: 'circle' },
@@ -518,6 +548,7 @@ function strike(x, y) {
   // Say what is actually on screen. Leaving the readout on "Mode 8" while sixteen
   // modes ring together would be the interface lying about the physics.
   showStruckReadout(amps);
+  maybeShowIosSoundHint();
   setSelected(els.spectrum, -1);
 }
 
@@ -1126,6 +1157,40 @@ els.formula.addEventListener('submit', (e) => {
 els.kacSwap.addEventListener('click', () => {
   const target = els.kacSwap.dataset.target;
   if (target) solve({ kind: 'preset', id: target });
+});
+
+els.iosSoundHintDismiss?.addEventListener('click', () => {
+  els.iosSoundHint.hidden = true;
+  try {
+    sessionStorage.setItem('eigendrum-ios-hint-dismissed', '1');
+  } catch {
+    /* ignore */
+  }
+});
+
+/* The status banner is a fact about hosting, not a fact about the drum, so it is
+ * shown on load rather than gated to a strike, and it is not gated to the deployed
+ * host either: whoever is running the site locally still benefits from knowing it is
+ * close to a usage limit. A missing element (a future build with no banner content)
+ * or a failed sessionStorage read both just mean "show it" - the safe default for a
+ * message about the site possibly going down. */
+if (els.statusBanner && els.statusBanner.textContent.trim()) {
+  let dismissed = false;
+  try {
+    dismissed = sessionStorage.getItem('eigendrum-status-dismissed') === '1';
+  } catch {
+    /* ignore */
+  }
+  if (!dismissed) els.statusBanner.hidden = false;
+}
+
+els.statusBannerDismiss?.addEventListener('click', () => {
+  els.statusBanner.hidden = true;
+  try {
+    sessionStorage.setItem('eigendrum-status-dismissed', '1');
+  } catch {
+    /* ignore */
+  }
 });
 
 els.sound.addEventListener('click', () => {

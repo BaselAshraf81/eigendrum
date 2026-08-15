@@ -107,6 +107,61 @@ h3 {
   outline-color: #fff;
 }
 
+/* ------------------------------------------------------------ status banner */
+
+/* `flex: none` in the same column as .masthead and .sheet: it takes its own
+   height and .sheet's `flex: 1 1 auto` absorbs the rest, so this can never push
+   the vermilion bench off a `100svh` screen the way a body-level sibling would.
+   Chrome yellow rather than the quiet ink-on-plaster of every other aside, since
+   the One Job Rule in DESIGN.md reserves that hue for the remarkable thing, and a
+   real risk to whether the site stays up qualifies. Links inherit the banner's
+   own ink colour rather than the page's blue-link default, since this sits on a
+   saturated field like the ledger does. */
+.status-banner {
+  flex: none;
+  margin: 0;
+  padding: 0.6rem 1.5rem;
+  background: var(--chrome);
+  color: var(--ink);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.status-banner a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+
+.status-banner button {
+  margin-left: auto;
+  flex: none;
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.2rem;
+}
+
+.status-banner button:hover {
+  opacity: 0.6;
+}
+
+@media (max-width: 34rem) {
+  .status-banner {
+    flex-wrap: wrap;
+    padding: 0.55rem 1rem;
+  }
+  .status-banner button {
+    margin-left: 0;
+  }
+}
+
 /* ---------------------------------------------------------------- masthead */
 
 .masthead {
@@ -226,6 +281,40 @@ h3 {
     flex: 1 0 100%;
     margin: -0.25rem 0 0;
   }
+}
+
+/* A hint, not a warning: nothing is broken, so it takes no ink colour and no border -
+   just the soft background every quiet aside on this sheet uses. Full width of the
+   action row on its own line, since it needs room for a full sentence and a dismiss
+   control without crowding the chips beside it. */
+.ios-sound-hint {
+  flex: 1 0 100%;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  background: rgba(20, 18, 15, 0.06);
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.ios-sound-hint button {
+  margin-left: auto;
+  flex: none;
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.15rem;
+}
+
+.ios-sound-hint button:hover {
+  color: var(--ink);
 }
 
 /* The source address and the support link are chips, not underlined text. They were

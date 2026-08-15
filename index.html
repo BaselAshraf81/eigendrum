@@ -357,6 +357,30 @@
          the masthead's real height is content-driven (83px, not 76px, at desktop type
          sizes), so any calc() against it put the vermilion bench 8px under the fold. -->
     <div class="screen">
+      <!-- A status banner, not decoration: hosting is genuinely close to a usage limit,
+           and the honest thing is to say so rather than let the site go dark with no
+           warning. Lives inside .screen, above the masthead, as a `flex: none` row in
+           the same flex column that already makes .sheet absorb the masthead's height -
+           see the comment on .screen in app.css. That is deliberate: a sibling of
+           .screen at the body level would NOT be absorbed, since .screen claims a fixed
+           100svh on desktop and anything else in that column pushes it off the bottom
+           (recorded already once in the memory file). Dismissing hides it for the
+           session via sessionStorage; a failed write there just means it does not
+           remember, which is a cosmetic degradation and not a broken page. Empty and
+           hidden by default: main.js decides whether to reveal it, so a static build
+           never claims a stale hosting fact if this line is deployed unattended. -->
+      <p class="status-banner" id="status-banner" hidden>
+        <span id="status-banner-text">
+          Hosting usage is close to its monthly limit less than a day after this went up.
+          If Eigendrum is worth a coffee to you, it keeps the lights on:
+          <a href="https://ko-fi.com/baselashraf" target="_blank" rel="noopener">Ko-fi</a>
+          ·
+          <a href="https://paypal.me/baselashrafusd" target="_blank" rel="noopener">PayPal</a>
+          ·
+          <a href="https://liberapay.com/BaselAshraf81/donate" target="_blank" rel="noopener">Liberapay</a>
+        </span>
+        <button type="button" id="status-banner-dismiss" aria-label="Dismiss this notice">×</button>
+      </p>
       <header class="masthead">
       <svg class="mark" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
         <circle cx="20" cy="20" r="13" fill="#d8321c" />
@@ -436,6 +460,19 @@
           </svg>
           <span id="sound-label">sound on</span>
         </button>
+        <!-- iOS Safari's Web Audio silently obeys the hardware ring/silent switch and the
+             media volume: there is no API that can detect either, so no strike can ever
+             tell a muted iPhone apart from a working one. Reported live: a visitor on
+             mobile Safari heard nothing and only found the fix (unmute the ringer, raise
+             the volume) by trial. Shown once, only on iOS, only after a first strike has
+             had a chance to make sound - see main.js. Dismissing it hides it for the
+             session, and it is worded as a real hint rather than an error, since nothing
+             here is actually broken. -->
+        <p class="ios-sound-hint" id="ios-sound-hint" hidden>
+          No sound on iPhone or iPad? Check the ring/silent switch and turn up the volume -
+          Safari mutes the drum along with your ringer.
+          <button type="button" id="ios-sound-hint-dismiss" aria-label="Dismiss this hint">×</button>
+        </p>
         <button type="button" id="btn-about" class="chip">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none" />
@@ -709,8 +746,9 @@
         <section class="colophon-support" aria-labelledby="colophon-support-h">
           <h2 id="colophon-support-h">Support this</h2>
           <p>
-            Eigendrum is free and has no account. If it was worth something to you, that
-            is the way to say so, and it is worth more than the adverts are.
+            Eigendrum is free and has no account, carries no advertising, and stays up on
+            voluntary support alone. If it was worth something to you, that is the way to
+            say so.
           </p>
           <a class="chip" href="https://ko-fi.com/baselashraf" target="_blank" rel="noopener">
             ko-fi.com/baselashraf
