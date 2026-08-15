@@ -338,4 +338,4 @@ maths or the interface, open an issue. For advertising or partnership enquiries:
 
 ## Licence
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE)
