@@ -39,7 +39,8 @@ export function mountPresence(el) {
       }
       if (!Number.isFinite(data?.online) || data.online < 1) return;
       const n = Math.round(data.online);
-      el.textContent = n === 1 ? '1 person here right now' : `${n} people here right now`;
+      el.textContent = n === 1 ? '1 here now' : `${n} here now`;
+      el.title = n === 1 ? '1 person has the page open right now' : `${n} people have the page open right now`;
       el.hidden = false;
     });
 

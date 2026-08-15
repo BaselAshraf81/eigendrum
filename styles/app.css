@@ -175,6 +175,54 @@ h3 {
   justify-content: flex-end;
 }
 
+/* A live headcount, not a thing you can click, so it takes no keyline - just a small
+   dot and a number, sitting quietly between the wordmark and the action chips. Hidden
+   by default (see index.html); mountPresence() in src/app/presence.js reveals it only
+   once a real count arrives, and hides it again the instant the connection drops. */
+.masthead-live {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0 0.25rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.01em;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+/* A pseudo-element rather than a child span, since presence.js sets this element's
+   textContent directly - a real child node would be wiped out on every update. */
+.masthead-live::before {
+  content: '';
+  display: block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #2f8f4e;
+  flex: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .masthead-live::before {
+    animation: masthead-live-pulse 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes masthead-live-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (max-width: 34rem) {
+  .masthead-live {
+    display: none;
+  }
+}
+
 /* The source address and the support link are chips, not underlined text. They were
    underlined text, which was readable but did not look pressable, and on this sheet a
    thing you can do carries a keyline. `.chip` already resets text-decoration and

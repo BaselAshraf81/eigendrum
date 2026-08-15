@@ -403,6 +403,13 @@
         </h1>
         <p>a study of the vibrating plane</p>
       </div>
+      <!-- A real concurrent-connection count from the standalone WebSocket server in
+           presence-server/, gated to the deployed host same as ads/analytics (see
+           adsAllowed() in main.js). Hidden until a real number arrives, and hidden
+           again the moment the connection drops - no placeholder, same honesty rule
+           as the footer's visit count. Sits between the wordmark and the action chips,
+           since a live headcount is the kind of thing worth seeing before you scroll. -->
+      <p class="masthead-live" id="online-count" hidden></p>
       <div class="masthead-actions">
         <!-- Both of these are chips rather than plain links: they are things you can
              do, and on this sheet a thing you can do has a keyline around it. The
@@ -714,12 +721,6 @@
              looks like a number is exactly the kind of thing this site elsewhere refuses
              to fake. -->
         <p class="colophon-meta" id="visit-count" hidden></p>
-        <!-- A real concurrent-connection count from a standalone WebSocket server
-             (presence-server/), not from this static site. Hidden until a real number
-             arrives and hidden again the moment the connection drops, same honesty rule
-             as the visit count above. -->
-        <p class="colophon-meta" id="online-count" hidden></p>
-
         <!-- Takes no hue, on purpose. The One Job Rule in DESIGN.md: vermilion is the
              bench, ultramarine the ledger, chrome yellow selection-and-the-remarkable
              thing, and asking for money is none of those. Same reasoning that kept the
