@@ -3,7 +3,7 @@
  * every change, and it catches the class of mistake that a browser test cannot see -
  * a stale sentence.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 
 const PAGES = [
   ['index.html', 'https://eigendrum.com/'],
@@ -74,18 +74,24 @@ if (/\bno ads\b/i.test(readme)) problems.push('README.md still claims "no ads"')
 /* The advertising config and the pages have to agree, and the ways they can disagree are
    all expensive: a live provider with no ads.txt entry loses most of the demand, and a
    privacy notice that names the wrong partner - or claims ads are off while they are
-   running - is the exact prose-drift failure this file exists to catch. */
+   running - is the exact prose-drift failure this file exists to catch. ads.txt itself
+   was removed 2026-08-15 along with all advertising: every line in it was already
+   commented out, so there was nothing left for a seller to declare, and a placeholder
+   full of dormant IAB lines invites exactly the confusion this check exists to prevent.
+   Read as absent rather than an empty file, so a provider that DOES need one still gets
+   flagged below rather than silently passing with zero declared sellers. */
 const adsjs = readFileSync('src/app/ads.js', 'utf8');
 const provider = adsjs.match(/^export const PROVIDER = '([a-z-]+)';/m)?.[1];
 if (!provider) problems.push('src/app/ads.js: could not read PROVIDER');
 
-const adstxt = readFileSync('ads.txt', 'utf8');
-const declared = adstxt
-  .split('\n')
-  .filter((l) => l.trim() && !l.trim().startsWith('#'));
+const declared = existsSync('ads.txt')
+  ? readFileSync('ads.txt', 'utf8')
+      .split('\n')
+      .filter((l) => l.trim() && !l.trim().startsWith('#'))
+  : [];
 
 const privacy = readFileSync('privacy.html', 'utf8');
-const saysAdsOff = /no advertising is running on this site yet/i.test(privacy);
+const saysAdsOff = /no advertising runs on this site/i.test(privacy);
 
 if (provider === 'none') {
   if (declared.length) {
