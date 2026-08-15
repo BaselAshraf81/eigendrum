@@ -469,6 +469,11 @@ function ring({ amps, taus, kind, x = 0, y = 0, gain = 1 }) {
 function strike(x, y) {
   const { drum } = state;
   if (!drum) return;
+  // iOS Safari only unlocks an AudioContext when resume() is called synchronously,
+  // as close to the top of a user-gesture handler as possible. Calling it here,
+  // before the mesh projection and mode weighting below, is what makes a first
+  // tap reliably produce sound instead of a silent context. See ensureAudio().
+  if (!state.muted) ensureAudio();
   // The projection is pure geometry; audibleAmps turns it into what a mallet
   // impulse actually leaves ringing. Zeros survive, so a strike on a nodal line
   // still cannot wake that mode.
@@ -499,6 +504,9 @@ function strike(x, y) {
 function playModeAlone(i) {
   const { drum, freqs } = state;
   if (!drum || !freqs || i < 0 || i >= freqs.length) return;
+  // Same reasoning as strike(): unlock the context as the first thing this
+  // gesture handler does, not after building the mode's amplitude vector.
+  if (!state.muted) ensureAudio();
   const amps = new Float64Array(freqs.length);
   amps[i] = 1;
   // A lone sinusoid needs far less gain than a strike to reach the same level, and
