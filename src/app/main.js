@@ -432,7 +432,17 @@ function ring({ amps, taus, kind, x = 0, y = 0, gain = 1 }) {
     y,
     amps,
     taus,
-    t0: performance.now(),
+    // Stamped by the first frame that draws this strike, NOT here. A rAF callback
+    // carries the start time of the frame it belongs to, so it can be older than
+    // a performance.now() taken later in the same frame - and everything below
+    // this line is synchronous main-thread work (creating the AudioContext,
+    // strikeHeadroom's full node sweep on the first strike, renderStrike), which
+    // on a first click can run for hundreds of ms. Reading the clock here
+    // therefore produced a t0 *ahead* of the next frame's `now`, and a negative
+    // elapsed time then blew up exp(-t/tau) into a huge frozen field and threw
+    // out of the render loop on a negative arc radius. Letting the frame supply
+    // its own clock makes elapsed >= 0 by construction.
+    t0: null,
     refAmp: peak > 1e-9 ? peak : 1,
     maxTau: Math.max(...taus),
   };
@@ -530,7 +540,28 @@ function playModeAlone(i) {
 
 // ------------------------------------------------------------------ rendering
 
+/**
+ * One animation frame.
+ *
+ * Wrapped so that the loop is rescheduled no matter what happens inside. This is
+ * not decoration: `requestAnimationFrame` used to be the last statement, so a
+ * single throw anywhere above it stopped the loop for the rest of the page's life
+ * and the drum froze until a reload. A bad frame should cost one frame.
+ */
 function frame(now) {
+  try {
+    drawFrame(now);
+  } catch (err) {
+    // Report once rather than every 16 ms, then carry on.
+    if (!frame.warned) {
+      frame.warned = true;
+      console.error('frame failed, continuing', err);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+function drawFrame(now) {
   board.resize();
   board.clear();
 
@@ -539,7 +570,6 @@ function frame(now) {
     // showing where a stroke actually lands, so it's clear where to draw.
     board.drawDrawGuide();
     if (state.stroke.length) board.drawStroke(state.stroke, false);
-    requestAnimationFrame(frame);
     return;
   }
 
@@ -547,9 +577,15 @@ function frame(now) {
     const { drum } = state;
     let refAmp = 1;
     let ringing = false;
+    let age = 0;
 
     if (state.view === 'struck' && state.strike) {
-      const elapsed = (now - state.strike.t0) / 1000;
+      // The first frame to see this strike owns its zero. Math.max is belt and
+      // braces: one clock, but never let a skew of any origin run time backwards
+      // into exp(-t/tau).
+      if (state.strike.t0 === null) state.strike.t0 = now;
+      const elapsed = Math.max(0, (now - state.strike.t0) / 1000);
+      age = elapsed;
       // Under prefers-reduced-motion, hold the peak displacement instead of
       // animating the ring-out. The information survives; the movement does not.
       const t = reducedMotion ? Math.min(elapsed, 1 / (4 * state.freqs[0])) : elapsed;
@@ -581,7 +617,8 @@ function frame(now) {
     // Only a mallet has a location. A lone mode is not struck anywhere, so marking
     // a point on it would be inventing one.
     if (ringing && state.strike.kind === 'strike') {
-      board.drawStrikeMarker(state.strike.x, state.strike.y, (now - state.strike.t0) / 1000);
+      // Reuses the clamped age above rather than reading the clock a second time.
+      board.drawStrikeMarker(state.strike.x, state.strike.y, age);
     }
 
     if (document.activeElement === els.board && !state.drawMode) {
@@ -594,8 +631,6 @@ function frame(now) {
       ctx.stroke();
     }
   }
-
-  requestAnimationFrame(frame);
 }
 
 function renderReadout() {

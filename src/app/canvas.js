@@ -329,6 +329,10 @@ export class Board {
     const r = (5 + age * 95) * this.dpr;
     const alpha = Math.max(0, 1 - age * 2.4);
     if (alpha <= 0) return;
+    // arc() throws IndexSizeError on a negative radius, and a throw here used to
+    // take the whole render loop with it. The caller clamps the age, so this is
+    // the backstop rather than the fix.
+    if (!(r > 0)) return;
     // A hard-edged ring, no glow: this world has no soft light in it.
     ctx.beginPath();
     ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
