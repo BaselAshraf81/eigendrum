@@ -11,6 +11,10 @@ yarn-error.log*
 
 # Browser smoke-test output
 .smoke/
+# The smoke test exercises the WAV export, which downloads into the repo root.
+*.wav
+# Commit message scratch file used when a message is too long for the shell.
+.commitmsg.tmp
 
 # Editors / OS
 .vscode/
