@@ -324,6 +324,15 @@ analytics).
   If that server is ever down, the count just disappears from the footer; nothing
   else on the site depends on it.
 
+## Star history
+
+<a href="https://star-history.com/#BaselAshraf81/eigendrum&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=BaselAshraf81/eigendrum&type=Date&theme=dark" />
+    <img src="https://api.star-history.com/svg?repos=BaselAshraf81/eigendrum&type=Date" alt="Star history chart for BaselAshraf81/eigendrum" />
+  </picture>
+</a>
+
 ## References
 
 - M. Kac, *Can One Hear the Shape of a Drum?*, American Mathematical Monthly 73
