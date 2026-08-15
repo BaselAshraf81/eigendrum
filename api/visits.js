@@ -22,6 +22,10 @@
  */
 
 const OFFSET = 3623;
+// The day this endpoint was wired up. Counting from here forward is what makes the
+// offset above correct: anything from before this date is already inside OFFSET,
+// so counting it again would double it.
+const SINCE = '2026-08-15T00:00:00.000Z';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300');
@@ -36,7 +40,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    const params = new URLSearchParams({ projectId });
+    const params = new URLSearchParams({
+      projectId,
+      // Without `since`, the endpoint defaults to a narrow recent window rather
+      // than the project's full history, which undercounts badly. `since` is
+      // clamped to this endpoint's own go-live date, so nothing before it is
+      // ever double-counted against OFFSET.
+      since: SINCE,
+    });
     if (teamId) params.set('teamId', teamId);
 
     const upstream = await fetch(
@@ -50,9 +61,10 @@ export default async function handler(req, res) {
     }
 
     const data = await upstream.json();
-    // The API's own response shape for a count endpoint is a single numeric total,
-    // exposed under `data.total` in the current version. Fall back defensively.
-    const apiCount = Number(data?.data?.total ?? data?.total ?? 0);
+    // The count endpoint's payload is `data.visitors` (unique visitors), not
+    // `data.total` as originally assumed. `data.pageviews` is also available but
+    // visitors matches what "visits" means everywhere else on the site.
+    const apiCount = Number(data?.data?.visitors ?? 0);
     const total = OFFSET + (Number.isFinite(apiCount) ? apiCount : 0);
 
     res.status(200).json({ count: total, live: true });
