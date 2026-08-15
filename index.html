@@ -234,7 +234,7 @@
                 "name": "Which parts of the sound does the shape decide?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "The shape fixes the frequency ratios, the mode shapes, and which modes a given strike position can excite. None of those are adjustable. The shape does not fix absolute pitch, which is size and tension, or how fast each overtone fades, which is material and air, so both are exposed as sliders. Outlines are scaled to equal area before solving, so what you hear is shape rather than size."
+                  "text": "The shape fixes the frequency ratios, the mode shapes, which modes a given strike position can excite, and the note the fundamental lands on. None of those are adjustable. Because outlines are scaled to equal area before solving, that fundamental is shape rather than size, and it spans about six semitones across the built-in shapes; a circle is the lowest of them, which is a theorem rather than a setting. What the shape does not fix is the wave speed, that is tension and density: the pitch slider sets it by naming the note a unit-area circle would sound, and every other outline sits above that. How fast each overtone fades is material and air, so that is a slider too."
                 }
               },
               {
@@ -588,14 +588,16 @@
         <div class="bench-head">
           <h2>what the shape does not decide</h2>
           <p>
-            Pitch is size and tension; fade is material and air. Neither is in the outline, so both
-            are yours. Every overtone <em>ratio</em> is computed and fixed.
+            Pitch here is a <em>reference</em>: the note a circle of this area would sound. Tension
+            and density are yours, and so is fade, which is material and air. Where each shape's own
+            fundamental lands above that reference is not yours, and neither is any overtone
+            <em>ratio</em>. Both are computed.
           </p>
         </div>
 
         <div class="dials">
           <div class="dial">
-            <label for="ctl-pitch">lowest mode</label>
+            <label for="ctl-pitch">reference pitch</label>
             <input type="range" id="ctl-pitch" min="60" max="330" step="1" value="130" />
             <output id="out-pitch">130 hz</output>
           </div>
@@ -778,10 +780,14 @@
 
         <h3>what is a modelling choice</h3>
         <p>
-          The frequency ratios and the mode shapes are physics, fixed entirely by the outline. The
-          absolute pitch depends on size and tension, and how fast each overtone fades depends on
-          the material and the air, so those are sliders rather than silent assumptions. Every shape
-          is scaled to the same area before solving, so what you hear is shape and not size.
+          The frequency ratios, the mode shapes and the pitch of the fundamental are physics, fixed
+          entirely by the outline. What is not in the outline is the wave speed, which is tension and
+          density: the pitch slider sets that by naming the note a circle of this area would sound,
+          and each shape then lands above the reference by its own amount. Every shape is scaled to
+          the same area before solving, so that offset is shape and not size - about six semitones
+          across the built-in shapes, with the circle lowest, which is Faber-Krahn rather than a
+          choice. How fast each overtone fades is material and air, so that stays a slider rather
+          than a silent assumption.
         </p>
         <p>
           The mallet is modelled too. Its width is a slider; its contact time is fixed at a few

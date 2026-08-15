@@ -13,10 +13,17 @@
  * The parts that are honest modelling choices, because they depend on the
  * material and the mallet rather than the outline:
  *   - tau_k, the decay times
- *   - the overall pitch, which is set by size and tension
+ *   - the wave speed c = sqrt(T / rho), which the pitch slider sets
+ *
+ * Note what is NOT in that second list: the pitch you actually hear. Given c,
+ * f_1 = c sqrt(lambda_1) / (2 pi) is fixed by the domain, and since outlines are
+ * normalised to unit area first, that is shape information rather than size. The
+ * slider chooses the reference, the shape chooses where the fundamental lands
+ * relative to it. See `frequencies`.
  *
  * The UI says as much. Nothing here is allowed to alter an overtone *ratio*.
  */
+import { besselJZero } from '../math/bessel.js';
 
 /** Lumped node areas: each triangle gives a third of its area to each vertex. */
 export function nodeWeights(mesh) {
@@ -42,16 +49,46 @@ export function nodeWeights(mesh) {
 }
 
 /**
- * Frequencies in Hz, with the fundamental pinned to `baseHz`.
+ * lambda_1 of the unit-area disk, the reference drum the pitch slider names.
  *
- * Only the overall scale is chosen; the ratios are exactly sqrt(lambda_k /
- * lambda_1), which is pure geometry. Physically this is the statement that
- * pitch is set by size and tension while timbre is set by shape.
+ * For a disk of radius r, lambda_1 = (j_{0,1} / r)^2. Unit area means pi r^2 = 1,
+ * so r^2 = 1/pi and lambda_1 = j_{0,1}^2 * pi = 18.1684...
+ *
+ * The disk is the right reference for two reasons. By Faber-Krahn it *minimises*
+ * lambda_1 over all domains of a given area, so every other unit-area shape comes
+ * out at or above the slider pitch and never below it. And it is the one shape
+ * whose spectrum this repo knows in closed form, so the reference is exact rather
+ * than meshed.
+ */
+export const REFERENCE_LAMBDA1 = besselJZero(0, 1) ** 2 * Math.PI;
+
+/**
+ * Frequencies in Hz.
+ *
+ * f_k = baseHz * sqrt(lambda_k / lambda_ref).
+ *
+ * The physics is f_k = c sqrt(lambda_k) / (2 pi), with c = sqrt(T / rho) set by
+ * the tension and the areal density. So one constant, c, is chosen by the pitch
+ * slider, and everything after that - including which note the fundamental lands
+ * on - comes from the domain.
+ *
+ * This deliberately does NOT pin f_1 to `baseHz`. Pinning it silently re-chose a
+ * different c for every outline, which cancelled exactly the part of the spectrum
+ * that says most about the shape: since shapes are normalised to unit area first,
+ * lambda_1 is pure shape information, and it varies by a factor of ~2 across the
+ * built-in presets (18.2 for the disk to 35.7 for a Kac drum, i.e. 5.9
+ * semitones). All of that was being discarded before it reached the ear, and
+ * because 84-94% of the audible energy sits in mode 1, discarding it made every
+ * drum open on the same note and left the shapes nearly indistinguishable.
+ *
+ * Ratios within one drum are untouched: f_k / f_1 is still exactly
+ * sqrt(lambda_k / lambda_1). The isospectral pair still matches to the last
+ * digit, because it has the same lambda_1 as well as the same ratios.
  */
 export function frequencies(eigenvalues, baseHz = 130) {
   const out = new Float64Array(eigenvalues.length);
   if (!eigenvalues.length) return out;
-  const root = Math.sqrt(eigenvalues[0]);
+  const root = Math.sqrt(REFERENCE_LAMBDA1);
   for (let k = 0; k < eigenvalues.length; k++) {
     out[k] = (baseHz * Math.sqrt(eigenvalues[k])) / root;
   }
@@ -148,9 +185,15 @@ export function modeNorms(mesh, modes, weights = null) {
  *     the recipe for a gong, not a drum.
  *  3. The mallet's contact time. No beater is an impulse: a force pulse lasting
  *     T cannot pump a mode whose period is much shorter than T. Modelled as a
- *     one-pole rolloff with its corner at `contactRatio` times the fundamental,
- *     which keeps it a pure ratio so the timbre does not drift when the pitch
- *     slider moves.
+ *     one-pole rolloff with its corner at `contactRatio` times `refHz`.
+ *
+ * `refHz` is the reference pitch (the slider), NOT this drum's own fundamental.
+ * One mallet has one contact time, so the corner must not move when the outline
+ * changes; keying it to f_1 would have handed every shape a different beater as
+ * soon as f_1 stopped being pinned. Keying it to the slider keeps the original
+ * intent - the timbre does not drift as you move the pitch - while leaving the
+ * mallet identical across shapes. Defaults to freqs[0] so a caller that has no
+ * reference behaves as before.
  *
  * Factor 3 is a modelling choice about the mallet and is declared as such. The
  * first two are not choices; they were missing.
@@ -158,14 +201,16 @@ export function modeNorms(mesh, modes, weights = null) {
  * Zeros are preserved exactly, so "striking a nodal line cannot excite this
  * mode" survives untouched.
  */
-export function audibleAmps(amps, norms, freqs, contactRatio = 3) {
+export function audibleAmps(amps, norms, freqs, contactRatio = 3, refHz = 0) {
   const out = new Float64Array(amps.length);
   if (!amps.length || !(freqs[0] > 0)) return out;
-  const cut = Math.max(0.5, contactRatio);
+  const ref = refHz > 0 ? refHz : freqs[0];
+  const cut = Math.max(0.5, contactRatio) * ref;
   for (let k = 0; k < amps.length; k++) {
     const n2 = norms[k] > 1e-12 ? norms[k] : 1;
-    const ratio = freqs[k] / freqs[0];
-    const lowpass = 1 / (1 + (ratio / cut) * (ratio / cut));
+    // 1 / omega_k, up to the global constant 2 pi ref that the gain absorbs.
+    const ratio = freqs[k] / ref;
+    const lowpass = 1 / (1 + (freqs[k] / cut) * (freqs[k] / cut));
     out[k] = (amps[k] / n2 / Math.max(1e-9, ratio)) * lowpass;
   }
   return out;
@@ -179,7 +224,16 @@ export function audibleAmps(amps, norms, freqs, contactRatio = 3) {
  * the rim stays quieter than one in the middle - that difference is information
  * the physics is trying to convey - while nothing ever reaches the limiter.
  */
-export function strikeHeadroom(mesh, modes, norms, freqs, weights, radius, contactRatio = 3) {
+export function strikeHeadroom(
+  mesh,
+  modes,
+  norms,
+  freqs,
+  weights,
+  radius,
+  contactRatio = 3,
+  refHz = 0,
+) {
   const phi1 = modes[0];
   let best = 0;
   let node = 0;
@@ -198,7 +252,7 @@ export function strikeHeadroom(mesh, modes, norms, freqs, weights, radius, conta
     radius,
     weights,
   );
-  const heard = audibleAmps(amps, norms, freqs, contactRatio);
+  const heard = audibleAmps(amps, norms, freqs, contactRatio, refHz);
   let l1 = 0;
   for (let k = 0; k < heard.length; k++) l1 += Math.abs(heard[k]);
   return l1 > 1e-12 ? l1 : 1;
@@ -218,15 +272,24 @@ export function strikeHeadroom(mesh, modes, norms, freqs, weights, radius, conta
  * fast darkening is most of what makes a drum read as a pitched thud.
  *
  * `brightness` in [0, 1] moves weight from the stiffness term to the mass term.
+ *
+ * `refHz` plays the same role as in `audibleAmps`: alpha and beta are properties
+ * of the material and the air, so the absolute frequency is what decides how fast
+ * a mode dies. Measuring omega against this drum's own fundamental would instead
+ * give every outline its own alpha and beta, so a taut little shape would ring
+ * exactly as long as a slack big one. Keyed to the slider, a shape that sits
+ * higher because of its geometry also decays faster, which is the audible half of
+ * why shapes differ. Defaults to freqs[0], which reproduces the old behaviour.
  */
-export function decayTimes(freqs, baseSeconds = 1.7, brightness = 0.5) {
+export function decayTimes(freqs, baseSeconds = 1.7, brightness = 0.5, refHz = 0) {
   const out = new Float64Array(freqs.length);
   if (!freqs.length) return out;
+  const ref = refHz > 0 ? refHz : freqs[0];
   const stiff = 0.96 - 0.9 * brightness; // 0.96 (dull) .. 0.06 (bright)
   const mass = 1 - stiff;
   const rate = 1 / Math.max(0.02, baseSeconds);
   for (let k = 0; k < freqs.length; k++) {
-    const ratio = freqs[0] > 0 ? freqs[k] / freqs[0] : 1;
+    const ratio = ref > 0 ? freqs[k] / ref : 1;
     out[k] = Math.max(0.006, 1 / (rate * (mass + stiff * ratio * ratio)));
   }
   return out;

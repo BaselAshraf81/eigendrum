@@ -31,10 +31,64 @@ import { area, simplifyClosed } from '../src/geom/polygon.js';
 
 const circle = () => solveDrum(regularPolygon(256, 1), { modes: 6, targetNodes: 2600 });
 
+/** A disk of unit area, which is what the pitch slider is defined against. */
+const unitAreaDisk = (modes = 6) => {
+  const poly = regularPolygon(256, 1 / Math.sqrt(Math.PI));
+  return solveDrum(poly, { modes, targetNodes: 2600 });
+};
+
+test('the pitch slider names the unit-area disk, and the disk lands on it', () => {
+  // frequencies() no longer pins f1 to the slider. It scales by the unit-area
+  // disk's own lambda_1, so the disk - and only the disk - comes out at the
+  // slider value. It lands slightly ABOVE rather than exactly on it, because P1
+  // Galerkin eigenvalues are upper bounds; that sign is asserted below.
+  const { eigenvalues } = unitAreaDisk();
+  const freqs = frequencies(eigenvalues, 100);
+  const cents = 1200 * Math.log2(freqs[0] / 100);
+  assert.ok(cents > 0, `mesh error must push the disk sharp, not flat, got ${cents} cents`);
+  assert.ok(cents < 15, `disk should sit within a few cents of the slider, got ${cents} cents`);
+});
+
+test('the fundamental follows the shape, not the slider', () => {
+  // The whole point of the change: at one slider setting, two equal-area shapes
+  // must sound at different pitches, because lambda_1 is shape information once
+  // area is normalised. Faber-Krahn says the disk is the lowest of them all.
+  const disk = frequencies(unitAreaDisk().eigenvalues, 130);
+  const sq = normalizeShape(
+    [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 1, y: 1 },
+      { x: 0, y: 1 },
+    ],
+    0,
+  );
+  const square = frequencies(
+    solveDrum(sq.polygon, { modes: 6, targetNodes: 2600, align: sq.align }).eigenvalues,
+    130,
+  );
+  const cents = 1200 * Math.log2(square[0] / disk[0]);
+  assert.ok(
+    cents > 40,
+    `a unit-area square must sound clearly higher than a unit-area disk, got ${cents} cents`,
+  );
+});
+
+test('scaling the pitch slider cannot change any ratio', () => {
+  // The standing invariant: audio may scale the whole spectrum, never a ratio.
+  const { eigenvalues } = unitAreaDisk(8);
+  const a = frequencies(eigenvalues, 90);
+  const b = frequencies(eigenvalues, 410);
+  for (let k = 1; k < a.length; k++) {
+    const ra = a[k] / a[0];
+    const rb = b[k] / b[0];
+    assert.ok(Math.abs(ra - rb) < 1e-12, `ratio ${k} drifted with the slider`);
+  }
+});
+
 test('frequency ratios of a circle follow the Bessel zeros', () => {
   const { eigenvalues } = circle();
   const freqs = frequencies(eigenvalues, 100);
-  assert.ok(Math.abs(freqs[0] - 100) < 1e-9, 'fundamental should be pinned to the base pitch');
 
   // The second mode of a disk is the first zero of J1 over the first of J0.
   const expected = besselJZero(1, 1) / besselJZero(0, 1);
@@ -183,23 +237,33 @@ test('overlapping voices can exceed full scale even though a single strike never
   // AudioContext needed, since it is pure arithmetic - to pin the fact that
   // motivates routing every voice through one shared limiter (`masterBus` in
   // main.js) rather than trusting the per-voice tanh alone.
-  const { mesh, modes, eigenvalues } = solveDrum(regularPolygon(160, 1), {
+  // Unit area, because main.js always normalises before solving. A radius-1 disk
+  // has area pi, so now that the pitch follows the shape it would sound about a
+  // fifth lower than anything the app can actually produce, and whether six taps
+  // 30 ms apart happen to align is a question about the frequency.
+  const { mesh, modes, eigenvalues } = solveDrum(regularPolygon(160, 1 / Math.sqrt(Math.PI)), {
     modes: 16,
     targetNodes: 2200,
   });
   const freqs = frequencies(eigenvalues, 130);
   const w = nodeWeights(mesh);
   const norms = modeNorms(mesh, modes, w);
-  const taus = decayTimes(freqs, 1.7, 0.5);
+  const taus = decayTimes(freqs, 1.7, 0.5, 130);
   const CONTACT_RATIO = 2.2;
   const TARGET_PEAK = 0.72;
   const OUT_GAIN = 0.85; // main.js: out.gain.value
   const MAX_VOICES = 6;
   const SR = 48000;
 
-  const head = strikeHeadroom(mesh, modes, norms, freqs, w, 0.09, CONTACT_RATIO);
+  const head = strikeHeadroom(mesh, modes, norms, freqs, w, 0.09, CONTACT_RATIO, 130);
   const gain = TARGET_PEAK / head;
-  const amps = audibleAmps(strikeAmplitudes(mesh, modes, 0.22, 0, 0.09, w), norms, freqs, CONTACT_RATIO);
+  const amps = audibleAmps(
+    strikeAmplitudes(mesh, modes, 0.22, 0, 0.09, w),
+    norms,
+    freqs,
+    CONTACT_RATIO,
+    130,
+  );
   const voice = renderStrike({ freqs, amps, taus, sampleRate: SR, gain });
 
   let singlePeak = 0;

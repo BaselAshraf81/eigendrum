@@ -234,11 +234,17 @@ Two further checks worth naming:
 Being clear about this is the point of the project:
 
 **Determined by the shape, and not adjustable.** The frequency *ratios*. The mode
-shapes. Which modes a given strike position can excite.
+shapes. Which modes a given strike position can excite. And the pitch the
+fundamental lands on, relative to the reference below: shapes are scaled to equal
+area before solving, so what is left in lambda_1 is shape rather than size, and it
+varies by about six semitones across the built-in presets. By Faber-Krahn the disk
+is the lowest of them all, so a round drum really is the deepest drum of its area.
 
-**Not determined by the shape, so exposed as controls.** Absolute pitch (that is
-size and tension). How fast each overtone fades (material and air). Shapes are
-scaled to equal area before solving, so what you hear is shape rather than size.
+**Not determined by the shape, so exposed as controls.** The wave speed
+`c = sqrt(T / rho)`, which is tension and density: the pitch slider sets it by
+naming the note a unit-area *disk* would sound. Every other outline is then placed
+above that by its own lambda_1, so the slider is a reference rather than the
+fundamental you hear. How fast each overtone fades (material and air).
 
 **Modelled, and neither of the above.** The mallet: its width, which is a control,
 and its contact time, which is fixed. Both decide how much of each mode a strike

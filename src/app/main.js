@@ -309,6 +309,15 @@ function updateKacMatch() {
   else els.kacText.after(line);
 }
 
+/**
+ * The reference pitch: the note a unit-area *disk* would sound at this slider
+ * setting. Every other outline is placed against it by its own lambda_1, so this
+ * is not necessarily the fundamental you hear. See `frequencies` in synth.js.
+ */
+function referenceHz() {
+  return Number(els.pitch.value);
+}
+
 function recomputeFrequencies() {
   if (!state.drum) return;
   state.freqs = frequencies(state.drum.eigenvalues, Number(els.pitch.value));
@@ -378,6 +387,7 @@ function headroom() {
         state.weights,
         r,
         CONTACT_RATIO,
+        referenceHz(),
       ),
     };
   }
@@ -485,10 +495,10 @@ function strike(x, y) {
     malletRadius(),
     state.weights,
   );
-  const amps = audibleAmps(projected, state.norms, state.freqs, CONTACT_RATIO);
+  const amps = audibleAmps(projected, state.norms, state.freqs, CONTACT_RATIO, referenceHz());
   ring({
     amps,
-    taus: decayTimes(state.freqs, 1.7, brightness()),
+    taus: decayTimes(state.freqs, 1.7, brightness(), referenceHz()),
     kind: 'strike',
     x,
     y,
@@ -512,7 +522,7 @@ function playModeAlone(i) {
   // A lone sinusoid needs far less gain than a strike to reach the same level, and
   // keeping it clear of the soft limiter leaves it a pure tone rather than a
   // limiter-coloured one.
-  ring({ amps, taus: decayTimes(freqs, 1.7, brightness()), kind: 'mode', gain: 0.45 });
+  ring({ amps, taus: decayTimes(freqs, 1.7, brightness(), referenceHz()), kind: 'mode', gain: 0.45 });
   setSelected(els.spectrum, i);
   showModeReadout(i, true);
 }
