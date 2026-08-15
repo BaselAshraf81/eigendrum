@@ -9,6 +9,14 @@ npm-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# Secrets. Nothing here should ever hold a real token - api/visits.js reads its
+# Vercel API token from Environment Variables set in the Vercel dashboard, never
+# from a file in the repo - but ignored preemptively so a local .env dropped in
+# for testing (Vercel CLI's `vercel env pull` writes one) never gets committed.
+.env
+.env.*
+.vercel/
+
 # Browser smoke-test output
 .smoke/
 

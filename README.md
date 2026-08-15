@@ -305,6 +305,27 @@ JavaScript, which no crawler that skips scripts will ever run, so without the
 canonical tag the two hosts compete as duplicates and neither earns the credit. If
 you fork this to your own domain, change the host in those four places.
 
+## The visitor and presence counts
+
+Two real numbers in the footer, both hidden until they resolve rather than shown
+as a placeholder, and both only run on the deployed host (same gate as ads and
+analytics).
+
+- **Visits since launch** comes from `api/visits.js`, a Vercel serverless
+  function that calls Vercel's own Web Analytics API server-side. It needs three
+  Environment Variables set on the Vercel project (Settings > Environment
+  Variables): `VERCEL_API_TOKEN` (a personal access token from
+  vercel.com/account/tokens), `VERCEL_PROJECT_ID`, and `VERCEL_TEAM_ID` if the
+  project sits under a team. Free on the Hobby plan. Without those set, the
+  endpoint still returns a number rather than erroring, it just returns the fixed
+  offset with `live: false`.
+- **People here right now** comes from a completely separate WebSocket server in
+  `presence-server/`, deployed on its own VPS rather than on Vercel, because
+  counting concurrent connections needs a persistent process, not a serverless
+  function. See `presence-server/README.md` for how it is deployed and wired up.
+  If that server is ever down, the count just disappears from the footer; nothing
+  else on the site depends on it.
+
 ## Contact
 
 For advertising or partnership enquiries: [u2679054@uel.ac.uk](mailto:u2679054@uel.ac.uk).

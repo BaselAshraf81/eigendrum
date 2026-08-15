@@ -2,6 +2,25 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+
+    <!-- Ezoic, for the Incubator programme application. This is integration-detection
+         only: their review dashboard needs to see these scripts live to move past
+         "Connect Your Site", and no ad actually serves until both their Platform Quality
+         review AND a separate Google MCM approval are complete - the same two-step gate
+         AdSense's own review sits behind. Privacy scripts load first, per Ezoic's own
+         ordering requirement, and both carry data-cfasync="false" so a CDN/Cloudflare
+         optimiser cannot reorder or defer them - Ezoic's docs are explicit that deferring
+         breaks detection. Verbatim from docs.ezoic.com so their checker recognises it;
+         see tools/serve.mjs for why localhost gets none of this. -->
+    <script data-cfasync="false" src="https://cmp.gatekeeperconsent.com/min.js"></script>
+    <script data-cfasync="false" src="https://the.gatekeeperconsent.com/cmp.min.js"></script>
+    <script async src="//www.ezojs.com/ezoic/sa.min.js"></script>
+    <script>
+      window.ezstandalone = window.ezstandalone || {};
+      ezstandalone.cmd = ezstandalone.cmd || [];
+    </script>
+    <script src="//ezoicanalytics.com/analytics.js"></script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Eigendrum - draw a shape and hear it as a real drum</title>
     <meta
@@ -689,6 +708,17 @@
           <a href="mailto:u2679054@uel.ac.uk">Contact</a> ·
           <a href="https://github.com/BaselAshraf81/eigendrum" target="_blank" rel="noopener">Source</a>
         </p>
+        <!-- A real number from Vercel's own Web Analytics API, fetched server-side by
+             api/visits.js so the token stays off the client. Hidden until it resolves,
+             rather than shown as "..." or a placeholder count, since a placeholder that
+             looks like a number is exactly the kind of thing this site elsewhere refuses
+             to fake. -->
+        <p class="colophon-meta" id="visit-count" hidden></p>
+        <!-- A real concurrent-connection count from a standalone WebSocket server
+             (presence-server/), not from this static site. Hidden until a real number
+             arrives and hidden again the moment the connection drops, same honesty rule
+             as the visit count above. -->
+        <p class="colophon-meta" id="online-count" hidden></p>
 
         <!-- Takes no hue, on purpose. The One Job Rule in DESIGN.md: vermilion is the
              bench, ultramarine the ledger, chrome yellow selection-and-the-remarkable
