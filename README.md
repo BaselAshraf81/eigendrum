@@ -303,13 +303,14 @@ JavaScript, which no crawler that skips scripts will ever run, so without the
 canonical tag the two hosts compete as duplicates and neither earns the credit. If
 you fork this to your own domain, change the host in those four places.
 
-## Star history
+## Star History
 
-<a href="https://star-history.com/#BaselAshraf81/eigendrum&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=BaselAshraf81/eigendrum&type=Date&theme=dark" />
-    <img src="https://api.star-history.com/svg?repos=BaselAshraf81/eigendrum&type=Date" alt="Star history chart for BaselAshraf81/eigendrum" />
-  </picture>
+<a href="https://www.star-history.com/?repos=BaselAshraf81%2Feigendrum&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=BaselAshraf81/eigendrum&type=date&theme=dark&legend=top-left&sealed_token=aewzcaQJ62zOvbniCf27FkXconx1CdPWnoDE559x0EDP-gBzlnqjFjvwShPrBf6W8wLCM-hUs-d1GdhGzESLv5wjUjSUxEUTFdJDI9ApoVcba3VBR253aQ" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=BaselAshraf81/eigendrum&type=date&legend=top-left&sealed_token=aewzcaQJ62zOvbniCf27FkXconx1CdPWnoDE559x0EDP-gBzlnqjFjvwShPrBf6W8wLCM-hUs-d1GdhGzESLv5wjUjSUxEUTFdJDI9ApoVcba3VBR253aQ" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=BaselAshraf81/eigendrum&type=date&legend=top-left&sealed_token=aewzcaQJ62zOvbniCf27FkXconx1CdPWnoDE559x0EDP-gBzlnqjFjvwShPrBf6W8wLCM-hUs-d1GdhGzESLv5wjUjSUxEUTFdJDI9ApoVcba3VBR253aQ" />
+ </picture>
 </a>
 
 ## References
