@@ -234,11 +234,17 @@ Two further checks worth naming:
 Being clear about this is the point of the project:
 
 **Determined by the shape, and not adjustable.** The frequency *ratios*. The mode
-shapes. Which modes a given strike position can excite.
+shapes. Which modes a given strike position can excite. And the pitch the
+fundamental lands on, relative to the reference below: shapes are scaled to equal
+area before solving, so what is left in lambda_1 is shape rather than size, and it
+varies by about six semitones across the built-in presets. By Faber-Krahn the disk
+is the lowest of them all, so a round drum really is the deepest drum of its area.
 
-**Not determined by the shape, so exposed as controls.** Absolute pitch (that is
-size and tension). How fast each overtone fades (material and air). Shapes are
-scaled to equal area before solving, so what you hear is shape rather than size.
+**Not determined by the shape, so exposed as controls.** The wave speed
+`c = sqrt(T / rho)`, which is tension and density: the pitch slider sets it by
+naming the note a unit-area *disk* would sound. Every other outline is then placed
+above that by its own lambda_1, so the slider is a reference rather than the
+fundamental you hear. How fast each overtone fades (material and air).
 
 **Modelled, and neither of the above.** The mallet: its width, which is a control,
 and its contact time, which is fixed. Both decide how much of each mode a strike
@@ -314,9 +320,12 @@ analytics).
   Environment Variables set on the Vercel project (Settings > Environment
   Variables): `VERCEL_API_TOKEN` (a personal access token from
   vercel.com/account/tokens), `VERCEL_PROJECT_ID`, and `VERCEL_TEAM_ID` if the
-  project sits under a team. Free on the Hobby plan. Without those set, the
-  endpoint still returns a number rather than erroring, it just returns the fixed
-  offset with `live: false`.
+  project sits under a team. Free on the Hobby plan. Without those set it reports
+  `live: false` and a count of zero, and the footer stays hidden, because a
+  made-up number is worse than no number. It sums the *daily* aggregate rather
+  than calling `visits/count` over the whole range: Vercel rotates its
+  privacy-preserving visitor hash every 24 hours, so only a day-by-day sum matches
+  what the dashboard itself reports.
 - **People here right now** comes from a completely separate WebSocket server in
   `presence-server/`, deployed on its own VPS rather than on Vercel, because
   counting concurrent connections needs a persistent process, not a serverless
@@ -324,13 +333,14 @@ analytics).
   If that server is ever down, the count just disappears from the footer; nothing
   else on the site depends on it.
 
-## Star history
+## Star History
 
-<a href="https://star-history.com/#BaselAshraf81/eigendrum&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=BaselAshraf81/eigendrum&type=Date&theme=dark" />
-    <img src="https://api.star-history.com/svg?repos=BaselAshraf81/eigendrum&type=Date" alt="Star history chart for BaselAshraf81/eigendrum" />
-  </picture>
+<a href="https://www.star-history.com/?repos=BaselAshraf81%2Feigendrum&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=BaselAshraf81/eigendrum&type=date&theme=dark&legend=top-left&sealed_token=aewzcaQJ62zOvbniCf27FkXconx1CdPWnoDE559x0EDP-gBzlnqjFjvwShPrBf6W8wLCM-hUs-d1GdhGzESLv5wjUjSUxEUTFdJDI9ApoVcba3VBR253aQ" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=BaselAshraf81/eigendrum&type=date&legend=top-left&sealed_token=aewzcaQJ62zOvbniCf27FkXconx1CdPWnoDE559x0EDP-gBzlnqjFjvwShPrBf6W8wLCM-hUs-d1GdhGzESLv5wjUjSUxEUTFdJDI9ApoVcba3VBR253aQ" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=BaselAshraf81/eigendrum&type=date&legend=top-left&sealed_token=aewzcaQJ62zOvbniCf27FkXconx1CdPWnoDE559x0EDP-gBzlnqjFjvwShPrBf6W8wLCM-hUs-d1GdhGzESLv5wjUjSUxEUTFdJDI9ApoVcba3VBR253aQ" />
+ </picture>
 </a>
 
 ## References
@@ -359,4 +369,4 @@ maths or the interface, open an issue. For advertising or partnership enquiries:
 
 ## Licence
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE)
