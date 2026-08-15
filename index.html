@@ -131,7 +131,7 @@
               "price": "0",
               "priceCurrency": "USD",
               "availability": "https://schema.org/InStock",
-              "description": "Free to use, with no account and no sign-up. Supported by advertising."
+              "description": "Free to use, with no account and no sign-up. Kept online by voluntary support, not by advertising."
             },
             "about": [
               { "@type": "Thing", "name": "Spectral geometry", "sameAs": "https://en.wikipedia.org/wiki/Spectral_geometry" },
@@ -240,7 +240,7 @@
                 "name": "Is Eigendrum free, and does it need an account?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "It is free to use, with no account and no sign-up, and the source is MIT licensed. It is supported by advertising, which pays for the domain. There is no application backend: the mesh, the solve and the audio all run on your own device, and the shape you draw lives in the URL fragment, which browsers never send to a server."
+                  "text": "It is free to use, with no account and no sign-up, and the source is MIT licensed. It carries no advertising network; the domain and hosting are supported voluntarily. There is no application backend: the mesh, the solve and the audio all run on your own device, and the shape you draw lives in the URL fragment, which browsers never send to a server."
                 }
               },
               {
@@ -374,6 +374,13 @@
         </h1>
         <p>a study of the vibrating plane</p>
       </div>
+      <!-- A real concurrent-connection count from the standalone WebSocket server in
+           presence-server/, gated to the deployed host same as analytics (see
+           adsAllowed() in main.js). Hidden until a real number arrives, and hidden
+           again the moment the connection drops - no placeholder, same honesty rule
+           as the footer's visit count. Sits between the wordmark and the action chips,
+           since a live headcount is the kind of thing worth seeing before you scroll. -->
+      <p class="masthead-live" id="online-count" hidden></p>
       <div class="masthead-actions">
         <!-- Both of these are chips rather than plain links: they are things you can
              do, and on this sheet a thing you can do has a keyline around it. The
@@ -683,12 +690,17 @@
 
       <div class="colophon-side">
         <p class="colophon-meta">
-          Built by Basel Ashraf. Free to use, MIT licensed. Advertising pays for the
-          domain and keeps it that way.<br />
+          Built by Basel Ashraf. Free to use, MIT licensed.<br />
           <a href="/privacy">Privacy</a> ·
           <a href="mailto:u2679054@uel.ac.uk">Contact</a> ·
           <a href="https://github.com/BaselAshraf81/eigendrum" target="_blank" rel="noopener">Source</a>
         </p>
+        <!-- A real number from Vercel's own Web Analytics API, fetched server-side by
+             api/visits.js so the token stays off the client. Hidden until it resolves,
+             rather than shown as "..." or a placeholder count, since a placeholder that
+             looks like a number is exactly the kind of thing this site elsewhere refuses
+             to fake. -->
+        <p class="colophon-meta" id="visit-count" hidden></p>
 
         <!-- Takes no hue, on purpose. The One Job Rule in DESIGN.md: vermilion is the
              bench, ultramarine the ledger, chrome yellow selection-and-the-remarkable
