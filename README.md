@@ -303,6 +303,15 @@ JavaScript, which no crawler that skips scripts will ever run, so without the
 canonical tag the two hosts compete as duplicates and neither earns the credit. If
 you fork this to your own domain, change the host in those four places.
 
+## Star history
+
+<a href="https://star-history.com/#BaselAshraf81/eigendrum&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=BaselAshraf81/eigendrum&type=Date&theme=dark" />
+    <img src="https://api.star-history.com/svg?repos=BaselAshraf81/eigendrum&type=Date" alt="Star history chart for BaselAshraf81/eigendrum" />
+  </picture>
+</a>
+
 ## References
 
 - M. Kac, *Can One Hear the Shape of a Drum?*, American Mathematical Monthly 73
