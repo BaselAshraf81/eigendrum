@@ -100,18 +100,22 @@
 
         <h2>What is collected, and by whom</h2>
 
-        <h3>1. Hosting (Vercel)</h3>
+        <h3>1. Hosting (Cloudflare)</h3>
         <p>
-          The site is hosted by Vercel, which processes standard server request data in order
-          to serve pages at all: IP address, the URL requested, user agent, referrer and
-          timestamp. This is ordinary web-server logging and is necessary for the site to
+          The site is hosted by Cloudflare Pages, which processes standard server request data
+          in order to serve pages at all: IP address, the URL requested, user agent, referrer
+          and timestamp. This is ordinary web-server logging and is necessary for the site to
           function and to stay available.
         </p>
         <p>
-          The deployed site also uses <strong>Vercel Web Analytics</strong> and
-          <strong>Vercel Speed Insights</strong>, which produce aggregate page-view and
-          performance measurements. These are designed to work without cookies and without
-          building a profile of you.
+          The public visit total is an aggregate page-load counter stored in Cloudflare D1.
+          Each production page load increments one number. No cookie, IP address, browser
+          identifier or visit history is stored by this counter.
+        </p>
+        <p>
+          The deployed site also uses <strong>Google Analytics 4</strong> and the separate
+          presence service described below for aggregate measurements. The public counter does
+          not attempt to identify unique visitors.
         </p>
 
         <h3>2. Analytics (Google Analytics 4)</h3>
@@ -218,8 +222,9 @@
         <h2>Retention</h2>
         <p>
           Analytics data is retained according to the Google Analytics property setting,
-          which is 14 months, after which it is deleted by Google. Server logs are retained
-          by Vercel under their own schedule. I do not keep a separate copy of either.
+          which is 14 months, after which it is deleted by Google. Cloudflare may retain
+          ordinary server logs under its own schedule. The D1 visit counter stores only its
+          aggregate total, not individual visit records.
         </p>
 
         <h2>Children</h2>
@@ -231,10 +236,9 @@
 
         <h2>International transfers</h2>
         <p>
-          Google and Vercel are US-headquartered and may process data outside your country,
-          including in the United States, under the transfer mechanisms set out in their own
-          terms - typically Standard Contractual Clauses and the EU-US Data Privacy
-          Framework.
+          Google and Cloudflare may process data outside your country, including in the
+          United States, under the transfer mechanisms set out in their own terms - typically
+          Standard Contractual Clauses and the EU-US Data Privacy Framework.
         </p>
 
         <h2>Third-party privacy policies</h2>
@@ -248,7 +252,8 @@
             Google uses information from sites that use its services</a>
           </li>
           <li>
-            <a href="https://vercel.com/legal/privacy-policy" rel="noopener">Vercel Privacy Policy</a>
+            <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare Privacy Policy</a>
+            (hosting and D1)
           </li>
         </ul>
 

@@ -1348,13 +1348,13 @@ else if (fromUrl?.kind === 'formula') {
 // so this line does nothing at all locally or in the test suites.
 mountAds();
 
-// The visit counter, same host gate as ads and analytics: only the deployed site has
-// the serverless function behind /api/visits, so there is nothing to fetch anywhere
-// else. Shown only once a real number comes back, never as a placeholder, and the
-// element stays hidden on any failure rather than displaying something invented.
+// The visit counter is an aggregate page-load count in Cloudflare D1. It is
+// deliberately not a unique-user tracker: no cookie, IP address or browser
+// identifier is stored. Shown only once a real number comes back, never as a
+// placeholder, and hidden on failure rather than displaying something invented.
 if (adsAllowed()) {
   const visitEl = el('visit-count');
-  fetch('/api/visits')
+  fetch('/api/visit', { method: 'POST', keepalive: true })
     .then((r) => (r.ok ? r.json() : null))
     .then((data) => {
       if (!visitEl || !data || !Number.isFinite(data.count)) return;

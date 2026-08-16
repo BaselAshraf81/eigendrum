@@ -1,12 +1,10 @@
 /**
- * Cloudflare Pages Function for the visitor count.
+ * Cloudflare Pages Function that reads the launch visit count from D1.
  *
- * It temporarily keeps Vercel Web Analytics as the data source so the move to
- * Pages does not reset the displayed count. The token stays in the Pages
- * runtime environment and never reaches the browser.
+ * The total is seeded once in D1 and incremented by api/visit.js. No browser
+ * identifier or IP address is stored.
  */
 
-const SINCE = '2026-08-11T00:00:00.000Z';
 const CACHE_HEADERS = {
   'Cache-Control': 'public, max-age=300, s-maxage=300',
   'Content-Type': 'application/json; charset=utf-8',
@@ -20,37 +18,15 @@ function json(data) {
 }
 
 export async function onRequestGet({ env }) {
-  const token = env.VERCEL_API_TOKEN;
-  const projectId = env.VERCEL_PROJECT_ID;
-  const teamId = env.VERCEL_TEAM_ID;
-
-  if (!token || !projectId) {
-    return json({ count: 0, live: false });
-  }
+  if (!env.DB) return json({ count: 0, live: false });
 
   try {
-    const params = new URLSearchParams({
-      projectId,
-      since: SINCE,
-      until: new Date().toISOString(),
-      by: 'day',
-    });
-    if (teamId) params.set('teamId', teamId);
-
-    const upstream = await fetch(
-      `https://api.vercel.com/v1/query/web-analytics/visits/aggregate?${params.toString()}`,
-      { headers: { Authorization: `Bearer ${token}` } },
-    );
-
-    if (!upstream.ok) {
-      return json({ count: 0, live: false });
-    }
-
-    const data = await upstream.json();
-    const rows = Array.isArray(data?.data) ? data.data : [];
-    const total = rows.reduce((sum, row) => sum + (Number(row?.visitors) || 0), 0);
-
-    return json({ count: total, live: true });
+    const row = await env.DB
+      .prepare('SELECT value FROM site_stats WHERE key = ?1')
+      .bind('visits')
+      .first();
+    const count = Number(row?.value);
+    return Number.isFinite(count) ? json({ count, live: true }) : json({ count: 0, live: false });
   } catch {
     return json({ count: 0, live: false });
   }

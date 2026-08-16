@@ -314,26 +314,19 @@ you fork this to your own domain, change the host in those four places.
 ## The visitor and presence counts
 
 Two real numbers in the footer, both hidden until they resolve rather than shown
-as a placeholder, and both only run on the deployed host (same gate as ads and
-analytics).
+as placeholders, and both only run on the deployed host.
 
-- **Visits since launch** comes from `api/visits.js`, a Vercel serverless
-  function that calls Vercel's own Web Analytics API server-side. It needs three
-  Environment Variables set on the Vercel project (Settings > Environment
-  Variables): `VERCEL_API_TOKEN` (a personal access token from
-  vercel.com/account/tokens), `VERCEL_PROJECT_ID`, and `VERCEL_TEAM_ID` if the
-  project sits under a team. Free on the Hobby plan. Without those set it reports
-  `live: false` and a count of zero, and the footer stays hidden, because a
-  made-up number is worse than no number. It sums the *daily* aggregate rather
-  than calling `visits/count` over the whole range: Vercel rotates its
-  privacy-preserving visitor hash every 24 hours, so only a day-by-day sum matches
-  what the dashboard itself reports.
+- **Visits since launch** is an aggregate page-load count stored in Cloudflare D1. Each
+  production page load increments it once through `/api/visit`; `/api/visits` reads the
+  current total. It stores no cookie, IP address, or browser identifier, so it counts
+  visits rather than unique people. If the database is unavailable, the footer stays
+  hidden instead of showing a made-up number.
 - **People here right now** comes from a completely separate WebSocket server in
-  `presence-server/`, deployed on its own VPS rather than on Vercel, because
-  counting concurrent connections needs a persistent process, not a serverless
-  function. See `presence-server/README.md` for how it is deployed and wired up.
-  If that server is ever down, the count just disappears from the footer; nothing
-  else on the site depends on it.
+  `presence-server/`, deployed on its own VPS rather than on Cloudflare Pages, because
+  counting concurrent connections needs a persistent process. See
+  `presence-server/README.md` for how it is deployed and wired up. If that server is
+  ever down, the count just disappears from the footer; nothing else on the site depends
+  on it.
 
 ## Star History
 

@@ -285,29 +285,11 @@
     </script>
     <script>
       // This repo still deploys to GitHub Pages (see .github/workflows/ci.yml),
-      // but the canonical home is eigendrum.com on Vercel. Bounce visitors who
+      // but the canonical home is eigendrum.com on Cloudflare Pages. Bounce visitors who
       // land on the old github.io link straight there, preserving the path and
       // hash so deep links (e.g. #s=... shape shares) keep working.
       if (location.hostname.endsWith('github.io')) {
         location.replace('https://eigendrum.com' + location.pathname.replace(/^\/eigendrum/, '') + location.search + location.hash);
-      }
-    </script>
-    <script>
-      // Vercel serves these first-party telemetry endpoints when Web Analytics
-      // and Speed Insights are enabled for the project. Keep local development,
-      // file:// use, and the legacy GitHub Pages host free of dead requests.
-      const isDeployedHost =
-        location.hostname &&
-        location.hostname !== 'localhost' &&
-        location.hostname !== '127.0.0.1' &&
-        !location.hostname.endsWith('github.io');
-      if (isDeployedHost) {
-        for (const path of ['/_vercel/insights/script.js', '/_vercel/speed-insights/script.js']) {
-          const script = document.createElement('script');
-          script.defer = true;
-          script.src = path;
-          document.head.appendChild(script);
-        }
       }
     </script>
     <link rel="stylesheet" href="styles/font.css" />
@@ -731,11 +713,9 @@
           <a href="mailto:u2679054@uel.ac.uk">Contact</a> ·
           <a href="https://github.com/BaselAshraf81/eigendrum" target="_blank" rel="noopener">Source</a>
         </p>
-        <!-- A real number from Vercel's own Web Analytics API, fetched server-side by
-             api/visits.js so the token stays off the client. Hidden until it resolves,
-             rather than shown as "..." or a placeholder count, since a placeholder that
-             looks like a number is exactly the kind of thing this site elsewhere refuses
-             to fake. -->
+        <!-- The aggregate page-load count comes from the Cloudflare D1-backed
+             /api/visit and /api/visits functions. Hidden until a real number
+             resolves rather than shown as a placeholder. -->
         <p class="colophon-meta" id="visit-count" hidden></p>
 
         <!-- Takes no hue, on purpose. The One Job Rule in DESIGN.md: vermilion is the
@@ -861,9 +841,10 @@
         <h3>colophon</h3>
         <p>
           No build step and no application backend: the mesh, the solve and the audio all run
-          on your own machine. The deployed site uses Vercel Analytics and Google Analytics;
-          it carries no advertising network and no consent banner. Support toward the domain
-          and hosting is voluntary, via the link above. The shape you draw lives in the
+          on your own machine. The deployed site uses Google Analytics for aggregate site
+          analytics and a Cloudflare D1 counter for the public visit total; it carries no
+          advertising network and no consent banner. Support toward the domain and hosting is
+          voluntary, via the link above. The shape you draw lives in the
           address bar after the <span class="tex">#</span>, which browsers never send to a
           server, and analytics is configured not to record it.
           Details in the <a href="/privacy">privacy notice</a>. Set in Jost* by
