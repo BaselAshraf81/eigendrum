@@ -1556,11 +1556,19 @@ dialog form {
   max-width: 34rem;
 }
 
-/* A region, not a card: plaster ground, told apart by a rule and by adjacency, like
-   every other region on the sheet. `margin-top: auto` is what turns the leftover
-   height into an interval instead of a gap. */
-.colophon-support {
+/* The pair of asks at the foot of the column. `margin-top: auto` on the wrapper is
+   what turns the leftover height into one interval instead of each section fighting
+   over the same auto margin. */
+.colophon-actions {
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+
+/* A region, not a card: plaster ground, told apart by a rule and by adjacency, like
+   every other region on the sheet. */
+.colophon-support {
   padding-top: 0.95rem;
   border-top: var(--rule) solid var(--ink);
 }
