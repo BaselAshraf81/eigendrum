@@ -1212,6 +1212,10 @@ els.about.addEventListener('click', () => {
   els.aboutBody.focus({ preventScroll: true });
 });
 
+els.dlgAbout.addEventListener('click', (event) => {
+  if (event.target === els.dlgAbout) els.dlgAbout.close();
+});
+
 els.share.addEventListener('click', async () => {
   const url = shareUrl(
     state.source.kind === 'preset'
