@@ -617,7 +617,16 @@ h3 {
   margin-left: -1px;
   background: var(--ink);
 }
-.comb-tick.is-selected {
+/* An invisible, wider hit target. The mark itself stays a true 2px line - that
+   precision is the point of a comb over a bar chart - but a hoverable thing
+   should not require pointer accuracy the mark's own honesty does not need. */
+.comb-tick::before {
+  content: '';
+  position: absolute;
+  inset: -0.9rem -5px;
+}
+.comb-tick.is-selected,
+.comb-tick.is-hover-linked {
   width: 4px;
   margin-left: -2px;
   top: 20%;
@@ -719,9 +728,13 @@ h2 {
   cursor: pointer;
   transition: background-color 110ms linear, color 110ms linear;
 }
+/* Larger than a chip's own icon (1.05rem): this glyph is the whole reason to
+   look at the button before reading it - it is the preset's actual outline,
+   not a stand-in - so it is sized to be told apart from its neighbours at a
+   glance rather than merely decorate the label. */
 .form-chip svg {
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 1.5rem;
+  height: 1.5rem;
   flex: none;
 }
 .form-chip:hover {
@@ -973,7 +986,13 @@ h2 {
   cursor: pointer;
   transition: background-color 110ms linear;
 }
-.mode-row:hover {
+/* `.is-hover-linked` is a class rather than `:hover` itself because the pointer
+   is never actually over this element - it is set from the *other* view (a comb
+   tick, or vice versa) to answer "which row does this mark belong to?" without
+   inventing a second visual language for the same question `:hover` already
+   answers on its own element. */
+.mode-row:hover,
+.mode-row.is-hover-linked {
   background: rgba(20, 18, 15, 0.07);
 }
 .mode-row[aria-pressed='true'] {
@@ -1098,7 +1117,57 @@ h2 {
   padding: 1.1rem 1.25rem 1.3rem;
   border-top: var(--rule) solid var(--ink);
 }
-.ledger h2 {
+.ledger-details {
+  margin: 0;
+}
+/* Native disclosure rather than a custom accordion: one click, keyboard built in,
+   and no extra state to wire. The marker is replaced with a square rule that
+   flips when open, same vocabulary as every other control here. */
+.ledger-summary-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  cursor: pointer;
+  list-style: none;
+}
+.ledger-summary-row::-webkit-details-marker {
+  display: none;
+}
+.ledger-summary-row::before {
+  content: '';
+  flex: none;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-top: 0.15rem;
+  border: var(--hair) solid var(--ultramarine-tint);
+  background: transparent;
+  transition: background-color 110ms linear;
+}
+.ledger-details[open] .ledger-summary-row::before {
+  background: var(--chrome);
+  border-color: var(--chrome);
+}
+.ledger-summary-label {
+  flex: none;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--ultramarine-tint);
+}
+.ledger-summary {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  text-align: right;
+}
+.ledger-details[open] .ledger-summary-row {
+  margin-bottom: 0.55rem;
+}
+.ledger h2,
+.ledger-summary-label {
   color: var(--ultramarine-tint);
 }
 .ledger dl {
@@ -1132,7 +1201,12 @@ h2 {
   border-top: var(--rule) solid var(--ink);
   padding: 1.05rem 1.5rem 1.15rem;
   display: grid;
-  grid-template-columns: minmax(0, 17rem) minmax(0, 1fr) auto;
+  /* The heading track was 17rem, well under the 46ch measure of its own
+     paragraph, so the text wrapped to five cramped lines with acres of empty
+     row beside it on any wide screen. 21rem lets the sentence breathe without
+     starving the dials, which cap their own width below rather than competing
+     for this space. */
+  grid-template-columns: minmax(0, 21rem) minmax(0, 1fr) auto;
   gap: 0.9rem 2.25rem;
   align-items: start;
 }
@@ -1154,6 +1228,16 @@ h2 {
   border-bottom: 2px solid #fff;
 }
 
+/* Still `minmax(11rem, 1fr)`, not a fixed max: auto-fit counts how many columns
+   fit using the *max* sizing function once it stops being a flex value, so
+   capping it here (e.g. `minmax(11rem, 15rem)`) would have changed how many
+   dials fit side by side at every width, not just the widest ones - confirmed by
+   testing it against the unmodified layout, where three dials still stayed on
+   one row at widths this shrunk to two. The 1fr tracks are what is stretching
+   each dial to a third of the whole middle column on a wide monitor, though,
+   which is the actual bug: "reference pitch" and "130 hz" end up 250px apart
+   with nothing between them. `.dial`'s own `max-width` below fixes that part
+   without touching the column count math at all. */
 .dials {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
@@ -1165,6 +1249,12 @@ h2 {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: baseline;
   gap: 0.1rem 0.6rem;
+  /* A stretched grid item still obeys its own max-width, so this only ever
+     shrinks a track, never widens one - every width this was tested at that
+     already fit two or three dials side by side is completely unaffected. Past
+     15rem a dial stops growing and the alignment default (`start`) leaves the
+     leftover width as a gap after it instead of inside it. */
+  max-width: 15rem;
 }
 .dial label {
   font-size: 0.8rem;
@@ -1348,6 +1438,94 @@ dialog form {
   justify-content: center;
   font-size: 1.25rem;
   line-height: 1;
+}
+
+/* -------------------------------------------------------------- promo toast */
+
+/* A plain region, not a card: plaster ground and a 1px ink keyline, the same
+   component weight as a chip rather than the page-dividing 3px rule. It takes no
+   primary hue on purpose - this is neither the bench, the ledger nor a selection,
+   so per The One Job Rule it lives on plaster like every other quiet aside here.
+   `main.js` sets `bottom` inline on the wide layout, where `.bench` is pinned to
+   the foot of the viewport and a fixed guess would sit on top of its own buttons;
+   below the breakpoint the page scrolls normally and the value below is enough. */
+.promo-toast {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: 25rem;
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  background: var(--plaster);
+  border: var(--hair) solid var(--ink);
+  color: var(--ink);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 220ms ease-out, transform 220ms ease-out;
+}
+/* `[hidden] { display: none !important }` (top of this file) always wins over
+   `display`, on purpose - so the entrance/exit motion is a separate class rather
+   than a `[hidden]` variant. `main.js` removes the `hidden` attribute and starts
+   from `.is-hidden`, then drops that class a frame later so this transition has
+   somewhere to animate from; dismissal reverses the order, re-adding `hidden`
+   only once the transition has actually finished. */
+.promo-toast.is-hidden {
+  opacity: 0;
+  transform: translateY(0.6rem);
+  pointer-events: none;
+}
+.promo-toast svg {
+  width: 1.3rem;
+  height: 1.3rem;
+  flex: none;
+}
+.promo-toast a {
+  color: var(--ink);
+  font-weight: 600;
+  border-bottom: var(--hair) solid var(--ink);
+  text-decoration: none;
+}
+.promo-toast a:hover {
+  background: var(--chrome);
+}
+.promo-toast button {
+  margin-left: auto;
+  flex: none;
+  align-self: flex-start;
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.15rem;
+}
+.promo-toast button:hover {
+  opacity: 0.6;
+}
+
+@media (max-width: 34rem) {
+  .promo-toast {
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .promo-toast {
+    transition: opacity 0.001ms linear;
+  }
+  .promo-toast.is-hidden {
+    transform: none;
+  }
 }
 
 /* ------------------------------------------------------------ responsive */
@@ -1650,6 +1828,11 @@ dialog form {
   font-size: 0.86rem;
   color: var(--ink-soft);
   max-width: 52ch;
+}
+/* Directly under the column's own "Site" label, matching the gap "Read more"
+   and "Advertisement" leave below their own heading rather than adding to it. */
+.colophon-side h2 + .colophon-meta {
+  margin-top: 0;
 }
 .colophon-meta a {
   color: var(--ink);

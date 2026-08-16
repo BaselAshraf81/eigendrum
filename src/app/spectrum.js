@@ -31,6 +31,7 @@ export function renderSpectrum(container, freqs, selectedIndex, onSelect) {
     const row = document.createElement('button');
     row.type = 'button';
     row.className = 'mode-row';
+    row.dataset.mode = String(i);
     row.setAttribute('aria-pressed', String(i === selectedIndex));
     row.setAttribute(
       'aria-label',
@@ -114,11 +115,15 @@ export function renderComb(els, freqs, selectedIndex, partner = null, drive = nu
   const span = b - a || 1;
   const pos = (f) => ((Math.log2(f) - a) / span) * 100;
 
-  const tick = (f, cls, height = null) => {
+  const tick = (f, cls, height = null, modeIndex = null) => {
     const t = document.createElement('span');
     t.className = cls ? `comb-tick ${cls}` : 'comb-tick';
     t.style.left = `${pos(f).toFixed(3)}%`;
     if (height !== null) t.style.height = `${height.toFixed(2)}rem`;
+    // Only the current drum's own ticks carry a mode index - the partner's ticks
+    // (the isospectral pair's second spectrum) have no row of their own in this
+    // drum's mode list to link back to.
+    if (modeIndex !== null) t.dataset.mode = String(modeIndex);
     els.axis.append(t);
   };
 
@@ -127,7 +132,7 @@ export function renderComb(els, freqs, selectedIndex, partner = null, drive = nu
     // While something is ringing the comb becomes an amplitude spectrum: tick
     // height is how much of this sound that mode is actually contributing.
     const h = drive ? 0.12 + 1.15 * Math.max(0, Math.min(1, drive[i] || 0)) : null;
-    tick(f, i === selectedIndex ? 'is-selected' : '', h);
+    tick(f, i === selectedIndex ? 'is-selected' : '', h, i);
   });
 
   els.lo.textContent = `${low.toFixed(0)} hz`;

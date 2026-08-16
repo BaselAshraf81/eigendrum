@@ -292,25 +292,12 @@ npm test        # unit tests, including the accuracy proofs
 
 Puppeteer is a dev dependency, used only by the browser tests, and never loads in
 the browser. The shipped app has zero runtime packages: every application module and local asset
-resolves inside this repo. On the deployed Vercel site, the two first-party Vercel telemetry
-scripts load from the platform endpoints.
+resolves inside this repo. ~~On the deployed Vercel site, the two first-party Vercel telemetry
+scripts load from the platform endpoints.~~ No longer deployed on vercel.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the rest of the scripts (accuracy
 benchmarks, the isospectral check, browser smoke tests) and how advertising is
 wired up on the deployed site.
-
-## Deploying
-
-Copy the repo to any static host. There is no build step, no server-side anything,
-and no environment to configure. GitHub Pages, Netlify, S3, a USB stick.
-
-The canonical host is `eigendrum.com`. `index.html` declares
-`<link rel="canonical">` pointing there, and `robots.txt`, `sitemap.xml` and
-`llms.txt` all name it. That matters because the repo still deploys to GitHub Pages
-as well: the redirect off `baselashraf81.github.io/eigendrum` is written in
-JavaScript, which no crawler that skips scripts will ever run, so without the
-canonical tag the two hosts compete as duplicates and neither earns the credit. If
-you fork this to your own domain, change the host in those four places.
 
 ## The visitor and presence counts
 
