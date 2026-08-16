@@ -1,14 +1,14 @@
-# Eigendrum - Everything is a drum
+# Eigendrum: everything is a drum
 
 **Draw a shape. Hear the sound it would actually make.**
 
 ![The Eigendrum interface: a circular drum ringing after a strike, with the mixture of modes it excited listed beside it and the solver's own measurements below](docs/hero.png)
 
 Eigendrum treats whatever you draw as an ideal drumhead clamped at its rim, solves
-the Laplacian eigenvalue problem on that exact region with real finite elements,
+the Laplacian eigenvalue problem on that exact region using real finite elements,
 and synthesises the frequencies it finds. Nothing is sampled and no overtone is
-faked - draw a circle and the overtones come out as ratios of Bessel function
-zeros, because that is what a circular drum does.
+faked: draw a circle and the overtones come out as ratios of Bessel function
+zeros, because that's what a circular drum actually does.
 
 Then it lets you hit it. Strike different places and the timbre changes, because
 striking a spot drives each mode in proportion to how much that mode moves
@@ -36,44 +36,45 @@ npm test          # 57 tests, including the accuracy proofs below
 
 ## What you can do with it
 
-- **Strike it anywhere.** Click or tap the plate. Where you hit changes the timbre,
+- Click or tap the plate to strike it anywhere. Where you hit changes the timbre,
   and the readout names the loudest mode along with any that stayed silent because
   the mallet landed on their nodal line.
-- **Hear one mode by itself.** Press any row in the mode list. No mallet can do that,
-  since a real strike always wakes many modes at once, but it is the only way to hear
-  what a single eigenvalue sounds like, and it is what makes the mixture legible
-  afterwards.
-- **Draw your own outline**, or pick from eleven built-in forms, including both halves
+- Press any row in the mode list to hear that one mode by itself. No mallet can do
+  that, since a real strike always wakes many modes at once, but it is the only way
+  to hear what a single eigenvalue sounds like, and it is what makes the mixture
+  legible afterwards.
+- Draw your own outline, or pick from eleven built-in forms, including both halves
   of the isospectral pair.
-- **Or write the outline as an equation.** `r(t)` in polar, or a parametric `x(t), y(t)`
-  pair, with `t` sweeping one full turn. This reaches shapes a hand cannot trace
-  accurately - eleven even lobes, a superellipse partway between a circle and a square
-  - and it makes a shape something you can *vary*: change one number and hear what
-  moved. Expressions are parsed, never evaluated as JavaScript, because a formula
-  arriving from somebody else's link is untrusted input.
-- **Change the parts that aren't fixed by the outline.** The pitch reference and
-  ring-out are yours. Mallet width changes how local the strike is, and which modes it
+- Write the outline as an equation instead: `r(t)` in polar, or a parametric
+  `x(t), y(t)` pair, with `t` sweeping one full turn. This reaches shapes a hand
+  cannot trace accurately, like eleven even lobes or a superellipse partway between
+  a circle and a square, and it makes a shape something you can *vary*: change one
+  number and hear what moved. Expressions are parsed, never evaluated as JavaScript,
+  because a formula arriving from somebody else's link is untrusted input.
+- Move the parts that aren't fixed by the outline. The pitch reference and ring-out
+  are yours. Mallet width changes how local the strike is, and which modes it
   reaches. The overtone *ratios* stay tied to the outline.
-- **See the mesh** the solver actually used, flexing with the membrane.
-- **Take it with you.** Copy a link that carries the shape in the URL fragment, save
-  the strike as a `.wav`, or the plate as a `.png`. A formula travels as the formula
+- Watch the mesh the solver actually used, flexing with the membrane.
+- Copy a link that carries the shape in the URL fragment, save the strike as a
+  `.wav`, or the plate as a `.png`. A formula travels as the formula
   (`#f=p:1 + 0.3cos(5t)`), so the link is readable, editable in the address bar, and
   survives any later change to how curves are sampled.
-- **Keyboard throughout.** Tab to the plate and press Enter or Space to strike it at
-  the marked point. Every form, mode and control is reachable and labelled, contrast
-  meets WCAG AA, and `prefers-reduced-motion` holds the peak displacement instead of
-  animating.
+- Use it from the keyboard. Tab to the plate and press Enter or Space to strike it
+  at the marked point. Every form, mode and control is reachable and labelled,
+  contrast meets WCAG AA, and `prefers-reduced-motion` holds the peak displacement
+  instead of animating.
 
-The shape stays in your browser. It lives in the URL fragment, which browsers never send to
-a server, and analytics is configured to report the origin and path only so the shapes you
-make are not recorded. There is no application backend: the mesh, the solve and the audio all
-run on your machine. Local clones and the GitHub Pages mirror load no analytics or ads at all.
+Your shape never leaves your browser. It lives in the URL fragment, which browsers
+never send to a server, and the site's analytics only logs which page you're on,
+never what you drew. There's no backend: meshing, solving, and audio all happen on
+your machine. A local clone or the GitHub Pages mirror doesn't load analytics or
+ads at all.
 
 ## Writing a shape as an equation
 
-`t` runs from 0 to `tau` in radians, one full turn. Size is irrelevant, since every
-outline is scaled to unit area before solving - what you hear is the shape and not
-the size - so `r = 0.001` and `r = 5000` are the same drum.
+`t` runs from 0 to `tau` in radians, one full turn. Every outline gets scaled to
+unit area before solving, so size doesn't matter: what you hear is the shape, not
+the size, and `r = 0.001` and `r = 5000` are the same drum.
 
 | notation | meaning | example |
 | --- | --- | --- |
@@ -86,7 +87,7 @@ Brackets group, `|x|` is absolute value, and implicit multiplication is accepted
 
 Available: `pi tau e phi`, and `sin cos tan asin acos atan atan2 sinh cosh tanh exp
 log ln log2 log10 sqrt cbrt abs sign floor ceil round hypot pow mod min max clamp`,
-plus `square` and `tri` - a square wave and a triangle wave of period `tau`, which is
+plus `square` and `tri`, a square wave and a triangle wave of period `tau`, which is
 how you get teeth and facets without a piecewise notation.
 
 Three kinds of formula are refused rather than answered, and each says which it is:
@@ -157,33 +158,33 @@ Each eigenfunction `u` is a standing wave; each eigenvalue `λ` gives a frequenc
 proportional to `√λ`. For almost every shape there is no formula, so Eigendrum
 solves it numerically:
 
-1. **Mesh.** Overlay a lattice of right-isosceles triangles, keep the triangles
+1. Mesh it: overlay a lattice of right-isosceles triangles, keep the triangles
    whose centroid is inside, project the resulting boundary onto the true
    outline, then repair it (slide boundary nodes along the outline to even out
    their spacing, drop the degenerate splinters that snapping leaves behind,
    smooth the interior).
-2. **Assemble.** P1 linear elements give the stiffness matrix `K` and the
+2. Assemble it: P1 linear elements give the stiffness matrix `K` and the
    consistent mass matrix `M`. Dirichlet conditions are imposed by never
    assembling rows for boundary nodes.
-3. **Solve.** The lowest 16 eigenpairs of `Kφ = λMφ`, by block inverse iteration
+3. Solve it: the lowest 16 eigenpairs of `Kφ = λMφ`, by block inverse iteration
    with a Rayleigh–Ritz projection. Inverse iteration because we want the
    *bottom* of the spectrum, and plain Lanczos converges to the top.
-4. **Listen.** Frequencies from `√λ`, per-mode amplitudes from projecting the
+4. Listen to it: frequencies from `√λ`, per-mode amplitudes from projecting the
    mallet onto the mode shapes, then a sum of decaying sinusoids.
 
 The step from projection to amplitude is where a struck membrane gets its voice,
 and it is easy to get wrong. Three factors apply, and only the last is a choice:
 
-- **Mass normalisation.** `c_k = ∫φ_k g` is the modal coefficient only when the
+- Mass normalisation. `c_k = ∫φ_k g` is the modal coefficient only when the
   modes are orthonormal in the mass inner product. The solver normalises them to
   unit *peak* instead, for the colour map's sake, so the projection is divided by
   `∫φ_k²`. That varies by a factor of about two across the first sixteen modes of
   a disk.
-- **`1/ω_k`.** A mallet delivers an impulse of *force*, which sets the membrane's
-  initial velocity, not its displacement. Solving `u_k(0) = 0`, `u_k'(0) = a_k`
-  gives `u_k(t) = (a_k/ω_k) sin ω_k t`, a 6 dB/octave rolloff.
-- **Contact time.** No beater is an impulse. A force pulse lasting `T` cannot pump
-  a mode whose period is far shorter than `T`, modelled here as a one-pole rolloff
+- The `1/ω_k` rolloff. A mallet delivers an impulse of *force*, which sets the
+  membrane's initial velocity, not its displacement. Solving `u_k(0) = 0`,
+  `u_k'(0) = a_k` gives `u_k(t) = (a_k/ω_k) sin ω_k t`, a 6 dB/octave rolloff.
+- Contact time. No beater is an impulse. A force pulse lasting `T` cannot pump a
+  mode whose period is far shorter than `T`, modelled here as a one-pole rolloff
   fixed at a ratio of the fundamental so the timbre does not shift with the pitch
   control.
 
@@ -200,11 +201,11 @@ reverse Cuthill–McKee and factorised once with a banded Cholesky. After that e
 solve is two triangular sweeps. A 2000-unknown drum solves in about 700 ms in a
 browser worker.
 
-## Why you can trust the numbers
+## Accuracy
 
 A handful of shapes have spectra that can be written in closed form, and the test
 suite checks the solver against them on every change. This is measured, not
-asserted - reproduce it with `npm run bench`:
+asserted: reproduce it with `npm run bench`.
 
 | shape | exact spectrum | 1200 nodes | 2600 | 6000 |
 | --- | --- | --- | --- | --- |
@@ -214,16 +215,16 @@ asserted - reproduce it with `npm run bench`:
 | unit disk | squared zeros of `J_m` | 0.946% | 0.437% | 0.192% |
 
 Worst relative error over the lowest 8 modes. The errors fall in the ratio
-1 : 0.47 : 0.21 against predicted `h²` ratios of 1 : 0.471 : 0.207 - clean
+1 : 0.47 : 0.21 against predicted `h²` ratios of 1 : 0.471 : 0.207, which is clean
 second-order convergence.
 
 Two further checks worth naming:
 
-- **Every error is positive.** A conforming finite element method minimises the
+- Every error is positive. A conforming finite element method minimises the
   Rayleigh quotient over a subspace of the true space, so it can never
   undershoot. An eigenvalue below the exact one would mean a bug, not a coarse
   mesh, and the suite asserts it never happens.
-- **The strike model reproduces physics nobody coded in.** Striking a circle dead
+- The strike model reproduces physics nobody coded in. Striking a circle dead
   centre excites the radially symmetric fundamental hard but leaves the next two
   modes essentially silent, because they have a nodal diameter straight through
   the centre. That falls out of the projection, and it is a test.
@@ -238,7 +239,7 @@ strike position can wake up. It also decides where the fundamental sits relative
 to the pitch slider: every shape gets scaled to the same area before solving, so
 whatever's left in lambda_1 is genuinely about the shape rather than its size.
 That swings by about six semitones across the built-in presets, and by
-Faber-Krahn's inequality the disk always comes out lowest - a round drum really is
+Faber-Krahn's inequality the disk always comes out lowest: a round drum really is
 the deepest drum for its area. None of this is adjustable, because none of it
 should be.
 
@@ -248,8 +249,8 @@ ring at. Every other shape then lands above or below that on its own, so the
 slider is a reference point, not a promise about what you'll hear. You also
 control how fast the overtones fade (material and air).
 
-The mallet sits outside both categories - its width is a control, its contact
-time is fixed - and it only changes how much of each mode a strike can reach,
+The mallet sits outside both categories: its width is a control, its contact
+time is fixed, and it only changes how much of each mode a strike can reach,
 never what frequency that mode rings at.
 
 ## Layout
@@ -316,17 +317,18 @@ you fork this to your own domain, change the host in those four places.
 Two real numbers in the footer, both hidden until they resolve rather than shown
 as placeholders, and both only run on the deployed host.
 
-- **Visits since launch** is an aggregate page-load count stored in Cloudflare D1. Each
-  production page load increments it once through `/api/visit`; `/api/visits` reads the
-  current total. It stores no cookie, IP address, or browser identifier, so it counts
-  visits rather than unique people. If the database is unavailable, the footer stays
-  hidden instead of showing a made-up number.
-- **People here right now** comes from a completely separate WebSocket server in
-  `presence-server/`, deployed on its own VPS rather than on Cloudflare Pages, because
-  counting concurrent connections needs a persistent process. See
-  `presence-server/README.md` for how it is deployed and wired up. If that server is
-  ever down, the count just disappears from the footer; nothing else on the site depends
-  on it.
+- Visits since launch is an aggregate page-load count stored in Cloudflare D1.
+  Each production page load increments it once through `/api/visit`;
+  `/api/visits` reads the current total. It stores no cookie, IP address, or
+  browser identifier, so it counts visits rather than unique people. If the
+  database is unavailable, the footer stays hidden instead of showing a
+  made-up number.
+- People here right now comes from a completely separate WebSocket server in
+  `presence-server/`, deployed on its own VPS rather than on Cloudflare Pages,
+  because counting concurrent connections needs a persistent process. See
+  `presence-server/README.md` for how it is deployed and wired up. If that
+  server goes down, the count just disappears from the footer; the rest of the
+  site does not depend on it.
 
 ## Star History
 
@@ -345,7 +347,7 @@ as placeholders, and both only run on the deployed host.
 - C. Gordon, D. Webb, S. Wolpert, *One cannot hear the shape of a drum*, Bulletin
   of the AMS 27 (1992).
 - T. Driscoll, *Eigenmodes of Isospectral Drums*, SIAM Review 39 (1997).
-  [SIAM](https://epubs.siam.org/doi/abs/10.1137/S0036144595285069) - the source of
+  [SIAM](https://epubs.siam.org/doi/abs/10.1137/S0036144595285069), the source of
   the coordinates used for the two Kac drums.
 - [Hearing the shape of a drum](https://en.wikipedia.org/wiki/Hearing_the_shape_of_a_drum)
   on Wikipedia, for the wider history.
