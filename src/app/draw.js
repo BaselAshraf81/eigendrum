@@ -11,10 +11,10 @@
 import { cleanClosedOutline } from '../geom/polygon.js';
 
 const MESSAGES = {
-  short: 'That stroke is too short to be a drum.',
-  degenerate: 'That stroke is too simple to be a drum.',
-  area: 'That outline encloses almost no area. Try a rounder shape.',
-  crossing: 'That outline crosses itself, so it has no inside. Try again without overlapping.',
+  short: "That's too short to work as a drum. Try a longer stroke.",
+  degenerate: "That's too simple a shape to work as a drum. Try adding more of an outline.",
+  area: "That outline has almost no area. Try drawing it a bit rounder or bigger.",
+  crossing: "That outline crosses itself, so there's no clear inside to solve for. Try drawing it without the overlap.",
 };
 
 export function strokeToPolygon(points, { tolerance = 0.006, minArea = 0.004 } = {}) {

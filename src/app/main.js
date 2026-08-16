@@ -897,6 +897,7 @@ function buildPresetChips() {
     label.textContent = preset.name.toLowerCase();
     chip.append(formGlyph(preset.polygon), label);
     chip.addEventListener('click', () => {
+      setFormulaMode(false);
       setDrawMode(false);
       solve({ kind: 'preset', id: preset.id });
     });

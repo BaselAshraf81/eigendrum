@@ -261,37 +261,38 @@
           second-order convergence, which is exactly what P1 elements should give.
         </p>
         <p>
-          Two further checks are worth naming. First, <strong>every error is
+          Two more things worth checking. First, <strong>every error comes out
           positive</strong>. A conforming finite element method minimises the Rayleigh
-          quotient over a restricted subspace of the true space, so it can never
-          undershoot the exact eigenvalue. An answer <em>below</em> the true one would
-          mean a bug, not a coarse mesh, and the test suite asserts it never happens.
-          Second, a circle's overtones come out as ratios of Bessel function zeros -
-          not because anyone typed Bessel zeros in, but because that is what a circular
-          drum does.
+          quotient over a restricted subspace of the true space, so it can't
+          undershoot the exact eigenvalue - an answer <em>below</em> the true one would
+          mean a bug, not just a coarse mesh, and the test suite checks for exactly that.
+          Second, a circle's overtones come out as ratios of Bessel function zeros,
+          and nobody typed those in by hand - that's simply what a circular drum does.
         </p>
 
-        <h2>What the shape decides, and what it does not</h2>
-        <p>Being clear about this is the point of the whole project.</p>
+        <h2>What the shape decides, and what's just a knob</h2>
+        <p>This tells you which parts of the sound come from the outline and which are controls.</p>
         <ul>
           <li>
-            <strong>Fixed by the outline, not adjustable.</strong> The frequency
-            <em>ratios</em>. The mode shapes. Which modes a given strike position can
-            excite. And where the fundamental lands relative to the reference below:
-            outlines are scaled to equal area before solving, so that is shape and not
-            size. It spans about six semitones across the built-in shapes, and the circle
-            is the lowest of them, which is Faber-Krahn and not a setting.
+            <strong>Locked in by the outline.</strong> The frequency <em>ratios</em>, the
+            mode shapes, and which modes a given strike can wake up. Also where the
+            fundamental lands relative to the reference pitch below - since outlines get
+            scaled to equal area before solving, that's genuinely about the shape rather
+            than its size. It swings by about six semitones across the built-in presets,
+            and the circle always comes out lowest - that's Faber-Krahn's inequality at
+            work, not a setting anyone chose.
           </li>
           <li>
-            <strong>Not fixed by the outline, so exposed as sliders.</strong> The wave
-            speed, which is tension and density: the pitch slider sets it by naming the
-            note a unit-area circle would sound, so it is a reference rather than the
-            fundamental you hear. How fast each overtone fades, which is material and air.
+            <strong>Not locked in, so they're sliders.</strong> The wave speed (tension and
+            density): the pitch slider sets it by naming the note a unit-area circle would
+            ring at, so think of it as a reference point rather than the actual pitch
+            you'll hear. Also how fast each overtone fades, which comes down to material
+            and air.
           </li>
           <li>
-            <strong>Modelled, and neither of the above.</strong> The mallet - its width is
-            a slider, its contact time is fixed. Both change how much of each mode a
-            strike reaches; neither can move a mode's frequency.
+            <strong>Modelled, but neither of the above.</strong> The mallet - its width is
+            a slider, its contact time is fixed. Both affect how much of each mode a
+            strike can reach, but neither one moves a mode's frequency.
           </li>
         </ul>
 

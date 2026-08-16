@@ -51,10 +51,9 @@ npm test          # 57 tests, including the accuracy proofs below
   - and it makes a shape something you can *vary*: change one number and hear what
   moved. Expressions are parsed, never evaluated as JavaScript, because a formula
   arriving from somebody else's link is untrusted input.
-- **Retune what the shape does not decide.** Absolute pitch and ring-out are yours.
-  Mallet width changes how sharply the strike is localised, and so which modes it can
-  reach. The overtone *ratios* are never adjustable, because those belong to the
-  outline.
+- **Change the parts that aren't fixed by the outline.** The pitch reference and
+  ring-out are yours. Mallet width changes how local the strike is, and which modes it
+  reaches. The overtone *ratios* stay tied to the outline.
 - **See the mesh** the solver actually used, flexing with the membrane.
 - **Take it with you.** Copy a link that carries the shape in the URL fragment, save
   the strike as a `.wav`, or the plate as a `.png`. A formula travels as the formula
@@ -229,26 +228,29 @@ Two further checks worth naming:
   modes essentially silent, because they have a nodal diameter straight through
   the centre. That falls out of the projection, and it is a test.
 
-## Physics versus modelling choice
+## What's physics and what's just a knob
 
-Being clear about this is the point of the project:
+This matters because it tells you which parts of the sound come from the outline
+and which are settings.
 
-**Determined by the shape, and not adjustable.** The frequency *ratios*. The mode
-shapes. Which modes a given strike position can excite. And the pitch the
-fundamental lands on, relative to the reference below: shapes are scaled to equal
-area before solving, so what is left in lambda_1 is shape rather than size, and it
-varies by about six semitones across the built-in presets. By Faber-Krahn the disk
-is the lowest of them all, so a round drum really is the deepest drum of its area.
+The shape decides the frequency ratios, the mode shapes, and which modes a given
+strike position can wake up. It also decides where the fundamental sits relative
+to the pitch slider: every shape gets scaled to the same area before solving, so
+whatever's left in lambda_1 is genuinely about the shape rather than its size.
+That swings by about six semitones across the built-in presets, and by
+Faber-Krahn's inequality the disk always comes out lowest - a round drum really is
+the deepest drum for its area. None of this is adjustable, because none of it
+should be.
 
-**Not determined by the shape, so exposed as controls.** The wave speed
-`c = sqrt(T / rho)`, which is tension and density: the pitch slider sets it by
-naming the note a unit-area *disk* would sound. Every other outline is then placed
-above that by its own lambda_1, so the slider is a reference rather than the
-fundamental you hear. How fast each overtone fades (material and air).
+What you do get to touch: the wave speed `c = sqrt(T / rho)` (tension and
+density), which the pitch slider sets by naming the note a unit-area disk would
+ring at. Every other shape then lands above or below that on its own, so the
+slider is a reference point, not a promise about what you'll hear. You also
+control how fast the overtones fade (material and air).
 
-**Modelled, and neither of the above.** The mallet: its width, which is a control,
-and its contact time, which is fixed. Both decide how much of each mode a strike
-can reach, never at what frequency a mode sits.
+The mallet sits outside both categories - its width is a control, its contact
+time is fixed - and it only changes how much of each mode a strike can reach,
+never what frequency that mode rings at.
 
 ## Layout
 

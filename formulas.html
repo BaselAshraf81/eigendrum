@@ -186,32 +186,30 @@
           spectrum is the corners talking.
         </p>
 
-        <h2>Three kinds of formula that get refused</h2>
+        <h2>Three kinds of formula it won't take</h2>
         <p>
-          Each refusal says which one it is, and each exists for a reason rather than out of
-          caution.
+          Each one gets its own message explaining which problem it hit. None of these are
+          arbitrary limits - they're places where the maths genuinely breaks down.
         </p>
         <ul>
           <li>
             <strong>Undefined somewhere on the sweep.</strong> If the expression has no
-            value at some <span class="tex">t</span>, there is no curve to solve on.
+            value at some <span class="tex">t</span>, there's no curve to solve on.
           </li>
           <li>
-            <strong>Self-crossing.</strong> A crossing outline has no well-defined
-            interior, so the Dirichlet problem is not posed. A negative
-            <span class="tex">r</span> is the usual cause - it folds the curve through the
-            origin - and the message names that specifically, because it is almost always
-            what happened.
+            <strong>Self-crossing.</strong> A crossing outline doesn't have a clean inside,
+            so the underlying problem isn't well posed. Usually it's a negative
+            <span class="tex">r</span> folding the curve back through the origin, and the
+            message calls that out directly since it's almost always what happened.
           </li>
           <li>
-            <strong>Too thin to mesh honestly.</strong> This one is the important one. A
-            hair-thin sliver has no interior nodes across its narrow direction, so a P1
-            solve would return eigenvalues that are badly wrong while still looking
-            perfectly like numbers. Refusing is the only option consistent with the
-            project's central claim. Freehand drawing never needed this guard, because a
-            hand cannot draw a 1-in-10,000 aspect ratio;
+            <strong>Too thin to mesh accurately.</strong> This is the one that actually
+            matters. A hair-thin sliver has no interior nodes across its narrow direction, so
+            solving it would hand back eigenvalues that look like real numbers but are wrong.
+            Refusing is the only honest option here. Freehand drawing never runs into this,
+            because nobody can draw a shape with a 1-in-10,000 aspect ratio by hand -
             <span class="tex">x = cos(t)</span>, <span class="tex">y = 0.0004sin(t)</span>
-            can, instantly.
+            does it instantly.
           </li>
         </ul>
         <p>
