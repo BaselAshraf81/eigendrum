@@ -316,13 +316,6 @@ h3 {
   height: 1.05rem;
   flex: none;
 }
-/* The Discord mark has more breathing room in its viewBox than the neighboring
-   symbols, so give the path more optical weight without changing the chip size. */
-.discord-icon {
-  width: 1.05rem !important;
-  height: 1.05rem !important;
-  transform: scale(1.28);
-}
 .chip[aria-pressed='true'] {
   background: var(--ink);
   color: var(--plaster);
