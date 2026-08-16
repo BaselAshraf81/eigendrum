@@ -28,7 +28,7 @@ const BRIGHTNESS = 0.5; // slider default
 const BASE_SECONDS = 1.7;
 const BASE_HZ = 130; // pitch slider default
 const RADIUS = 0.06; // mallet default
-const MODES = 16;
+const MODES = 64;
 const TARGET_NODES = 2000;
 const SR = 48000;
 
