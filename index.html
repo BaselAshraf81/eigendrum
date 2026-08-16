@@ -718,21 +718,40 @@
              resolves rather than shown as a placeholder. -->
         <p class="colophon-meta" id="visit-count" hidden></p>
 
-        <!-- Takes no hue, on purpose. The One Job Rule in DESIGN.md: vermilion is the
-             bench, ultramarine the ledger, chrome yellow selection-and-the-remarkable
-             thing, and asking for money is none of those. Same reasoning that kept the
-             masthead support chip un-tinted. -->
-        <section class="colophon-support" aria-labelledby="colophon-support-h">
-          <h2 id="colophon-support-h">Support this</h2>
-          <p>
-            Eigendrum is free and has no account, carries no advertising, and stays up on
-            voluntary support alone. If it was worth something to you, that is the way to
-            say so.
-          </p>
-          <a class="chip" href="https://ko-fi.com/baselashraf" target="_blank" rel="noopener">
-            ko-fi.com/baselashraf
-          </a>
-        </section>
+        <!-- Two sibling asks, grouped so only the group needs margin-top: auto to sit
+             at the foot of the column - two competing auto margins would fight over
+             the same leftover space. Neither takes a hue, on purpose: the One Job Rule
+             in DESIGN.md reserves vermilion for the bench, ultramarine for the ledger,
+             chrome yellow for selection-and-the-remarkable thing, and asking for money
+             or company is none of those. Same reasoning that kept the masthead support
+             chip un-tinted. -->
+        <div class="colophon-actions">
+          <section class="colophon-support" aria-labelledby="colophon-support-h">
+            <h2 id="colophon-support-h">Support this</h2>
+            <p>
+              Eigendrum is free and has no account, carries no advertising, and stays up on
+              voluntary support alone. If it was worth something to you, that is the way to
+              say so.
+            </p>
+            <a class="chip" href="https://ko-fi.com/baselashraf" target="_blank" rel="noopener">
+              ko-fi.com/baselashraf
+            </a>
+          </section>
+
+          <!-- Same shape as the block above, deliberately: an invitation to show
+               something off is the same kind of ask as a tip, so it gets the same
+               weight and the same wording pattern rather than a louder callout. -->
+          <section class="colophon-support" aria-labelledby="colophon-community-h">
+            <h2 id="colophon-community-h">Share your favourite shapes</h2>
+            <p>
+              Drawn something that surprised you, or found a formula worth passing on?
+              There's a small Discord for exactly that.
+            </p>
+            <a class="chip" href="https://discord.gg/GYcnBG3g4q" target="_blank" rel="noopener">
+              discord.gg/GYcnBG3g4q
+            </a>
+          </section>
+        </div>
       </div>
     </footer>
 
