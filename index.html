@@ -625,8 +625,18 @@
         </section>
 
         <section class="ledger">
-          <h2>the numbers</h2>
-          <dl id="facts"></dl>
+          <!-- Collapsed by default so casual visitors see modes first; the summary
+               line still carries the two honesty figures that matter most (accuracy
+               against a closed-form answer when one exists, and solve time). Full
+               mesh diagnostics sit behind one click rather than owning a whole
+               saturated field on first glance. -->
+          <details class="ledger-details" id="ledger-details">
+            <summary class="ledger-summary-row">
+              <span class="ledger-summary-label">advanced stats</span>
+              <span class="ledger-summary" id="ledger-summary"></span>
+            </summary>
+            <dl id="facts"></dl>
+          </details>
         </section>
       </aside>
 
@@ -729,6 +739,12 @@
       </div>
 
       <div class="colophon-side">
+        <!-- "Read more" and "Advertisement" both head their column with a label,
+             which put a line of empty space above this column's own first line and
+             left the footer's three columns starting from three different heights -
+             the fragmented-islands feeling had a literal, measurable cause. A third
+             label closes that gap without inventing any new copy underneath it. -->
+        <h2>Site</h2>
         <p class="colophon-meta">
           Built by Basel Ashraf. Free to use, MIT licensed. Advertising pays for the
           domain and keeps it that way.<br />
@@ -889,6 +905,36 @@
         <button class="chip chip-solid" value="close" aria-label="Close how it works">×</button>
       </form>
     </dialog>
+
+    <!-- A light, one-time pointer to the community, not a popup: it never blocks the
+         plate or steals focus, and main.js only reveals it after a first success -
+         a drum strike, a hand-drawn shape solving, or a mode played from the list -
+         so it lands after there is already something worth sharing rather than on arrival.
+         On desktop main.js docks it just under the bench's own buttons rather than
+         Docked above the bench top on wide layouts (see `positionPromoToast` in
+         `main.js`) so it does not sit on the ledger's accuracy rows or bury itself
+         in vermilion chips. Below the breakpoint the page scrolls normally and the
+         scrolls normally and the stylesheet's own corner position is already
+         clear of anything pinned. -->
+    <p class="promo-toast" id="promo-toast" hidden>
+      <svg viewBox="2.5 4.2 19 12" aria-hidden="true" focusable="false">
+        <path
+          fill="currentColor"
+          d="M17.5 5.5c-1.1-.5-2.2-.85-3.4-1.05-.15.27-.32.63-.44.91a13.6 13.6 0 0 0-4.24 0
+             c-.12-.28-.3-.64-.45-.91-1.2.2-2.3.55-3.4 1.05C3.3 8 2.6 10.8 2.8 13.55
+             c1.35.99 2.66 1.59 3.95 1.98.32-.44.6-.9.84-1.4-.46-.17-.9-.39-1.32-.64
+             .11-.08.22-.17.32-.25 2.77 1.28 5.77 1.28 8.51 0 .1.09.21.17.32.25-.42.25-.86.47
+             -1.32.64.24.5.52.96.84 1.4 1.29-.39 2.6-.99 3.95-1.98.24-3.2-.6-5.97-2.39-8.05Z
+             M9.7 12.1c-.68 0-1.24-.63-1.24-1.4s.55-1.4 1.24-1.4 1.25.63 1.24 1.4c0 .77-.55 1.4-1.24 1.4Z
+             M14.3 12.1c-.68 0-1.24-.63-1.24-1.4s.55-1.4 1.24-1.4 1.25.63 1.24 1.4c0 .77-.55 1.4-1.24 1.4Z"
+        />
+      </svg>
+      <span id="promo-toast-text">
+        Found a shape that sounds good?
+        <a href="https://discord.gg/GYcnBG3g4q" target="_blank" rel="noopener">Share it in the Discord.</a>
+      </span>
+      <button type="button" id="promo-toast-dismiss" aria-label="Dismiss this notice">×</button>
+    </p>
 
     <script type="module" src="src/app/main.js"></script>
   </body>

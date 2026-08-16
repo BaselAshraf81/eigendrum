@@ -56,6 +56,7 @@ const els = {
   staleNote: el('stale-note'),
   comb: el('comb'),
   facts: el('facts'),
+  ledgerSummary: el('ledger-summary'),
   aboutBody: el('about-body'),
   drawBtn: el('btn-draw'),
   drawLabel: el('draw-label'),
@@ -94,6 +95,9 @@ const els = {
   wav: el('btn-wav'),
   png: el('btn-png'),
   shareStatus: el('share-status'),
+  bench: el('bench'),
+  promoToast: el('promo-toast'),
+  promoToastDismiss: el('promo-toast-dismiss'),
 };
 
 const combEls = {
@@ -130,6 +134,81 @@ function maybeShowIosSoundHint() {
   if (!isIOS || iosSoundHintShown || state.muted || !els.iosSoundHint) return;
   iosSoundHintShown = true;
   els.iosSoundHint.hidden = false;
+}
+
+/* A light, one-time pointer to the community rather than a nag. Persist only
+ * when the visitor dismisses it - not when it first appears - so a missed toast
+ * can still show on the next visit until they close it. */
+let promoToastDismissed = false;
+try {
+  // Earlier builds wrote `eigendrum-discord-toast-shown` the moment the toast
+  // appeared, even when positioning made it easy to miss. Drop that key unless
+  // the visitor actually dismissed the toast, so they get another chance.
+  const dismissed = localStorage.getItem('eigendrum-discord-toast-dismissed') === '1';
+  if (localStorage.getItem('eigendrum-discord-toast-shown') === '1' && !dismissed) {
+    localStorage.removeItem('eigendrum-discord-toast-shown');
+  }
+  promoToastDismissed = dismissed;
+} catch {
+  /* ignore - a hint that fails to remember being dismissed is cosmetic, not fatal */
+}
+
+const desktopLayoutQuery = window.matchMedia('(min-width: 62.0625rem)');
+
+/**
+ * Floats the toast in the gap above the pinned bench on desktop. The ledger's
+ * foot and the bench's top border meet with no gutter, so sitting *on* the bench
+ * (or clamped to the viewport bottom when the bench is tall) buried the toast
+ * among vermilion chips. Anchoring to the bench's top edge keeps the ledger's
+ * accuracy rows clear and puts plaster-on-plaster contrast where the eye already
+ * travels between the mode list and the controls.
+ *
+ * Only meaningful on the desktop layout, where `.bench` is pinned to the foot
+ * of the viewport; below the breakpoint the page scrolls normally and the
+ * stylesheet's own `bottom` is already clear of everything.
+ */
+function positionPromoToast() {
+  if (!els.promoToast || els.promoToast.hidden) return;
+  if (desktopLayoutQuery.matches && els.bench) {
+    const benchTop = els.bench.getBoundingClientRect().top;
+    const gap = 10;
+    const bottom = window.innerHeight - benchTop + gap;
+    els.promoToast.style.bottom = `${Math.max(gap, Math.round(bottom))}px`;
+  } else {
+    els.promoToast.style.bottom = '';
+  }
+}
+
+/** Reveals the toast once, after the first moment there is something worth
+ *  sharing: a strike that made sound, a hand-drawn shape that solved, or a mode
+ *  played from the list. Tapping the drum is what most visitors try first, so
+ *  waiting for a mode-row click alone meant the toast never appeared. */
+function maybeShowPromoToast() {
+  if (!els.promoToast || promoToastDismissed) return;
+  promoToastDismissed = true;
+  els.promoToast.hidden = false;
+  els.promoToast.classList.add('is-hidden');
+  positionPromoToast();
+  // Two frames, not one: the browser has to paint the `.is-hidden` starting
+  // state at least once before removing the class gives the transition below
+  // something to animate from, or the toast just pops straight to rest.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => els.promoToast.classList.remove('is-hidden'));
+  });
+}
+
+function dismissPromoToast() {
+  if (!els.promoToast || els.promoToast.hidden) return;
+  promoToastDismissed = true;
+  try {
+    localStorage.setItem('eigendrum-discord-toast-dismissed', '1');
+  } catch {
+    /* ignore */
+  }
+  els.promoToast.classList.add('is-hidden');
+  setTimeout(() => {
+    els.promoToast.hidden = true;
+  }, 240);
 }
 
 const state = {
@@ -292,6 +371,10 @@ function onSolved(msg) {
   renderReadout();
   updateKacMatch();
   showPrompt();
+  // A hand-drawn shape that solved is the first of the two "something worth
+  // sharing" moments; playing a single mode from the list (selectMode) is the
+  // other. A preset or a typed formula is not - the shape was not theirs.
+  if (state.source.kind === 'custom') maybeShowPromoToast();
 }
 
 function partnerFreqs() {
@@ -548,6 +631,7 @@ function strike(x, y) {
   // modes ring together would be the interface lying about the physics.
   showStruckReadout(amps);
   maybeShowIosSoundHint();
+  maybeShowPromoToast();
   setSelected(els.spectrum, -1);
 }
 
@@ -795,11 +879,13 @@ function renderFacts() {
   const rows = [];
 
   const exact = exactSpectrum(state.presetId, Math.min(8, state.drum.eigenvalues.length));
+  let worstError = null;
   if (exact) {
     let worst = 0;
     for (let k = 0; k < exact.length; k++) {
       worst = Math.max(worst, Math.abs(state.drum.eigenvalues[k] - exact[k]) / exact[k]);
     }
+    worstError = worst;
     rows.push(['error against exact answer', fmtPercent(worst), true]);
   } else {
     rows.push(['exact answer', 'no formula exists', false]);
@@ -811,6 +897,14 @@ function renderFacts() {
   rows.push(['outline reproduced to', fmtPercent(d.areaError), d.areaError < 1e-12]);
   rows.push(['eigen residual', d.maxResidual.toExponential(1), false]);
   rows.push(['solve time', `${d.solveMs} ms`, false]);
+
+  if (els.ledgerSummary) {
+    const headline =
+      worstError !== null
+        ? `${fmtPercent(worstError)} error · ${d.solveMs} ms`
+        : `no exact formula · ${d.solveMs} ms`;
+    els.ledgerSummary.textContent = headline;
+  }
 
   els.facts.replaceChildren();
   for (const [label, value, flag] of rows) {
@@ -935,6 +1029,7 @@ function selectMode(i) {
     // the list look like a filter on the next strike - it is not one, and there is
     // no way to make a mallet excite a single mode.
     playModeAlone(i);
+    maybeShowPromoToast();
     return;
   }
   state.view = 'mode';
@@ -1193,6 +1288,8 @@ els.statusBannerDismiss?.addEventListener('click', () => {
   }
 });
 
+els.promoToastDismiss?.addEventListener('click', dismissPromoToast);
+
 els.sound.addEventListener('click', () => {
   state.muted = !state.muted;
   // Pressed means sound is on, which is what the visible label says. Setting it
@@ -1258,7 +1355,11 @@ function download(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
-window.addEventListener('resize', () => board.resize());
+window.addEventListener('resize', () => {
+  board.resize();
+  positionPromoToast();
+});
+desktopLayoutQuery.addEventListener('change', positionPromoToast);
 
 /**
  * Keys play modes directly, matching the row numbers shown in the index: 1
@@ -1316,6 +1417,52 @@ window.addEventListener('hashchange', () => {
     setDrawMode(false);
     solve({ kind: 'custom', polygon: next.polygon });
   }
+});
+
+/*
+ * Links the two views of the same spectrum. Hovering a comb tick highlights the
+ * matching row in the mode list, and hovering or focusing a row raises its own
+ * tick the same way `.is-selected` already does - so the reader can find the
+ * same mode in whichever view they were not already looking at.
+ *
+ * Delegated on the two containers rather than bound per-row or per-tick:
+ * `renderSpectrum` and `renderComb` both replace their children wholesale on
+ * every solve, which would silently drop any listener attached to a row or a
+ * tick itself. `#spectrum` and `#comb-axis` are never replaced, only emptied,
+ * so binding here once is what survives every re-render.
+ */
+function linkModeAndTick(mode, linked) {
+  const tick = combEls.axis.querySelector(`.comb-tick[data-mode="${mode}"]`);
+  tick?.classList.toggle('is-hover-linked', linked);
+  const row = els.spectrum.querySelector(`.mode-row[data-mode="${mode}"]`);
+  row?.classList.toggle('is-hover-linked', linked);
+}
+
+els.spectrum.addEventListener('pointerover', (e) => {
+  const row = e.target.closest('.mode-row');
+  if (row) linkModeAndTick(row.dataset.mode, true);
+});
+els.spectrum.addEventListener('pointerout', (e) => {
+  const row = e.target.closest('.mode-row');
+  if (row) linkModeAndTick(row.dataset.mode, false);
+});
+// Keyboard parity with the pointer version above: tabbing through the rows
+// raises the same tick a mouse hover would.
+els.spectrum.addEventListener('focusin', (e) => {
+  const row = e.target.closest('.mode-row');
+  if (row) linkModeAndTick(row.dataset.mode, true);
+});
+els.spectrum.addEventListener('focusout', (e) => {
+  const row = e.target.closest('.mode-row');
+  if (row) linkModeAndTick(row.dataset.mode, false);
+});
+combEls.axis.addEventListener('pointerover', (e) => {
+  const tick = e.target.closest('.comb-tick');
+  if (tick && tick.dataset.mode != null) linkModeAndTick(tick.dataset.mode, true);
+});
+combEls.axis.addEventListener('pointerout', (e) => {
+  const tick = e.target.closest('.comb-tick');
+  if (tick && tick.dataset.mode != null) linkModeAndTick(tick.dataset.mode, false);
 });
 
 // -------------------------------------------------------------------- startup

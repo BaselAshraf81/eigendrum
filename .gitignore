@@ -43,3 +43,7 @@ tools/poki-levels.mjs
 tools/poki-smoke.mjs
 tools/poki-survey.mjs
 tools/poki-sync.mjs
+.github/agents
+.github/hooks
+.github/skills
+.codex/
