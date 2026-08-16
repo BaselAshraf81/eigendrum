@@ -224,7 +224,7 @@
                 "name": "Which parts of the sound does the shape decide?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "The shape fixes the frequency ratios, the mode shapes, which modes a given strike position can excite, and the note the fundamental lands on. None of those are adjustable. Because outlines are scaled to equal area before solving, that fundamental is shape rather than size, and it spans about six semitones across the built-in shapes; a circle is the lowest of them, which is a theorem rather than a setting. What the shape does not fix is the wave speed, that is tension and density: the pitch slider sets it by naming the note a unit-area circle would sound, and every other outline sits above that. How fast each overtone fades is material and air, so that is a slider too."
+                  "text": "The shape fixes the frequency ratios, the mode shapes, which modes a given strike position can excite, and where the fundamental sits relative to the pitch slider. None of that is adjustable. Because outlines are scaled to equal area before solving, that fundamental position is genuinely about the shape, not its size, and it spans about six semitones across the built-in shapes, with the circle always lowest thanks to Faber-Krahn's inequality. What the shape doesn't fix is the wave speed (tension and density), which the pitch slider sets by naming the note a unit-area circle would sound, with every other outline landing above or below that. How fast each overtone fades is down to material and air, so that's a slider too."
                 }
               },
               {
@@ -620,12 +620,13 @@
 
       <section class="bench" id="bench" aria-label="Controls">
         <div class="bench-head">
-          <h2>what the shape does not decide</h2>
+          <h2>what you can and can't change</h2>
           <p>
-            Pitch here is a <em>reference</em>: the note a circle of this area would sound. Tension
-            and density are yours, and so is fade, which is material and air. Where each shape's own
-            fundamental lands above that reference is not yours, and neither is any overtone
-            <em>ratio</em>. Both are computed.
+            The pitch slider isn't your drum's actual pitch - it's a reference point, the note a
+            circle this size would make. Your shape's real fundamental sits above or below that,
+            and its overtones lock to whatever ratios the shape produces. None of that is
+            adjustable. What you do control is tension and density (the pitch slider), and how
+            fast it fades (material and air).
           </p>
         </div>
 
@@ -826,22 +827,22 @@
           the sound is not.
         </p>
 
-        <h3>what is a modelling choice</h3>
+        <h3>what's physics, and what's just a slider</h3>
         <p>
-          The frequency ratios, the mode shapes and the pitch of the fundamental are physics, fixed
-          entirely by the outline. What is not in the outline is the wave speed, which is tension and
-          density: the pitch slider sets that by naming the note a circle of this area would sound,
-          and each shape then lands above the reference by its own amount. Every shape is scaled to
-          the same area before solving, so that offset is shape and not size - about six semitones
-          across the built-in shapes, with the circle lowest, which is Faber-Krahn rather than a
-          choice. How fast each overtone fades is material and air, so that stays a slider rather
-          than a silent assumption.
+          The frequency ratios, the mode shapes, and the pitch of the fundamental are all baked
+          into the outline - you can't touch them. What you can move is the wave speed (tension
+          and density): the pitch slider names the note a circle of this area would sound, and
+          your actual shape lands above or below that on its own. Since every shape gets scaled
+          to the same area first, that offset is genuinely about the shape - roughly six
+          semitones of spread across the built-in presets, with the circle always lowest thanks
+          to Faber-Krahn's inequality. Fade time is a real slider too, since that's material and
+          air, not something the maths pins down.
         </p>
         <p>
-          The mallet is modelled too. Its width is a slider; its contact time is fixed at a few
-          milliseconds, because no real beater is instantaneous and one that was would drive every
-          mode equally hard. Both decide how much of a mode a strike can reach, and neither can move
-          a mode's frequency. Damping is Rayleigh damping, so loss rises with the square of
+          The mallet works the same way. Its width is a slider; its contact time is fixed at a
+          few milliseconds, because no real beater is instant, and one that was would slam every
+          mode equally hard. Both change how much of a mode a strike can reach - neither one can
+          shift where a mode actually sits. Damping is Rayleigh damping, so loss rises with the square of
           frequency: the high overtones die away first, which is why a drum darkens as it rings.
         </p>
 

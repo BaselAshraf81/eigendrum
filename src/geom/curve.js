@@ -52,7 +52,7 @@ function finishCurve(points, { closingGap = 0 } = {}) {
   // which they are: only the shape is audible.
   const scaled = normalizeToUnitArea(points);
   if (!(area(scaled) > 0) || !Number.isFinite(scaled[0].x)) {
-    return { ok: false, error: 'That formula encloses no area, so there is no membrane to solve.' };
+    return { ok: false, error: "That formula doesn't enclose any area, so there's no membrane to solve." };
   }
 
   const cleaned = cleanClosedOutline(scaled, { tolerance: 0.004, minArea: 1e-4 });
@@ -61,17 +61,17 @@ function finishCurve(points, { closingGap = 0 } = {}) {
       return {
         ok: false,
         error:
-          'That curve crosses itself, so it has no single inside. ' +
-          'Negative or looping radii usually cause this.',
+          "That curve crosses itself, so there's no single inside to solve for. " +
+          'Usually a negative or looping radius is the cause.',
       };
     }
     if (cleaned.reason === 'area') {
       return {
         ok: false,
-        error: 'That formula encloses no area, so there is no membrane to solve.',
+        error: "That formula doesn't enclose any area, so there's no membrane to solve.",
       };
     }
-    return { ok: false, error: 'That formula does not trace a usable outline.' };
+    return { ok: false, error: "That formula doesn't trace a usable outline." };
   }
 
   // Normalise again after simplifying. Cutting corners with chords removes a little
@@ -85,8 +85,8 @@ function finishCurve(points, { closingGap = 0 } = {}) {
     return {
       ok: false,
       error:
-        'That shape is too thin to mesh honestly. It would return numbers, ' +
-        'and they would be wrong.',
+        "That shape is too thin to mesh accurately - it would give back numbers " +
+        "that look fine but aren't.",
     };
   }
 
@@ -94,7 +94,7 @@ function finishCurve(points, { closingGap = 0 } = {}) {
     return {
       ok: false,
       error:
-        'That curve does not come back to where it started, so closing it needs a ' +
+        "That curve doesn't come back to where it started, so closing it would need a " +
         'straight jump across the shape. Check the periods in x and y.',
     };
   }
@@ -133,7 +133,7 @@ export function polarToPolygon(source) {
       ok: false,
       error:
         `r goes negative near t = ${negative.toFixed(2)}, which folds the curve ` +
-        'through the middle and makes it overlap. Add a constant, or use abs().',
+        'back through the middle and makes it overlap itself. Try adding a constant, or wrap it in abs().',
     };
   }
 
