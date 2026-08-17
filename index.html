@@ -382,13 +382,6 @@
         </h1>
         <p>a study of the vibrating plane</p>
       </div>
-      <!-- A real concurrent-connection count from the standalone WebSocket server in
-           presence-server/, gated to the deployed host same as analytics (see
-           adsAllowed() in main.js). Hidden until a real number arrives, and hidden
-           again the moment the connection drops - no placeholder, same honesty rule
-           as the footer's visit count. Sits between the wordmark and the action chips,
-           since a live headcount is the kind of thing worth seeing before you scroll. -->
-      <p class="masthead-live" id="online-count" hidden></p>
       <div class="masthead-actions">
         <!-- Both of these are chips rather than plain links: they are things you can
              do, and on this sheet a thing you can do has a keyline around it. The
@@ -750,10 +743,6 @@
           <a href="mailto:u2679054@uel.ac.uk">Contact</a> ·
           <a href="https://github.com/BaselAshraf81/eigendrum" target="_blank" rel="noopener">Source</a>
         </p>
-        <!-- The aggregate page-load count comes from the Cloudflare D1-backed
-             /api/visit and /api/visits functions. Hidden until a real number
-             resolves rather than shown as a placeholder. -->
-        <p class="colophon-meta" id="visit-count" hidden></p>
 
         <!-- Takes no hue, on purpose. The One Job Rule in DESIGN.md: vermilion is the
              bench, ultramarine the ledger, chrome yellow selection-and-the-remarkable
@@ -879,7 +868,7 @@
         <p>
           No build step and no application backend: the mesh, the solve and the audio all run
           on your own machine. The deployed site uses Google Analytics for aggregate site
-          analytics and a Cloudflare D1 counter for the public visit total; it carries no
+          analytics; it carries no
           advertising network and no consent banner. Support toward the domain and hosting is
           voluntary, via the link above. The shape you draw lives in the
           address bar after the <span class="tex">#</span>, which browsers never send to a

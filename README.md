@@ -292,30 +292,11 @@ npm test        # unit tests, including the accuracy proofs
 
 Puppeteer is a dev dependency, used only by the browser tests, and never loads in
 the browser. The shipped app has zero runtime packages: every application module and local asset
-resolves inside this repo. ~~On the deployed Vercel site, the two first-party Vercel telemetry
-scripts load from the platform endpoints.~~ No longer deployed on vercel.
+resolves inside this repo.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the rest of the scripts (accuracy
 benchmarks, the isospectral check, browser smoke tests) and how advertising is
 wired up on the deployed site.
-
-## The visitor and presence counts
-
-Two real numbers in the footer, both hidden until they resolve rather than shown
-as placeholders, and both only run on the deployed host.
-
-- Visits since launch is an aggregate page-load count stored in Cloudflare D1.
-  Each production page load increments it once through `/api/visit`;
-  `/api/visits` reads the current total. It stores no cookie, IP address, or
-  browser identifier, so it counts visits rather than unique people. If the
-  database is unavailable, the footer stays hidden instead of showing a
-  made-up number.
-- People here right now comes from a completely separate WebSocket server in
-  `presence-server/`, deployed on its own VPS rather than on Cloudflare Pages,
-  because counting concurrent connections needs a persistent process. See
-  `presence-server/README.md` for how it is deployed and wired up. If that
-  server goes down, the count just disappears from the footer; the rest of the
-  site does not depend on it.
 
 ## Star History
 

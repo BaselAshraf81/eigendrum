@@ -6,8 +6,7 @@
  * nothing here is allowed to invent a frequency.
  */
 
-import { adsAllowed, mountAds } from './ads.js';
-import { mountPresence } from './presence.js';
+import { mountAds } from './ads.js';
 import { Board } from './canvas.js';
 import { PRESETS, PRESETS_BY_ID, normalizeShape } from './presets.js';
 import { renderComb, renderSpectrum, setDrive, setSelected } from './spectrum.js';
@@ -1498,23 +1497,3 @@ else if (fromUrl?.kind === 'formula') {
 // as a slower drum rather than as a slower advert. `mountAds` is a no-op off-origin,
 // so this line does nothing at all locally or in the test suites.
 mountAds();
-
-// The visit counter is an aggregate page-load count in Cloudflare D1. It is
-// deliberately not a unique-user tracker: no cookie, IP address or browser
-// identifier is stored. Shown only once a real number comes back, never as a
-// placeholder, and hidden on failure rather than displaying something invented.
-if (adsAllowed()) {
-  const visitEl = el('visit-count');
-  fetch('/api/visit', { method: 'POST', keepalive: true })
-    .then((r) => (r.ok ? r.json() : null))
-    .then((data) => {
-      if (!visitEl || !data || !Number.isFinite(data.count)) return;
-      visitEl.textContent = `${data.count.toLocaleString('en-US')} visits since launch`;
-      visitEl.hidden = false;
-    })
-    .catch(() => {
-      /* No number is better than a wrong one. */
-    });
-
-  mountPresence(el('online-count'));
-}
