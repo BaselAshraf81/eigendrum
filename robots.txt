@@ -10,7 +10,7 @@ Allow: /
 
 # Answer engines are allowed deliberately. Blocking them would keep Eigendrum out
 # of the answers people actually read, and there is nothing here to withhold: the
-# app is MIT licensed, the source is public, and the maths is 60 years old.
+# source is public (see LICENSE for terms) and the maths is 60 years old.
 
 User-agent: GPTBot
 Allow: /

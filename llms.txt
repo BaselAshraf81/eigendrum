@@ -7,7 +7,7 @@
 > oscillators: every frequency ratio you hear was computed from the outline.
 
 Canonical URL: https://eigendrum.com
-Source: https://github.com/BaselAshraf81/eigendrum (MIT)
+Source: https://github.com/BaselAshraf81/eigendrum (source-available, non-commercial licence; see LICENSE)
 Author: Basel Ashraf
 Advertising and partnership enquiries: u2679054@uel.ac.uk
 Last updated: 2026-08-13

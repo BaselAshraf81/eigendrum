@@ -83,7 +83,7 @@
             "inLanguage": "en",
             "author": { "@id": "https://eigendrum.com/#author" },
             "publisher": { "@id": "https://eigendrum.com/#author" },
-            "license": "https://opensource.org/licenses/MIT"
+            "license": "https://github.com/BaselAshraf81/eigendrum/blob/master/LICENSE"
           },
           {
             "@type": "Person",
@@ -109,7 +109,7 @@
             "isAccessibleForFree": true,
             "inLanguage": "en",
             "author": { "@id": "https://eigendrum.com/#author" },
-            "license": "https://opensource.org/licenses/MIT",
+            "license": "https://github.com/BaselAshraf81/eigendrum/blob/master/LICENSE",
             "softwareHelp": "https://github.com/BaselAshraf81/eigendrum#readme",
             "codeRepository": "https://github.com/BaselAshraf81/eigendrum",
             "programmingLanguage": "JavaScript",
@@ -240,7 +240,7 @@
                 "name": "Is Eigendrum free, and does it need an account?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "It is free to use, with no account and no sign-up, and the source is MIT licensed. It carries no advertising network; the domain and hosting are supported voluntarily. There is no application backend: the mesh, the solve and the audio all run on your own device, and the shape you draw lives in the URL fragment, which browsers never send to a server."
+                  "text": "It is free to use, with no account and no sign-up. The source is available to read and to use for non-commercial purposes; see the repository's LICENSE for terms, including commercial use. It carries no advertising network; the domain and hosting are supported voluntarily. There is no application backend: the mesh, the solve and the audio all run on your own device, and the shape you draw lives in the URL fragment, which browsers never send to a server."
                 }
               },
               {
@@ -284,10 +284,12 @@
       });
     </script>
     <script>
-      // This repo still deploys to GitHub Pages (see .github/workflows/ci.yml),
-      // but the canonical home is eigendrum.com on Cloudflare Pages. Bounce visitors who
-      // land on the old github.io link straight there, preserving the path and
-      // hash so deep links (e.g. #s=... shape shares) keep working.
+      // The canonical home is eigendrum.com on Cloudflare Pages. A github.io mirror
+      // has existed in the past (see .github/workflows/ci.yml, though as of this
+      // writing that workflow triggers on a 'main' branch this repo does not have,
+      // so check whether it still runs before relying on it). Bounce anyone who
+      // lands on the old github.io link straight to the canonical host, preserving
+      // the path and hash so deep links (e.g. #s=... shape shares) keep working.
       if (location.hostname.endsWith('github.io')) {
         location.replace('https://eigendrum.com' + location.pathname.replace(/^\/eigendrum/, '') + location.search + location.hash);
       }
@@ -743,7 +745,7 @@
              label closes that gap without inventing any new copy underneath it. -->
         <h2>Site</h2>
         <p class="colophon-meta">
-          Built by Basel Ashraf. Free to use, MIT licensed.<br />
+          Built by Basel Ashraf. Free to use. Source available, non-commercial licence.<br />
           <a href="/privacy">Privacy</a> ·
           <a href="mailto:u2679054@uel.ac.uk">Contact</a> ·
           <a href="https://github.com/BaselAshraf81/eigendrum" target="_blank" rel="noopener">Source</a>
@@ -896,7 +898,7 @@
         </p>
         <p>
           Free to use, with no account and nothing to install. If you would like to put
-          something towards it, or would rather it were not ad-supported:
+          something towards the domain and hosting:
           <a href="https://ko-fi.com/baselashraf" target="_blank" rel="noopener"
             >ko-fi.com/baselashraf</a
           >

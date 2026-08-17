@@ -1,21 +1,51 @@
-MIT License
+Eigendrum Source-Available Non-Commercial Licence
+Copyright (c) 2026 Basel Ashraf
 
-Copyright (c) 2026 Eigendrum contributors
+This licence applies to code added to this repository from the date it took
+effect onward. Code published before that date remains available to anyone
+who already obtained it under the licence terms that applied at that time,
+including the MIT licence. This licence does not withdraw those existing
+rights.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Subject to the conditions below, permission is granted to any person
+obtaining a copy of this software and associated documentation files (the
+"Software") to use, copy, modify, merge, and distribute copies of the
+Software for personal, educational, research, and other non-commercial
+purposes.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Commercial use requires a separate written licence from Basel Ashraf.
+"Commercial use" includes, without limitation: selling the Software or a
+derivative of it, including a copy, a fork, or a repackaging under a
+different name; offering it, or a product or service built on it, for a fee
+or subscription; bundling it into a paid app, plugin, plan, or service; and
+using it to generate revenue via advertising placed on a deployment of it,
+beyond covering the reasonable hosting cost of a personal or non-commercial
+instance. Basel Ashraf and parties he authorises in writing are exempt from
+this restriction for their own commercial use of the Software.
+
+Further conditions, which apply to both commercial and non-commercial use:
+
+1. Attribution. Any use, deployment, app, website, or product built on the
+   Software must credit Basel Ashraf and Eigendrum, visibly to end users
+   (for example, in an "about," credits, or footer section reachable without
+   extra clicks), not only in source comments or a licence file nobody sees.
+2. No rebranding as an unrelated work. You may not present a copy or a
+   derivative of the Software as your own original creation, remove the
+   attribution required above, or use it in a way that implies it is not
+   based on Eigendrum.
+3. No use of the Eigendrum name, logo, or brand identity to market your own
+   copy or derivative, beyond the attribution required above. See
+   TRADEMARK.md.
+4. The copyright notice and this permission notice, including these
+   conditions, shall be included in all copies or substantial portions of
+   the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+To request a commercial licence, contact
+u2679054@uel.ac.uk.

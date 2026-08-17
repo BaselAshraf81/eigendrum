@@ -31,7 +31,7 @@ No dependencies, no build step, no backend. Clone it and open `index.html`, or:
 
 ```bash
 npm run serve     # http://localhost:8080
-npm test          # 57 tests, including the accuracy proofs below
+npm test          # 61 tests, including the accuracy proofs below
 ```
 
 ## What you can do with it
@@ -341,16 +341,23 @@ as placeholders, and both only run on the deployed host.
 
 ## Support
 
-Free to use, with no account and nothing to install. The deployed site is ad-supported
-to cover the cost of the domain; see [`privacy.html`](privacy.html) for what runs and
+Free to use, with no account and nothing to install. No ad network currently runs on
+the deployed site; the reserved ad slots instead carry a plain sponsorship pitch with
+no third-party script. See [`privacy.html`](privacy.html) for what actually runs and
 why, or [CONTRIBUTING.md](CONTRIBUTING.md) for how it's wired into the code. None of it
 applies to a local clone: `npm run serve` strips ad and analytics tags from every page.
 
-If you'd rather it stayed ad-free, or just want to put something toward it:
+If you'd like to put something toward the domain and hosting:
 [ko-fi.com/baselashraf](https://ko-fi.com/baselashraf). For anything wrong with the
-maths or the interface, open an issue. For advertising or partnership enquiries:
+maths or the interface, open an issue. For sponsorship or partnership enquiries:
 [u2679054@uel.ac.uk](mailto:u2679054@uel.ac.uk).
 
 ## Licence
 
-MIT. See [LICENSE](LICENSE)
+See [LICENSE](LICENSE). Code from before this licence took effect remains
+available under the MIT licence to whoever already had it. Code from here
+forward is free to use, copy, modify, and redistribute for non-commercial
+purposes, with visible credit to Basel Ashraf and Eigendrum and no
+presenting a copy as an unrelated, original work. Commercial use needs a
+separate licence from Basel Ashraf. The Eigendrum name and logo are not part
+of this grant either way; see [TRADEMARK.md](TRADEMARK.md).

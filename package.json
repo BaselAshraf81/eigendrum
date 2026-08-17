@@ -4,7 +4,7 @@
   "description": "Draw any shape and hear the sound it would actually make. Real finite-element solution of the Laplacian eigenproblem, synthesised in the browser.",
   "type": "module",
   "private": true,
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "keywords": [
     "spectral-geometry",
     "eigenvalues",
