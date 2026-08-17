@@ -327,6 +327,29 @@ as placeholders, and both only run on the deployed host.
  </picture>
 </a>
 
+## In the press
+
+Eigendrum has been covered across Hacker News, Reddit, YouTube, and international
+technology publications:
+
+| Source | Coverage |
+| --- | --- |
+| [Hacker News](https://news.ycombinator.com/item?id=49246366) | Front page, twice. 200+ points. |
+| [kottke.org](https://kottke.org/26/08/0049489-eigendrum) | Editorial post by Jason Kottke. |
+| [r/InternetIsBeautiful](https://www.reddit.com/r/InternetIsBeautiful/comments/1vdja1i/) | "Draw any shape and hear what it would sound like" |
+| [r/oddlysatisfying](https://www.reddit.com/r/oddlysatisfying/comments/1vdjqc4/) | "Every shape you draw becomes a drum" |
+| [Sidebar.io](https://sidebar.io/category/programming/e5svt5oBQWLnvveXG) | Curated design & dev newsletter |
+| [YouTube (×2)](https://www.youtube.com/watch?v=3DvOCP68sP0) | Two independent video reviews |
+| [drweb.de](https://www.drweb.de/eigendrum-trommelklang-ohne-samples/) | Major German web design editorial |
+| [remio.ai](https://www.remio.ai/post/eigendrum-hit-hacker-news-but-its-best-trick-is-exposing-imperfect-physics) | English analysis: physics accuracy |
+| [trendshift.io](https://trendshift.io/repositories/100569) | Trending repositories chart |
+| [Vostok Magazine](https://vostokmagazine.ru/2026/08/eigendrum-create-your-unique-drum-line/) | Russian editorial |
+| [diginews.fr](https://diginews.johandenoyer.fr/article.php?id=40396) | French developer digest |
+| [LinkedIn Pulse (NL)](https://nl.linkedin.com/pulse/maak-en-bespeel-je-eigen-drum-de-broedplaats-psychosynthese) | Dutch professional network |
+
+Plus coverage in Spanish, Chinese, Japanese, Russian, and Dutch aggregators;
+two Facebook group posts; Mastodon and Bluesky reposts by kottke.org.
+
 ## References
 
 - M. Kac, *Can One Hear the Shape of a Drum?*, American Mathematical Monthly 73
@@ -349,8 +372,8 @@ applies to a local clone: `npm run serve` strips ad and analytics tags from ever
 
 If you'd like to put something toward the domain and hosting:
 [ko-fi.com/baselashraf](https://ko-fi.com/baselashraf). For anything wrong with the
-maths or the interface, open an issue. For sponsorship or partnership enquiries:
-[u2679054@uel.ac.uk](mailto:u2679054@uel.ac.uk).
+maths or the interface, open an issue. For hiring or partnership enquiries:
+[bosbos.basel@gmail.com](mailto:bosbos.basel@gmail.com?subject=Hire%20Basel%20Ashraf).
 
 ## Licence
 

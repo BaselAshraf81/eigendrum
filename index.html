@@ -164,6 +164,25 @@
                 "isPartOf": "SIAM Review 39",
                 "url": "https://epubs.siam.org/doi/abs/10.1137/S0036144595285069"
               }
+            ],
+            "subjectOf": [
+              {
+                "@type": "Article",
+                "name": "Eigendrum Hit Hacker News. But Its Best Trick Is Exposing Imperfect Physics.",
+                "url": "https://www.remio.ai/post/eigendrum-hit-hacker-news-but-its-best-trick-is-exposing-imperfect-physics",
+                "publisher": { "@type": "Organization", "name": "remio.ai" }
+              },
+              {
+                "@type": "Article",
+                "name": "Eigendrum",
+                "url": "https://kottke.org/26/08/0049489-eigendrum",
+                "publisher": { "@type": "Organization", "name": "kottke.org" }
+              },
+              {
+                "@type": "DiscussionForumPosting",
+                "url": "https://news.ycombinator.com/item?id=49246366",
+                "publisher": { "@type": "Organization", "name": "Hacker News" }
+              }
             ]
           },
           {
@@ -332,7 +351,7 @@
       Eigendrum is hosted at eigendrum.com. The older address
       baselashraf81.github.io/eigendrum is a mirror that redirects there, so eigendrum.com
       is the canonical URL to link to and to cite. For advertising and partnership
-      enquiries, contact the developer, Basel Ashraf, at u2679054@uel.ac.uk.
+      enquiries, contact the developer, Basel Ashraf, at bosbos.basel@gmail.com.
     </p>
 
     <!-- Wraps the masthead and the sheet into exactly one viewport on desktop, so the
@@ -401,6 +420,7 @@
           href="https://github.com/BaselAshraf81/eigendrum"
           target="_blank"
           rel="noopener"
+          aria-label="View source on GitHub"
         >
           <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
             <path
@@ -415,10 +435,13 @@
                  1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
             />
           </svg>
+          <!-- On wide screens show the full repo path; on narrower screens the wide-only
+               span is hidden by CSS and the stars badge becomes the label. The badge
+               stays hidden until the fetch resolves so no stale text ever appears. -->
           <span class="wide-only">github.com/BaselAshraf81/eigendrum</span>
-          <span class="narrow-only">source</span>
+          <span id="github-stars-nav" class="github-stars-nav" hidden aria-hidden="true"></span>
         </a>
-        <a class="chip" id="link-support" href="https://ko-fi.com/baselashraf" target="_blank" rel="noopener">
+        <a class="chip nav-secondary" id="link-support" href="https://ko-fi.com/baselashraf" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <rect x="4" y="7" width="11" height="9" fill="currentColor" />
             <path d="M15 9h3a2.5 2.5 0 010 5h-3" stroke="currentColor" stroke-width="2" fill="none" />
@@ -430,7 +453,7 @@
              keyline. Sits next to "support this" since both are outward, "join in"
              kinds of link, and this is the one place on the sheet a visitor sees it
              without having to scroll past the whole instrument first. -->
-        <a class="chip" id="link-discord" href="https://discord.gg/GYcnBG3g4q" target="_blank" rel="noopener">
+        <a class="chip nav-secondary" id="link-discord" href="https://discord.gg/GYcnBG3g4q" target="_blank" rel="noopener">
           <svg viewBox="2.5 4.2 19 12" aria-hidden="true" focusable="false">
             <path
               fill="currentColor"
@@ -448,14 +471,26 @@
         <!-- Emailing is a thing you can do, so on this sheet it gets a keyline like every
              other thing you can do. It is here rather than only in the explainer because
              an address nobody finds is an address that does not exist. -->
-        <a class="chip" id="link-contact" href="mailto:u2679054@uel.ac.uk">
+        <!-- Hire me: a dedicated professional email so the university address is not
+             the only route to a paid engagement. Briefcase icon over the original
+             mail icon, same 24x24 Bauhaus vocabulary. Mobile: the span is clipped to
+             1px (visually-hidden pattern reused from #link-source / #btn-about below)
+             so it collapses to an icon-only square that still carries an aria-label. -->
+        <a
+          class="chip"
+          id="link-contact"
+          href="mailto:bosbos.basel@gmail.com?subject=Hire%20Basel%20Ashraf"
+          aria-label="hire me"
+        >
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <rect x="3" y="5" width="18" height="14" stroke="currentColor" stroke-width="2" fill="none" />
-            <path d="M3 6l9 7 9-7" stroke="currentColor" stroke-width="2" fill="none" />
+            <rect x="2" y="7" width="20" height="14" rx="0" stroke="currentColor" stroke-width="2" fill="none" />
+            <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" fill="none" />
+            <line x1="12" y1="12" x2="12" y2="12" stroke="currentColor" stroke-width="2" />
+            <path d="M2 12h20" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 0" fill="none" opacity="0.4" />
           </svg>
-          <span>contact</span>
+          <span>hire me</span>
         </a>
-        <button type="button" id="btn-sound" class="chip" aria-pressed="true">
+        <button type="button" id="btn-sound" class="chip nav-secondary" aria-pressed="true">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <rect x="3" y="9" width="6" height="6" fill="currentColor" />
             <path d="M13 6v12M18 3v18" stroke="currentColor" stroke-width="2" fill="none" />
@@ -476,6 +511,23 @@
           Safari mutes the drum along with your ringer.
           <button type="button" id="ios-sound-hint-dismiss" aria-label="Dismiss this hint">×</button>
         </p>
+        <!-- btn-nav-more: on mobile this is the "more ▾" button that reveals the
+             secondary chips (support, discord, sound). On desktop it is display:none
+             and all chips are always visible. JS in main.js or the inline block below
+             toggles .nav-expanded on .masthead-actions. -->
+        <button
+          type="button"
+          id="btn-nav-more"
+          class="chip nav-more-btn"
+          aria-expanded="false"
+          aria-controls="masthead-actions"
+        >
+          <span class="nav-more-label">more</span>
+          <svg class="nav-more-chevron" viewBox="0 0 12 8" aria-hidden="true" focusable="false">
+            <polyline points="1,1 6,7 11,1" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+        <span class="masthead-break" aria-hidden="true"></span>
         <button type="button" id="btn-about" class="chip">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none" />
@@ -695,6 +747,240 @@
       </main>
     </div>
 
+    <!-- ---------------------------------------------------------------- press band --
+         "As seen in" — surfaces the viral coverage and Basel's credibility as the
+         author. Plaster ground (no fourth primary: the three already have jobs), a 3px
+         ink rule above, a flex-wrap row of named press chips, and a live GitHub star
+         count with an overflow count for the long tail. Star count is fetched in the
+         inline script at the bottom of this file. Hidden until JS resolves it so no
+         stale or missing data is ever rendered; the rest of the section is always shown.
+    -->
+    <section class="press" aria-labelledby="press-heading">
+      <div class="press-inner">
+        <h2 id="press-heading">as seen in</h2>
+        <div class="press-chips" role="list">
+          <a class="press-chip" role="listitem" href="https://news.ycombinator.com/item?id=49246366" target="_blank" rel="nofollow noopener" aria-label="Hacker News front page">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="press-chip-icon">
+              <polygon points="12,2 22,22 2,22" fill="currentColor" />
+              <rect x="11" y="10" width="2" height="7" fill="white" />
+            </svg>
+            <span>Hacker News</span>
+            <span class="press-chip-sub">front page ×2</span>
+          </a>
+          <!-- kottke.org is Jason Kottke's long-running influential blog, one of the
+               oldest and most respected on the web. Blog post + Bluesky + Mastodon
+               reposts are three distinct reach events from the same influential person. -->
+          <a class="press-chip" role="listitem" href="https://kottke.org/26/08/0049489-eigendrum" target="_blank" rel="nofollow noopener" aria-label="kottke.org editorial post by Jason Kottke">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="press-chip-icon">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none" />
+              <path d="M12 3v9l6 3" stroke="currentColor" stroke-width="2" fill="none" />
+            </svg>
+            <span>kottke.org</span>
+            <span class="press-chip-sub">editorial</span>
+          </a>
+          <a class="press-chip" role="listitem" href="https://bsky.app/profile/kottke.org/post/3msxykkqore25" target="_blank" rel="nofollow noopener" aria-label="kottke.org Bluesky post">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="press-chip-icon">
+              <path d="M12 10.8C10.4 8.4 7.2 5.4 4.8 4.8 2.4 4.2 2 6 2 7.2s.6 4.2 1.2 4.8c2.4.6 5.4.6 8.8-.6m0-1.4C13.6 8.4 16.8 5.4 19.2 4.8 21.6 4.2 22 6 22 7.2s-.6 4.2-1.2 4.8c-2.4.6-5.4.6-8.8-.6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
+              <path d="M12 10.8v9.6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
+            </svg>
+            <span>kottke · Bluesky</span>
+          </a>
+          <a class="press-chip" role="listitem" href="https://mastodon.social/@kottke" target="_blank" rel="nofollow noopener" aria-label="kottke.org Mastodon post">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="press-chip-icon">
+              <path d="M20 13c0 4-3.4 6-8 6s-8-2-8-6V8c0-3.3 2.2-5 8-5s8 1.7 8 5v5Z" stroke="currentColor" stroke-width="2" fill="none" />
+              <path d="M8 10v4m8-4v4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
+            </svg>
+            <span>kottke · Mastodon</span>
+          </a>
+          <!-- yogthos is one of the highest-karma, most-followed users on Lemmy (the
+               federated, open-source Reddit alternative), with a track record of surfacing
+               notable open-source projects to a large technical audience. -->
+          <a class="press-chip" role="listitem" href="https://lemmy.ml/u/yogthos" target="_blank" rel="nofollow noopener" aria-label="Lemmy – shared by yogthos">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="press-chip-icon">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none" />
+              <circle cx="8.5" cy="11" r="1.2" fill="currentColor" />
+              <circle cx="15.5" cy="11" r="1.2" fill="currentColor" />
+              <path d="M9 15.5c1 1 5 1 6 0" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" />
+            </svg>
+            <span>Lemmy</span>
+            <span class="press-chip-sub">yogthos</span>
+          </a>
+          <a class="press-chip" role="listitem" href="https://www.reddit.com/r/InternetIsBeautiful/comments/1vdja1i/" target="_blank" rel="nofollow noopener" aria-label="Reddit – r/InternetIsBeautiful">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="press-chip-icon">
+              <circle cx="12" cy="12" r="9" fill="currentColor" />
+              <circle cx="8.5" cy="11" r="1.2" fill="white" />
+              <circle cx="15.5" cy="11" r="1.2" fill="white" />
+              <path d="M9 15.5c1 1 5 1 6 0" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" />
+              <path d="M12 3v2m3-1-1 2" stroke="currentColor" stroke-width="1.5" fill="none" />
+              <circle cx="15.5" cy="4.5" r="1" fill="currentColor" />
+            </svg>
+            <span>r/InternetIsBeautiful</span>
+          </a>
+          <a class="press-chip" role="listitem" href="https://www.reddit.com/r/oddlysatisfying/comments/1vdjqc4/" target="_blank" rel="nofollow noopener" aria-label="Reddit – r/oddlysatisfying">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="press-chip-icon">
+              <circle cx="12" cy="12" r="9" fill="currentColor" />
+              <circle cx="8.5" cy="11" r="1.2" fill="white" />
+              <circle cx="15.5" cy="11" r="1.2" fill="white" />
+              <path d="M9 15.5c1 1 5 1 6 0" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" />
+            </svg>
+            <span>r/oddlysatisfying</span>
+          </a>
+          <a class="press-chip" role="listitem" href="https://sidebar.io/category/programming/e5svt5oBQWLnvveXG" target="_blank" rel="nofollow noopener" aria-label="Sidebar.io curated newsletter">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="press-chip-icon">
+              <rect x="3" y="4" width="18" height="16" stroke="currentColor" stroke-width="2" fill="none" />
+              <path d="M3 9h18" stroke="currentColor" stroke-width="1.5" fill="none" />
+              <rect x="3" y="4" width="5" height="16" fill="currentColor" opacity="0.18" />
+            </svg>
+            <span>Sidebar.io</span>
+            <span class="press-chip-sub">newsletter</span>
+          </a>
+          <!-- Named YouTube channels so a visitor can verify the coverage is real. -->
+          <a class="press-chip" role="listitem" href="https://www.youtube.com/watch?v=3DvOCP68sP0" target="_blank" rel="nofollow noopener" aria-label="YouTube – Daily Tech Feed">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="press-chip-icon">
+              <rect x="2" y="5" width="20" height="14" rx="3" fill="currentColor" />
+              <polygon points="10,8.5 10,15.5 17,12" fill="white" />
+            </svg>
+            <span>Daily Tech Feed</span>
+            <span class="press-chip-sub">YouTube</span>
+          </a>
+          <a class="press-chip" role="listitem" href="https://www.youtube.com/watch?v=hrwFEa-81Gc" target="_blank" rel="nofollow noopener" aria-label="YouTube – Agent Amigos">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="press-chip-icon">
+              <rect x="2" y="5" width="20" height="14" rx="3" fill="currentColor" />
+              <polygon points="10,8.5 10,15.5 17,12" fill="white" />
+            </svg>
+            <span>Agent Amigos</span>
+            <span class="press-chip-sub">YouTube</span>
+          </a>
+          <a class="press-chip" role="listitem" href="https://www.drweb.de/eigendrum-trommelklang-ohne-samples/" target="_blank" rel="nofollow noopener" aria-label="Dr. Web – German editorial">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="press-chip-icon">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none" />
+              <path d="M2 12h20M12 3c-3 4-3 14 0 18M12 3c3 4 3 14 0 18" stroke="currentColor" stroke-width="1.5" fill="none" />
+            </svg>
+            <span>drweb.de</span>
+            <span class="press-chip-sub">DE</span>
+          </a>
+          <!-- Meneame is the dominant Spanish-language tech aggregator, roughly
+               equivalent to Hacker News for the Spanish-speaking developer community. -->
+          <a class="press-chip" role="listitem" href="https://www.meneame.net/m/tecnolog%C3%ADa/dibujar-escuchar-sorprenderse-arte-golpes-tambor-convertidos-eng" target="_blank" rel="nofollow noopener" aria-label="Meneame – Spanish tech aggregator">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="press-chip-icon">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none" />
+              <path d="M2 12h20M12 3c-3 4-3 14 0 18M12 3c3 4 3 14 0 18" stroke="currentColor" stroke-width="1.5" fill="none" />
+            </svg>
+            <span>Meneame</span>
+            <span class="press-chip-sub">ES</span>
+          </a>
+          <a class="press-chip" role="listitem" href="https://vostokmagazine.ru/2026/08/eigendrum-create-your-unique-drum-line/" target="_blank" rel="nofollow noopener" aria-label="Vostok Magazine – Russian editorial">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="press-chip-icon">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none" />
+              <path d="M2 12h20M12 3c-3 4-3 14 0 18M12 3c3 4 3 14 0 18" stroke="currentColor" stroke-width="1.5" fill="none" />
+            </svg>
+            <span>Vostok Magazine</span>
+            <span class="press-chip-sub">RU</span>
+          </a>
+          <a class="press-chip" role="listitem" href="https://diginews.johandenoyer.fr/article.php?id=40396" target="_blank" rel="nofollow noopener" aria-label="diginews.fr – French dev digest">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="press-chip-icon">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none" />
+              <path d="M2 12h20M12 3c-3 4-3 14 0 18M12 3c3 4 3 14 0 18" stroke="currentColor" stroke-width="1.5" fill="none" />
+            </svg>
+            <span>diginews.fr</span>
+            <span class="press-chip-sub">FR</span>
+          </a>
+          <a class="press-chip" role="listitem" href="https://trendshift.io/repositories/100569" target="_blank" rel="nofollow noopener" aria-label="Trendshift – trending repositories">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="press-chip-icon">
+              <polyline points="3,17 9,11 13,15 21,7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+              <polyline points="16,7 21,7 21,12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span>trendshift.io</span>
+            <span class="press-chip-sub">trending</span>
+          </a>
+          <a class="press-chip" role="listitem" href="https://www.remio.ai/post/eigendrum-hit-hacker-news-but-its-best-trick-is-exposing-imperfect-physics" target="_blank" rel="nofollow noopener" aria-label="remio.ai editorial analysis">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="press-chip-icon">
+              <rect x="3" y="3" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" />
+              <path d="M7 8h10M7 12h8M7 16h5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" />
+            </svg>
+            <span>remio.ai</span>
+            <span class="press-chip-sub">analysis</span>
+          </a>
+        </div>
+        <div class="press-footer">
+          <p class="press-summary" id="press-summary">
+            <span class="press-summary-inner" id="press-summary-inner" hidden>
+              <a
+                href="https://github.com/BaselAshraf81/eigendrum"
+                target="_blank"
+                rel="noopener"
+                class="press-stars-link"
+                id="press-stars-link"
+                aria-label="View on GitHub"
+              >
+                <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" class="press-star-icon">
+                  <path fill="currentColor" d="M8 0l2.06 4.18L14.59 4.9l-3.29 3.2.78 4.52L8 10.42l-4.08 2.2.78-4.52L1.41 4.9l4.53-.72L8 0z"/>
+                </svg>
+                <strong id="github-stars-count"></strong>
+              </a>
+              <span class="press-and-more">· featured in 18 named sources</span>
+            </span>
+          </p>
+          <details class="press-more-details" id="press-more-details">
+            <summary class="press-overflow-summary">
+              <span class="press-overflow-label">and 32 more</span>
+              <svg class="press-overflow-chevron" viewBox="0 0 12 8" aria-hidden="true" focusable="false">
+                <polyline points="1,1 6,7 11,1" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </summary>
+            <div class="press-more-grid">
+              <div class="press-more-group">
+                <h3>Hacker News &amp; aggregators</h3>
+                <a href="https://news.ycombinator.com/item?id=49305250" target="_blank" rel="nofollow noopener">Hacker News – eigendrum.com thread</a>
+                <a href="https://hn.algolia.com/?query=eigendrum&amp;type=story&amp;dateRange=all&amp;sort=byDate&amp;storyText=false&amp;prefix&amp;page=0" target="_blank" rel="nofollow noopener">HN Algolia search</a>
+                <a href="https://www.reddit.com/r/hackernews/comments/1vovo41/eigendrum/" target="_blank" rel="nofollow noopener">Reddit · r/hackernews</a>
+                <a href="https://zeli.app/en/story/49305250" target="_blank" rel="nofollow noopener">Zeli</a>
+                <a href="https://debutly.app/app/eigendrum" target="_blank" rel="nofollow noopener">Debutly</a>
+                <a href="https://mastodon.social/@CuratedHackerNews/117102371364825124" target="_blank" rel="nofollow noopener">Mastodon · CuratedHackerNews</a>
+              </div>
+              <div class="press-more-group">
+                <h3>Chinese (ZH)</h3>
+                <a href="https://www.sheepnav.com/tools/eigendrum" target="_blank" rel="nofollow noopener">SheepNav</a>
+                <a href="https://briefsum.com" target="_blank" rel="nofollow noopener">Briefsum</a>
+              </div>
+              <div class="press-more-group">
+                <h3>Japanese (JA)</h3>
+                <a href="https://thenote.app/post/ja/donnaxing-demomiao-ite-sorewodoramunoyin-toshitewen-kou-lbq18fokcb" target="_blank" rel="nofollow noopener">TheNote.app</a>
+              </div>
+              <div class="press-more-group">
+                <h3>Spanish (ES)</h3>
+                <a href="https://ojeo.com" target="_blank" rel="nofollow noopener">ojeo.com</a>
+              </div>
+              <div class="press-more-group">
+                <h3>German (DE)</h3>
+                <a href="https://eayz.de" target="_blank" rel="nofollow noopener">eayz.de</a>
+              </div>
+              <div class="press-more-group">
+                <h3>Russian (RU)</h3>
+                <a href="https://dzen.ru/search?text=eigendrum" target="_blank" rel="nofollow noopener">Dzen ×2</a>
+                <a href="https://iitog.ru" target="_blank" rel="nofollow noopener">iitog.ru</a>
+                <a href="https://vk.ru" target="_blank" rel="nofollow noopener">VK.ru</a>
+                <a href="https://glance.trager.ru" target="_blank" rel="nofollow noopener">glance.trager.ru</a>
+              </div>
+              <div class="press-more-group">
+                <h3>Social &amp; blogs</h3>
+                <a href="https://mastodon.social/@h4ckernews" target="_blank" rel="nofollow noopener">Mastodon · h4ckernews</a>
+                <a href="https://x.com/search?q=eigendrum" target="_blank" rel="nofollow noopener">X · multiple shares</a>
+                <a href="https://memooftheair.wordpress.com" target="_blank" rel="nofollow noopener">Memo of the Air</a>
+              </div>
+              <div class="press-more-group">
+                <h3>Directories &amp; tools</h3>
+                <a href="https://websitehunt.co" target="_blank" rel="nofollow noopener">WebsiteHunt</a>
+                <a href="https://oddities.app" target="_blank" rel="nofollow noopener">Oddities.app</a>
+                <a href="https://askmatchbox.com" target="_blank" rel="nofollow noopener">AskMatchbox</a>
+                <a href="https://markethunt.app" target="_blank" rel="nofollow noopener">Markethunt</a>
+              </div>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
     <!--
       Below the study sheet, so it costs the instrument nothing: on a wide screen the
       sheet is pinned to a full viewport, and this is reached by scrolling past it. It
@@ -747,7 +1033,7 @@
         <p class="colophon-meta">
           Built by Basel Ashraf. Free to use. Source available, non-commercial licence.<br />
           <a href="/privacy">Privacy</a> ·
-          <a href="mailto:u2679054@uel.ac.uk">Contact</a> ·
+          <a href="mailto:bosbos.basel@gmail.com?subject=Hire%20Basel%20Ashraf">Contact</a> ·
           <a href="https://github.com/BaselAshraf81/eigendrum" target="_blank" rel="noopener">Source</a>
         </p>
         <!-- The aggregate page-load count comes from the Cloudflare D1-backed
@@ -869,8 +1155,8 @@
           is a mirror that now redirects there.
         </p>
         <p>
-          For advertising or partnership enquiries, write to
-          <a href="mailto:u2679054@uel.ac.uk">u2679054@uel.ac.uk</a>. For anything wrong
+          For hiring or partnership enquiries, write to
+          <a href="mailto:bosbos.basel@gmail.com?subject=Hire%20Basel%20Ashraf">bosbos.basel@gmail.com</a>. For anything wrong
           with the maths or the interface, an issue on the repository is better, because
           then the fix is public.
         </p>
@@ -939,6 +1225,50 @@
       <button type="button" id="promo-toast-dismiss" aria-label="Dismiss this notice">×</button>
     </p>
 
+    <!-- GitHub star count for the "as seen in" press section.
+         Fetches once from the public API (unauthenticated, 60 req/hr per visitor IP).
+         Reveals the summary bar only when a real number arrives; stays hidden on any
+         error or rate-limit, so no stale data is ever shown. Not bundled with main.js
+         because this fetch fires independently of the audio/solver initialisation path,
+         and a module that can fail silently should fail in its own scope. -->
+    <script>
+      (function () {
+        /* ── GitHub stars ──────────────────────────────────────────────────────── */
+        var count    = document.getElementById('github-stars-count');
+        var navBadge = document.getElementById('github-stars-nav');
+        var inner    = document.getElementById('press-summary-inner');
+
+        fetch('https://api.github.com/repos/BaselAshraf81/eigendrum')
+          .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+          .then(function (data) {
+            var n = data.stargazers_count;
+            if (typeof n !== 'number') return;
+            var compact = n >= 1000
+              ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k'
+              : String(n);
+            if (count) count.textContent = compact + '\u2605 stars on GitHub';
+            if (inner) inner.removeAttribute('hidden');
+            if (navBadge) {
+              navBadge.textContent = '\u2605\u00a0' + compact;
+              navBadge.removeAttribute('hidden');
+              navBadge.removeAttribute('aria-hidden');
+              var src = document.getElementById('link-source');
+              if (src) src.setAttribute('aria-label', compact + ' stars \u2013 view on GitHub');
+            }
+          })
+          .catch(function () { /* stay hidden */ });
+
+        /* ── Mobile nav “more ▾” toggle ────────────────────────────────────── */
+        var btn     = document.getElementById('btn-nav-more');
+        var actions = document.querySelector('.masthead-actions');
+        if (btn && actions) {
+          btn.addEventListener('click', function () {
+            var expanded = actions.classList.toggle('nav-expanded');
+            btn.setAttribute('aria-expanded', String(expanded));
+          });
+        }
+      })();
+    </script>
     <script type="module" src="src/app/main.js"></script>
   </body>
 </html>

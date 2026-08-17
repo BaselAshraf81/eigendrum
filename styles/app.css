@@ -1608,26 +1608,6 @@ dialog form {
   .masthead-titles p {
     display: none;
   }
-  /* Four chips do not fit beside the wordmark on a phone with their labels intact, so
-     source and explainer both shed theirs and shrink to an icon-only square. The
-     source chip stays reachable rather than vanishing: it is the only link off the
-     page that a mobile visitor could otherwise miss entirely, since the explainer's
-     colophon copy is easy to skip past without opening the dialog. */
-  #link-source span,
-  #link-contact span,
-  #btn-about span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-  #link-source,
-  #link-contact,
-  #btn-about {
-    padding: 0.4rem;
-  }
   #btn-sound {
     font-size: 0.8rem;
   }
@@ -1907,5 +1887,303 @@ dialog form {
 @media (prefers-reduced-motion: reduce) {
   .colophon-nav a:hover {
     background: transparent;
+  }
+}
+
+/* --------------------------------------------------- masthead nav mobile */
+
+/* .masthead-break is the zero-height flex-100%-wide item that forces expanded
+   secondary chips onto a second row on mobile. Invisible (display:none) by
+   default; turned on inside the @media block below when it matters. */
+.masthead-break {
+  flex: 0 0 100%;
+  height: 0;
+  display: none;
+}
+
+/* The "more ▾" toggle: visible on mobile only, display:none on desktop. */
+.nav-more-btn {
+  display: none;
+}
+
+/* Stars badge in the masthead GitHub chip: shows on mobile when the fetch
+   resolves; the wide-only text span hides on narrow screens via existing CSS. */
+.github-stars-nav {
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  /* coloured the same as text — it is just a count, not a badge background */
+  color: inherit;
+}
+
+/* Chevron in the "more" button: rotates 180° when expanded. */
+.nav-more-chevron {
+  width: 0.65rem;
+  height: 0.65rem;
+  flex: none;
+  transition: transform 150ms linear;
+}
+
+@media (max-width: 34rem) {
+  .nav-more-btn {
+    display: inline-flex;
+  }
+  .nav-secondary {
+    display: none;
+  }
+  /* When expanded, reveal secondaries and flip the chevron. */
+  .masthead-actions.nav-expanded .nav-secondary {
+    display: inline-flex;
+  }
+  .masthead-actions.nav-expanded #btn-nav-more .nav-more-chevron {
+    transform: rotate(180deg);
+  }
+  /* Ordering: GitHub | hire me | how it works | more ▾ | — break — | support | discord | sound */
+  #link-source    { order: 1; font-size: 0.78rem; }
+  #link-contact   { order: 2; }
+  #btn-about      { order: 3; }
+  #btn-nav-more   { order: 4; }
+  .masthead-break { order: 5; display: block; }
+  #link-support   { order: 6; }
+  #link-discord   { order: 7; }
+  #btn-sound      { order: 8; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-more-chevron {
+    transition: none;
+  }
+}
+
+
+/* ------------------------------------------------------- press / as seen in */
+
+/* Plaster ground. The three primaries already own the bench, ledger and chrome
+   yellow; a press band needs none of them. Same 3px ink rule as every region
+   divider on the sheet. Not .screen-relative: it scrolls with the document like
+   the colophon it sits above. */
+.press {
+  flex: none;
+  border-top: var(--rule) solid var(--ink);
+  padding: 1.6rem 1.5rem 2rem;
+  background: var(--plaster);
+}
+
+/* Inner wrapper constrains measure on very wide screens and centres the content. */
+.press-inner {
+  max-width: 72rem;
+}
+
+.press > .press-inner > h2 {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--ink-soft);
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+}
+
+/* Grid of press chips: wraps freely. Each chip is a keylined tag with a small
+   icon, a name, and an optional sub-label. The chip vocabulary matches the
+   masthead chips (hairline border, no radius, 110ms linear hover) because they
+   carry the same weight: "this is a link you can press". */
+.press-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 1.25rem;
+}
+
+.press-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.38rem 0.8rem 0.38rem 0.55rem;
+  border: var(--hair) solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: background-color 110ms linear, color 110ms linear;
+  line-height: 1.2;
+}
+.press-chip:hover {
+  background: var(--ink);
+  color: var(--plaster);
+}
+.press-chip:hover .press-chip-icon {
+  color: var(--plaster);
+}
+
+.press-chip-icon {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  color: inherit;
+}
+
+/* The sub-label (e.g. "front page", "FR", "×2 videos"). Quieter than the name:
+   ink-soft on plaster, a thin separator to the left. */
+.press-chip-sub {
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  font-weight: 400;
+  padding-left: 0.3rem;
+  border-left: var(--hair) solid rgba(20, 18, 15, 0.3);
+  margin-left: 0.1rem;
+  transition: color 110ms linear;
+}
+.press-chip:hover .press-chip-sub {
+  color: rgba(240, 237, 230, 0.75);
+  border-left-color: rgba(240, 237, 230, 0.3);
+}
+
+/* Summary bar: star count + overflow. Shown only once the fetch resolves. */
+.press-summary {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.press-summary-inner {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.55rem;
+}
+
+/* The stars link: icon + bold number + "stars on GitHub". Same underline-then-
+   hover treatment as .colophon-nav a, but smaller and quieter — it is a
+   supporting fact, not a headline. */
+.press-stars-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+  border-bottom: var(--hair) solid var(--ink);
+}
+.press-stars-link:hover {
+  background: var(--chrome);
+  border-bottom-color: transparent;
+}
+
+.press-star-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex: none;
+  color: var(--ink);
+}
+
+/* press-footer: flexbox row holding the stars summary and the "and N more"
+   disclosure side by side on wide screens, stacking on narrow ones. */
+.press-footer {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  margin-top: 0.1rem;
+}
+
+/* "and 32 more" disclosure. <details>/<summary> gives keyboard + screen-reader
+   access without JS. The summary looks like the existing press-overflow text but
+   gains a cursor and a chevron. No card, no shadow, no radius. */
+.press-more-details {
+  display: inline-block;
+  font-size: 0.82rem;
+}
+.press-more-details[open] .press-overflow-chevron {
+  transform: rotate(180deg);
+}
+
+.press-overflow-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  list-style: none; /* remove default marker */
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  user-select: none;
+}
+.press-overflow-summary::-webkit-details-marker {
+  display: none;
+}
+.press-overflow-summary:hover .press-overflow-label {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
+
+.press-overflow-label {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.press-overflow-chevron {
+  width: 0.6rem;
+  height: 0.6rem;
+  flex: none;
+  color: var(--ink-soft);
+  transition: transform 150ms linear;
+}
+
+/* The expanded grid of overflow links, grouped by region. Opens with a brief
+   CSS animation so the expansion feels deliberate, not jarring. */
+.press-more-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem 2rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: var(--hair) solid var(--ink);
+  animation: press-expand 180ms ease-out both;
+}
+@keyframes press-expand {
+  from { opacity: 0; transform: translateY(-0.4rem); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.press-more-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 10rem;
+}
+.press-more-group h3 {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 0.25rem;
+}
+.press-more-group a {
+  font-size: 0.84rem;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: var(--hair) solid var(--ink);
+  width: fit-content;
+}
+.press-more-group a:hover {
+  background: var(--chrome);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .press-more-grid {
+    animation: none;
+  }
+  .press-overflow-chevron {
+    transition: none;
+  }
+}
+
+@media (max-width: 34rem) {
+  .press {
+    padding: 1.35rem 1rem 1.75rem;
   }
 }
