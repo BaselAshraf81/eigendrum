@@ -805,15 +805,14 @@ function showStruckReadout(amps) {
   }
 
   els.readout.replaceChildren(
-    strong('Struck.'),
-    text(' Every mode sounds at once, each as loud as the surface moves where you hit. Loudest here is '),
+    text('Loudest: '),
     strong(`mode ${loud + 1}`),
     text(` at ${state.freqs[loud].toFixed(1)} Hz. `),
     span(
       'note',
       silent.length
-        ? `${silent.length === 1 ? 'Mode' : 'Modes'} ${listNumbers(silent)} stayed silent - the mallet landed on a nodal line.`
-        : 'The rules under the list are the mixture you just made.',
+        ? `${silent.length === 1 ? 'Mode' : 'Modes'} ${listNumbers(silent)} stayed silent because the strike hit a nodal line.`
+        : 'Overtones are excited in proportion to surface motion at the strike point.',
     ),
   );
 }
