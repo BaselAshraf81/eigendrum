@@ -372,6 +372,7 @@ h3 {
   width: 1.05rem;
   height: 1.05rem;
   flex: none;
+  pointer-events: none;
 }
 .chip[aria-pressed='true'] {
   background: var(--ink);
@@ -736,6 +737,7 @@ h2 {
   width: 1.5rem;
   height: 1.5rem;
   flex: none;
+  pointer-events: none;
 }
 .form-chip:hover {
   background: var(--ink);
