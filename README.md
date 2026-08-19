@@ -334,6 +334,7 @@ technology publications:
 
 | Source | Coverage |
 | --- | --- |
+| [Wikipedia](https://en.wikipedia.org/wiki/Hearing_the_shape_of_a_drum#External_links) | *Hearing the shape of a drum* external links |
 | [Hacker News](https://news.ycombinator.com/item?id=49246366) | Front page, twice. 200+ points. |
 | [kottke.org](https://kottke.org/26/08/0049489-eigendrum) | Editorial post by Jason Kottke. |
 | [r/InternetIsBeautiful](https://www.reddit.com/r/InternetIsBeautiful/comments/1vdja1i/) | "Draw any shape and hear what it would sound like" |
@@ -345,7 +346,6 @@ technology publications:
 | [trendshift.io](https://trendshift.io/repositories/100569) | Trending repositories chart |
 | [Vostok Magazine](https://vostokmagazine.ru/2026/08/eigendrum-create-your-unique-drum-line/) | Russian editorial |
 | [diginews.fr](https://diginews.johandenoyer.fr/article.php?id=40396) | French developer digest |
-| [LinkedIn Pulse (NL)](https://nl.linkedin.com/pulse/maak-en-bespeel-je-eigen-drum-de-broedplaats-psychosynthese) | Dutch professional network |
 
 Plus coverage in Spanish, Chinese, Japanese, Russian, and Dutch aggregators;
 two Facebook group posts; Mastodon and Bluesky reposts by kottke.org.
