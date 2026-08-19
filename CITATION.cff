@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this software in your research, please cite it as below."
+authors:
+  - family-names: "Ashraf"
+    given-names: "Basel"
+title: "Eigendrum: Hearing the shape of a drum"
+version: 1.0.0
+date-released: 2026-08-20
+url: "https://eigendrum.com"
+repository-code: "https://github.com/BaselAshraf81/eigendrum"
+abstract: "An interactive simulation for exploring drumhead eigenmodes and isospectral domains using finite element methods in the browser."
