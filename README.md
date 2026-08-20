@@ -338,6 +338,7 @@ technology publications:
 | --- | --- |
 | [Wikipedia](https://en.wikipedia.org/wiki/Hearing_the_shape_of_a_drum#External_links) | *Hearing the shape of a drum* external links |
 | [Hacker News](https://news.ycombinator.com/item?id=49246366) | Front page, twice. 200+ points. |
+| [Nele Hirsch](https://mastodon.social/@nele@wirksamen.social/117122100527702517) | Mastodon post by notable German educator & open-education advocate |
 | [kottke.org](https://kottke.org/26/08/0049489-eigendrum) | Editorial post by Jason Kottke. |
 | [r/InternetIsBeautiful](https://www.reddit.com/r/InternetIsBeautiful/comments/1vdja1i/) | "Draw any shape and hear what it would sound like" |
 | [r/oddlysatisfying](https://www.reddit.com/r/oddlysatisfying/comments/1vdjqc4/) | "Every shape you draw becomes a drum" |
