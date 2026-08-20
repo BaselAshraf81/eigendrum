@@ -1,5 +1,7 @@
 # Eigendrum: everything is a drum
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22019539.svg)](https://doi.org/10.5281/zenodo.22019539)
+
 **Draw a shape. Hear the sound it would actually make.**
 
 ![The Eigendrum interface: a circular drum ringing after a strike, with the mixture of modes it excited listed beside it and the solver's own measurements below](docs/hero.png)

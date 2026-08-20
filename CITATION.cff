@@ -8,4 +8,5 @@ version: 1.0.0
 date-released: 2026-08-20
 url: "https://eigendrum.com"
 repository-code: "https://github.com/BaselAshraf81/eigendrum"
+doi: "10.5281/zenodo.22019539"
 abstract: "An interactive simulation for exploring drumhead eigenmodes and isospectral domains using finite element methods in the browser."
