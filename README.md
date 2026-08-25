@@ -347,6 +347,7 @@ technology publications:
 | [drweb.de](https://www.drweb.de/eigendrum-trommelklang-ohne-samples/) | Major German web design editorial |
 | [remio.ai](https://www.remio.ai/post/eigendrum-hit-hacker-news-but-its-best-trick-is-exposing-imperfect-physics) | English analysis: physics accuracy |
 | [trendshift.io](https://trendshift.io/repositories/100569) | Trending repositories chart |
+| [Website Design Awards](https://websitedesignawards.com/site/66fd320f-c593-40c5-9092-c9a90143f1a6) | Winner's badge |
 | [Vostok Magazine](https://vostokmagazine.ru/2026/08/eigendrum-create-your-unique-drum-line/) | Russian editorial |
 | [diginews.fr](https://diginews.johandenoyer.fr/article.php?id=40396) | French developer digest |
 
