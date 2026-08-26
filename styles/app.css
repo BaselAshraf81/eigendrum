@@ -164,6 +164,40 @@ h3 {
 
 /* ---------------------------------------------------------------- masthead */
 
+/* The Website Design Awards winner's badge in the masthead. Renders at
+   the natural 240x88 SVG size so the artwork inside reads as designed. No
+   wrapper, padding, border, or background around the image: the link sits on
+   the page, the image is inside the link, the page is the frame. */
+.masthead-award {
+  display: inline-block;
+  line-height: 0;
+}
+
+.masthead-award img {
+  display: block;
+  /* The SVG carries width="240" height="88" in markup; this lets the image
+     render at that size, scaled down only by browser DPR. */
+}
+
+.masthead-award:hover img {
+  opacity: 0.85;
+  transition: opacity 110ms linear;
+}
+
+@media (max-width: 34rem) {
+  .masthead-award {
+    order: 5;
+    margin: 0.3rem 0 0;
+  }
+  /* Slight scale-down on phones so the badge does not push the chip row out
+     of the viewport. The image keeps its aspect ratio: 240x88 stays 240x88. */
+  .masthead-award img {
+    width: 200px;
+    height: auto;
+  }
+  .masthead-break { order: 6; }
+}
+
 .masthead {
   flex: none;
   display: flex;
@@ -1996,6 +2030,7 @@ dialog form {
   gap: 0.45rem;
   margin-bottom: 1.25rem;
 }
+
 
 .press-chip {
   display: inline-flex;
