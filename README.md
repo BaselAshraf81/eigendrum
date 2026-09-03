@@ -338,20 +338,22 @@ technology publications:
 
 | Source | Coverage |
 | --- | --- |
+| [Clive Thompson](https://buttondown.com/clivethompson/archive/linkfest-48-the-mouthpad-volitional-reconsumption/) | *Linkfest #48* feature by Wired & NYT Magazine contributing writer |
 | [Wikipedia](https://en.wikipedia.org/wiki/Hearing_the_shape_of_a_drum#External_links) | *Hearing the shape of a drum* external links |
 | [Hacker News](https://news.ycombinator.com/item?id=49246366) | Front page, twice. 200+ points. |
-| [Nele Hirsch](https://mastodon.social/@nele@wirksamen.social/117122100527702517) | Mastodon post by notable German educator & open-education advocate |
 | [kottke.org](https://kottke.org/26/08/0049489-eigendrum) | Editorial post by Jason Kottke. |
+| [Nele Hirsch](https://mastodon.social/@nele@wirksamen.social/117122100527702517) | Mastodon post by notable German educator & open-education advocate |
 | [r/InternetIsBeautiful](https://www.reddit.com/r/InternetIsBeautiful/comments/1vdja1i/) | "Draw any shape and hear what it would sound like" |
 | [r/oddlysatisfying](https://www.reddit.com/r/oddlysatisfying/comments/1vdjqc4/) | "Every shape you draw becomes a drum" |
 | [Sidebar.io](https://sidebar.io/category/programming/e5svt5oBQWLnvveXG) | Curated design & dev newsletter |
+| [remio.ai](https://www.remio.ai/post/eigendrum-hit-hacker-news-but-its-best-trick-is-exposing-imperfect-physics) | English analysis: physics accuracy |
 | [YouTube (×2)](https://www.youtube.com/watch?v=3DvOCP68sP0) | Two independent video reviews |
 | [drweb.de](https://www.drweb.de/eigendrum-trommelklang-ohne-samples/) | Major German web design editorial |
-| [remio.ai](https://www.remio.ai/post/eigendrum-hit-hacker-news-but-its-best-trick-is-exposing-imperfect-physics) | English analysis: physics accuracy |
 | [trendshift.io](https://trendshift.io/repositories/100569) | Trending repositories chart |
 | [Website Design Awards](https://websitedesignawards.com/site/66fd320f-c593-40c5-9092-c9a90143f1a6) | Winner's badge |
 | [Vostok Magazine](https://vostokmagazine.ru/2026/08/eigendrum-create-your-unique-drum-line/) | Russian editorial |
 | [diginews.fr](https://diginews.johandenoyer.fr/article.php?id=40396) | French developer digest |
+| [ds106 / NomadWarMachine](https://nomadwarmachine.co.uk/2026/09/02/eigendrum/) | TDC5346 educational drum simulation |
 
 Plus coverage in Spanish, Chinese, Japanese, Russian, and Dutch aggregators;
 two Facebook group posts; Mastodon and Bluesky reposts by kottke.org.
