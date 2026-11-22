@@ -2,214 +2,45 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22019539.svg)](https://doi.org/10.5281/zenodo.22019539)
 
-[![Eigendrum — Featured on Website Design Awards](https://websitedesignawards.com/api/public/badge/66fd320f-c593-40c5-9092-c9a90143f1a6/svg?variant=light)](https://websitedesignawards.com/site/66fd320f-c593-40c5-9092-c9a90143f1a6)
-
 **Draw a shape. Hear the sound it would actually make.**
 
 ![The Eigendrum interface: a circular drum ringing after a strike, with the mixture of modes it excited listed beside it and the solver's own measurements below](docs/hero.png)
 
-Eigendrum treats whatever you draw as an ideal drumhead clamped at its rim, solves
-the Laplacian eigenvalue problem on that exact region using real finite elements,
-and synthesises the frequencies it finds. Nothing is sampled and no overtone is
-faked: draw a circle and the overtones come out as ratios of Bessel function
-zeros, because that's what a circular drum actually does.
+**Try it at [eigendrum.com](https://eigendrum.com).**
 
-Then it lets you hit it. Strike different places and the timbre changes, because
-striking a spot drives each mode in proportion to how much that mode moves
-there. Hit a line where a mode stands still and you cannot excite it at all.
+Eigendrum treats your outline as a drumhead clamped at its rim. It splits the shape into thousands of small triangles, solves for the ways the surface can vibrate, and plays those frequencies. Nothing is sampled and no overtone is hand-tuned. Draw a circle and you get the overtones of a real circular drum. Strike a different spot and the sound changes, because a mode only rings if the mallet lands where that mode moves.
 
-You can also watch it: the real vibration modes ripple across the shape, with pale
-channels along the curves where the surface never moves. Those are nodal lines, the
-mathematical ancestors of the sand figures Ernst Chladni was drawing in 1787.
+The nodal lines you see on the plate are the places that stay still. They are the same patterns Ernst Chladni drew with sand in 1787.
 
 <p align="center">
   <img src="docs/nodal-lines.png" width="46%" alt="The ninth mode of a five-pointed star: six lobes pushed alternately up and down, separated by pale nodal lines" />
   <img src="docs/freehand.png" width="46%" alt="A freehand blob ringing after a strike, its displacement drawn in contour bands" />
 </p>
 
-<p align="center"><em>Left: mode 9 of a star. Right: something drawn by hand, struck once.<br />Neither has a closed-form spectrum. Both were solved from the outline alone.</em></p>
+## What you can do
 
-**Live at [eigendrum.com](https://eigendrum.com).**
+- Click or tap the plate to strike it. The readout names the loudest mode and any mode that stayed silent.
+- Press a row in the mode list to hear that mode alone.
+- Draw your own outline, or pick one of the built-in shapes, including both Kac drums (below).
+- Type an equation instead, in polar `r(t)` or parametric `x(t), y(t)` form. Formulas are read by a small custom parser and never run as JavaScript. The syntax is on the [formulas page](formulas.html).
+- Change the reference pitch, the ring-out and the mallet width.
+- Share a link, save the strike as a `.wav`, or save the plate as a `.png`.
+- Use the keyboard. Tab to the plate and press Enter or Space to strike. If your system asks for reduced motion, the plate holds still.
 
-No dependencies, no build step, no backend. Clone it and open `index.html`, or:
+Your shape stays in your browser. See [privacy.html](privacy.html) for what the site does collect.
+
+## Run it locally
+
+It is a static site with no build step and no runtime dependencies, so any static host can serve it.
 
 ```bash
 npm run serve     # http://localhost:8080
-npm test          # 61 tests, including the accuracy proofs below
+npm test
 ```
-
-## What you can do with it
-
-- Click or tap the plate to strike it anywhere. Where you hit changes the timbre,
-  and the readout names the loudest mode along with any that stayed silent because
-  the mallet landed on their nodal line.
-- Press any row in the mode list to hear that one mode by itself. No mallet can do
-  that, since a real strike always wakes many modes at once, but it is the only way
-  to hear what a single eigenvalue sounds like, and it is what makes the mixture
-  legible afterwards.
-- Draw your own outline, or pick from eleven built-in forms, including both halves
-  of the isospectral pair.
-- Write the outline as an equation instead: `r(t)` in polar, or a parametric
-  `x(t), y(t)` pair, with `t` sweeping one full turn. This reaches shapes a hand
-  cannot trace accurately, like eleven even lobes or a superellipse partway between
-  a circle and a square, and it makes a shape something you can *vary*: change one
-  number and hear what moved. Expressions are parsed, never evaluated as JavaScript,
-  because a formula arriving from somebody else's link is untrusted input.
-- Move the parts that aren't fixed by the outline. The pitch reference and ring-out
-  are yours. Mallet width changes how local the strike is, and which modes it
-  reaches. The overtone *ratios* stay tied to the outline.
-- Watch the mesh the solver actually used, flexing with the membrane.
-- Copy a link that carries the shape in the URL fragment, save the strike as a
-  `.wav`, or the plate as a `.png`. A formula travels as the formula
-  (`#f=p:1 + 0.3cos(5t)`), so the link is readable, editable in the address bar, and
-  survives any later change to how curves are sampled.
-- Use it from the keyboard. Tab to the plate and press Enter or Space to strike it
-  at the marked point. Every form, mode and control is reachable and labelled,
-  contrast meets WCAG AA, and `prefers-reduced-motion` holds the peak displacement
-  instead of animating.
-
-Your shape never leaves your browser. It lives in the URL fragment, which browsers
-never send to a server, and the site's analytics only logs which page you're on,
-never what you drew. There's no backend: meshing, solving, and audio all happen on
-your machine. A local clone or the GitHub Pages mirror doesn't load analytics or
-ads at all.
-
-## Writing a shape as an equation
-
-`t` runs from 0 to `tau` in radians, one full turn. Every outline gets scaled to
-unit area before solving, so size doesn't matter: what you hear is the shape, not
-the size, and `r = 0.001` and `r = 5000` are the same drum.
-
-| notation | meaning | example |
-| --- | --- | --- |
-| polar | `r(t)`, the radius at angle `t` | `1 + 0.3cos(5t)` |
-| parametric | `x(t)`, `y(t)` | `3cos(t) - cos(3t)`, `3sin(t) - sin(3t)` |
-
-Operators are `+ - * / % ^` with the usual precedence, `^` right associative.
-Brackets group, `|x|` is absolute value, and implicit multiplication is accepted, so
-`2t`, `3cos(t)` and `2(1 + t)` all mean what they look like.
-
-Available: `pi tau e phi`, and `sin cos tan asin acos atan atan2 sinh cosh tanh exp
-log ln log2 log10 sqrt cbrt abs sign floor ceil round hypot pow mod min max clamp`,
-plus `square` and `tri`, a square wave and a triangle wave of period `tau`, which is
-how you get teeth and facets without a piecewise notation.
-
-Three kinds of formula are refused rather than answered, and each says which it is:
-
-- one that has no value somewhere on the sweep,
-- one whose curve crosses itself, since a crossing outline has no interior to solve
-  on (a negative `r` is the usual cause, and it is named as such),
-- one too thin to mesh honestly. A hair-thin sliver has no interior nodes across its
-  narrow direction, so it would come back with numbers, and they would be wrong.
-
-An implicit form `F(x, y) = 0` is deliberately absent. It needs contour tracing and a
-rule for which contour you meant, which is a different job from parsing an expression.
-
-Expressions are compiled by a recursive-descent parser in `src/math/expr.js`, never
-by `eval` or `new Function`. That is not stylistic: shapes travel in the URL
-fragment, so an expression is untrusted input arriving from a link somebody else
-wrote, and handing that to a JavaScript evaluator would make every shared drum a
-script-injection vector.
-
-## Can one hear the shape of a drum?
-
-Mark Kac asked exactly that in [a famous 1966 paper](https://www.jstor.org/stable/2313748).
-If you know every frequency a drumhead can produce, can you deduce its outline?
-
-In 1992 Carolyn Gordon, David Webb and Scott Wolpert answered **no**, by
-constructing two different shapes with identical spectra. Both are built into
-Eigendrum as *Kac drum I* and *Kac drum II*. Each is made from the same seven
-right-isosceles triangles, rearranged. One looks like a hook and the other like an
-arrow. They enclose the same area and the same perimeter, and **every single
-frequency matches**.
-
-![Kac drum I selected. A panel reports that both drums were solved just now and all 16 frequencies agree to within 1.0e-7 percent, and the frequency comb shows the partner drum's ticks above the axis landing on top of this drum's below it](docs/kac-pair.png)
-
-Both drums are solved, and the app reports the agreement it measured rather than
-asserting the theorem. The partner drum's spectrum is drawn above the same axis as
-this one, so you can see the ticks coincide.
-
-Switch between them and listen. This is not an approximation that happens to come
-out close:
-
-```
-  k        drum I         drum II    difference
-  1     2.54398772     2.54398772        0.00000%
-  2     3.66297335     3.66297335        0.00000%
-  3     5.19087452     5.19087452        0.00000%
- ...
- 12    15.95243552    15.95243552        0.00000%
-```
-
-Both drums have only axis-aligned and 45-degree edges on integer coordinates, and
-the mesher reproduces both of those directions *exactly*, so the two discrete
-problems are isospectral in exact arithmetic too. Run it yourself:
-
-```bash
-node tools/isospectral.mjs
-```
-
-## The mathematics
-
-A membrane clamped at its boundary can only vibrate in certain shapes at certain
-frequencies. They are the solutions of
-
-```
-  −∇²u = λu   inside Ω,        u = 0   on ∂Ω
-```
-
-Each eigenfunction `u` is a standing wave; each eigenvalue `λ` gives a frequency
-proportional to `√λ`. For almost every shape there is no formula, so Eigendrum
-solves it numerically:
-
-1. Mesh it: overlay a lattice of right-isosceles triangles, keep the triangles
-   whose centroid is inside, project the resulting boundary onto the true
-   outline, then repair it (slide boundary nodes along the outline to even out
-   their spacing, drop the degenerate splinters that snapping leaves behind,
-   smooth the interior).
-2. Assemble it: P1 linear elements give the stiffness matrix `K` and the
-   consistent mass matrix `M`. Dirichlet conditions are imposed by never
-   assembling rows for boundary nodes.
-3. Solve it: the lowest 16 eigenpairs of `Kφ = λMφ`, by block inverse iteration
-   with a Rayleigh–Ritz projection. Inverse iteration because we want the
-   *bottom* of the spectrum, and plain Lanczos converges to the top.
-4. Listen to it: frequencies from `√λ`, per-mode amplitudes from projecting the
-   mallet onto the mode shapes, then a sum of decaying sinusoids.
-
-The step from projection to amplitude is where a struck membrane gets its voice,
-and it is easy to get wrong. Three factors apply, and only the last is a choice:
-
-- Mass normalisation. `c_k = ∫φ_k g` is the modal coefficient only when the
-  modes are orthonormal in the mass inner product. The solver normalises them to
-  unit *peak* instead, for the colour map's sake, so the projection is divided by
-  `∫φ_k²`. That varies by a factor of about two across the first sixteen modes of
-  a disk.
-- The `1/ω_k` rolloff. A mallet delivers an impulse of *force*, which sets the
-  membrane's initial velocity, not its displacement. Solving `u_k(0) = 0`,
-  `u_k'(0) = a_k` gives `u_k(t) = (a_k/ω_k) sin ω_k t`, a 6 dB/octave rolloff.
-- Contact time. No beater is an impulse. A force pulse lasting `T` cannot pump a
-  mode whose period is far shorter than `T`, modelled here as a one-pole rolloff
-  fixed at a ratio of the fundamental so the timbre does not shift with the pitch
-  control.
-
-Damping is **Rayleigh damping**, `C = αM + βK`, which is the standard proportional
-model for a system like this one and in modal coordinates reads
-`1/τ_k = α + βω_k²`. Loss growing with the *square* of frequency is why a drum's
-high inharmonic partials vanish in tens of milliseconds while the fundamental
-rings on, and that fast darkening is most of what makes a drum read as a pitched
-thud rather than a chord. The brightness control moves weight between the two
-terms.
-
-The eigensolver needs a few hundred solves of `K y = b`, so `K` is reordered with
-reverse Cuthill–McKee and factorised once with a banded Cholesky. After that each
-solve is two triangular sweeps. A 2000-unknown drum solves in about 700 ms in a
-browser worker.
 
 ## Accuracy
 
-A handful of shapes have spectra that can be written in closed form, and the test
-suite checks the solver against them on every change. This is measured, not
-asserted: reproduce it with `npm run bench`.
+The solver is checked against shapes with known exact answers. `npm run bench` reproduces this table, which shows the worst relative error over the lowest 8 modes.
 
 | shape | exact spectrum | 1200 nodes | 2600 | 6000 |
 | --- | --- | --- | --- | --- |
@@ -218,108 +49,30 @@ asserted: reproduce it with `npm run bench`.
 | right triangle | square modes with `m ≠ n` | 1.103% | 0.519% | 0.227% |
 | unit disk | squared zeros of `J_m` | 0.946% | 0.437% | 0.192% |
 
-Worst relative error over the lowest 8 modes. The errors fall in the ratio
-1 : 0.47 : 0.21 against predicted `h²` ratios of 1 : 0.471 : 0.207, which is clean
-second-order convergence.
+The method can only overestimate, so every error is positive. The step-by-step math is on the [how it works page](how-it-works.html).
 
-Two further checks worth naming:
+## Can one hear the shape of a drum?
 
-- Every error is positive. A conforming finite element method minimises the
-  Rayleigh quotient over a subspace of the true space, so it can never
-  undershoot. An eigenvalue below the exact one would mean a bug, not a coarse
-  mesh, and the suite asserts it never happens.
-- The strike model reproduces physics nobody coded in. Striking a circle dead
-  centre excites the radially symmetric fundamental hard but leaves the next two
-  modes essentially silent, because they have a nodal diameter straight through
-  the centre. That falls out of the projection, and it is a test.
+In 1966 Mark Kac [asked](https://www.jstor.org/stable/2313748) whether knowing every frequency of a drum tells you its shape. In 1992 Gordon, Webb and Wolpert showed it does not, with two different shapes that have identical frequencies. Both are built in as Kac drum I and Kac drum II. Eigendrum solves both and reports how closely the frequencies agree. The [Kac page](hearing-the-shape-of-a-drum.html) has the full story, and `node tools/isospectral.mjs` runs the check yourself.
 
-## What's physics and what's just a knob
+![Kac drum I selected. A panel reports that both drums were solved just now and all 16 frequencies agree to within 1.0e-7 percent, and the frequency comb shows the partner drum's ticks above the axis landing on top of this drum's below it](docs/kac-pair.png)
 
-This matters because it tells you which parts of the sound come from the outline
-and which are settings.
-
-The shape decides the frequency ratios, the mode shapes, and which modes a given
-strike position can wake up. It also decides where the fundamental sits relative
-to the pitch slider: every shape gets scaled to the same area before solving, so
-whatever's left in lambda_1 is genuinely about the shape rather than its size.
-That swings by about six semitones across the built-in presets, and by
-Faber-Krahn's inequality the disk always comes out lowest: a round drum really is
-the deepest drum for its area. None of this is adjustable, because none of it
-should be.
-
-What you do get to touch: the wave speed `c = sqrt(T / rho)` (tension and
-density), which the pitch slider sets by naming the note a unit-area disk would
-ring at. Every other shape then lands above or below that on its own, so the
-slider is a reference point, not a promise about what you'll hear. You also
-control how fast the overtones fade (material and air).
-
-The mallet sits outside both categories: its width is a control, its contact
-time is fixed, and it only changes how much of each mode a strike can reach,
-never what frequency that mode rings at.
-
-## Layout
+## Project layout
 
 ```
-index.html    the whole page: shell markup, the About dialog, and the head's
-              canonical tag, social cards and JSON-LD. No application logic
-robots.txt    crawl directives, answer engines allowed on purpose
-sitemap.xml   one URL, because shapes travel in the fragment and fragments are
-              not separate resources
-llms.txt      a plain-prose summary for answer engines, with the measured
-              accuracy figures and the Kac story
-styles/       all styling, plus the typeface as a base64 data URI
-src/math/     linalg, sparse CSR, banded Cholesky + RCM, eigensolver, Bessel,
-              closed-form spectra, the expression parser
-src/geom/     polygon utilities, the mesher, equations to outlines
-src/fem/      P1 assembly, and the pipeline that ties it together
-src/audio/    modal synthesis, WAV encoding, note naming
-src/app/      DOM, canvas rendering, input, presets, sharing
-src/worker/   runs the mesher and solver off the main thread
-tools/        dev server, accuracy bench, isospectral check, browser smoke tests
+index.html    the page and the About dialog
+src/math/     eigensolver, Bessel functions, closed-form spectra, formula parser
+src/geom/     polygon cleanup, mesher, equations to outlines
+src/fem/      finite element assembly and solve
+src/audio/    modal synthesis, WAV encoding, note names
+src/app/      interface, canvas, input, presets, sharing
+src/worker/   runs the solver off the main thread
+tools/        dev server, accuracy bench, browser tests
 tests/        node --test
-docs/         the images this README embeds
+docs/         images used in this README
 ```
 
-`src/math`, `src/geom` and `src/fem` never touch the DOM, which is why they can be
-tested in Node and run in a worker. The worker owns every expensive step, so the
-interface stays responsive while a drum solves.
-
-The typeface is embedded as a data URI rather than linked, because Chrome refuses
-font subresources over `file://` and this has to work from a bare filesystem.
-
-## Working on it
-
-```bash
-npm run serve   # dev server on :8080
-npm test        # unit tests, including the accuracy proofs
-```
-
-Puppeteer is a dev dependency, used only by the browser tests, and never loads in
-the browser. The shipped app has zero runtime packages: every application module and local asset
-resolves inside this repo. ~~On the deployed Vercel site, the two first-party Vercel telemetry
-scripts load from the platform endpoints.~~ No longer deployed on vercel.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the rest of the scripts (accuracy
-benchmarks, the isospectral check, browser smoke tests) and how advertising is
-wired up on the deployed site.
-
-## The visitor and presence counts
-
-Two real numbers in the footer, both hidden until they resolve rather than shown
-as placeholders, and both only run on the deployed host.
-
-- Visits since launch is an aggregate page-load count stored in Cloudflare D1.
-  Each production page load increments it once through `/api/visit`;
-  `/api/visits` reads the current total. It stores no cookie, IP address, or
-  browser identifier, so it counts visits rather than unique people. If the
-  database is unavailable, the footer stays hidden instead of showing a
-  made-up number.
-- People here right now comes from a completely separate WebSocket server in
-  `presence-server/`, deployed on its own VPS rather than on Cloudflare Pages,
-  because counting concurrent connections needs a persistent process. See
-  `presence-server/README.md` for how it is deployed and wired up. If that
-  server goes down, the count just disappears from the footer; the rest of the
-  site does not depend on it.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the other scripts.
 
 ## Star History
 
@@ -330,33 +83,6 @@ as placeholders, and both only run on the deployed host.
    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=BaselAshraf81/eigendrum&type=date&legend=top-left&sealed_token=aewzcaQJ62zOvbniCf27FkXconx1CdPWnoDE559x0EDP-gBzlnqjFjvwShPrBf6W8wLCM-hUs-d1GdhGzESLv5wjUjSUxEUTFdJDI9ApoVcba3VBR253aQ" />
  </picture>
 </a>
-
-## In the press
-
-Eigendrum has been covered across Hacker News, Reddit, YouTube, and international
-technology publications:
-
-| Source | Coverage |
-| --- | --- |
-| [Clive Thompson](https://buttondown.com/clivethompson/archive/linkfest-48-the-mouthpad-volitional-reconsumption/) | *Linkfest #48* feature by Wired & NYT Magazine contributing writer |
-| [Wikipedia](https://en.wikipedia.org/wiki/Hearing_the_shape_of_a_drum#External_links) | *Hearing the shape of a drum* external links |
-| [Hacker News](https://news.ycombinator.com/item?id=49246366) | Front page, twice. 200+ points. |
-| [kottke.org](https://kottke.org/26/08/0049489-eigendrum) | Editorial post by Jason Kottke. |
-| [Nele Hirsch](https://mastodon.social/@nele@wirksamen.social/117122100527702517) | Mastodon post by notable German educator & open-education advocate |
-| [r/InternetIsBeautiful](https://www.reddit.com/r/InternetIsBeautiful/comments/1vdja1i/) | "Draw any shape and hear what it would sound like" |
-| [r/oddlysatisfying](https://www.reddit.com/r/oddlysatisfying/comments/1vdjqc4/) | "Every shape you draw becomes a drum" |
-| [Sidebar.io](https://sidebar.io/category/programming/e5svt5oBQWLnvveXG) | Curated design & dev newsletter |
-| [remio.ai](https://www.remio.ai/post/eigendrum-hit-hacker-news-but-its-best-trick-is-exposing-imperfect-physics) | English analysis: physics accuracy |
-| [YouTube (×2)](https://www.youtube.com/watch?v=3DvOCP68sP0) | Two independent video reviews |
-| [drweb.de](https://www.drweb.de/eigendrum-trommelklang-ohne-samples/) | Major German web design editorial |
-| [trendshift.io](https://trendshift.io/repositories/100569) | Trending repositories chart |
-| [Website Design Awards](https://websitedesignawards.com/site/66fd320f-c593-40c5-9092-c9a90143f1a6) | Winner's badge |
-| [Vostok Magazine](https://vostokmagazine.ru/2026/08/eigendrum-create-your-unique-drum-line/) | Russian editorial |
-| [diginews.fr](https://diginews.johandenoyer.fr/article.php?id=40396) | French developer digest |
-| [ds106 / NomadWarMachine](https://nomadwarmachine.co.uk/2026/09/02/eigendrum/) | TDC5346 educational drum simulation |
-
-Plus coverage in Spanish, Chinese, Japanese, Russian, and Dutch aggregators;
-two Facebook group posts; Mastodon and Bluesky reposts by kottke.org.
 
 ## References
 
@@ -372,23 +98,8 @@ two Facebook group posts; Mastodon and Bluesky reposts by kottke.org.
 
 ## Support
 
-Free to use, with no account and nothing to install. No ad network currently runs on
-the deployed site; the reserved ad slots instead carry a plain sponsorship pitch with
-no third-party script. See [`privacy.html`](privacy.html) for what actually runs and
-why, or [CONTRIBUTING.md](CONTRIBUTING.md) for how it's wired into the code. None of it
-applies to a local clone: `npm run serve` strips ad and analytics tags from every page.
-
-If you'd like to put something toward the domain and hosting:
-[ko-fi.com/baselashraf](https://ko-fi.com/baselashraf). For anything wrong with the
-maths or the interface, open an issue. For hiring or partnership enquiries:
-[bosbos.basel@gmail.com](mailto:bosbos.basel@gmail.com?subject=Hire%20Basel%20Ashraf).
+Eigendrum is free. If you want to chip in for the domain and hosting, you can donate at [ko-fi.com/baselashraf](https://ko-fi.com/baselashraf). Bugs go in the issue tracker.
 
 ## Licence
 
-See [LICENSE](LICENSE). Code from before this licence took effect remains
-available under the MIT licence to whoever already had it. Code from here
-forward is free to use, copy, modify, and redistribute for non-commercial
-purposes, with visible credit to Basel Ashraf and Eigendrum and no
-presenting a copy as an unrelated, original work. Commercial use needs a
-separate licence from Basel Ashraf. The Eigendrum name and logo are not part
-of this grant either way; see [TRADEMARK.md](TRADEMARK.md).
+See [LICENSE](LICENSE). Code from before this licence took effect remains available under the MIT licence to whoever already had it. Code from here forward is free to use, copy, modify, and redistribute for non-commercial purposes, with visible credit to Basel Ashraf and Eigendrum and no presenting a copy as an unrelated, original work. Commercial use needs a separate licence from Basel Ashraf. The Eigendrum name and logo are not part of this grant either way; see [TRADEMARK.md](TRADEMARK.md).
