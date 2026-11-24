@@ -232,6 +232,8 @@ const state = {
   fieldBuf: null,
   cursor: { x: 0, y: 0 },
   drawMode: false,
+  // A finger tracing an outline on the Erae. Shares state.stroke with the mouse mode.
+  eraeDraw: false,
   drawing: false,
   stroke: [],
   // The equation the current drum came from, when it came from one. Kept so the
@@ -718,6 +720,33 @@ const erae = setupErae({
   isSolving: () => !els.solving.hidden,
   setBend,
   advance: advanceHidden,
+  drawing: {
+    enter() {
+      if (state.drawMode) setDrawMode(false);
+      state.eraeDraw = true;
+      state.stroke = [];
+      clearNotice();
+      showPrompt();
+    },
+    leave() {
+      state.eraeDraw = false;
+      state.stroke = [];
+      showPrompt();
+    },
+    preview(points) {
+      state.stroke = points;
+    },
+    // The same conversion and solve as finishStroke below, for a stroke that came from the Erae.
+    submit(points) {
+      const result = strokeToPolygon(points);
+      if (!result.ok) {
+        showNotice(result.error);
+        return result;
+      }
+      solve({ kind: 'custom', polygon: result.polygon });
+      return result;
+    },
+  },
 });
 /**
  * Steps the strike clock and fills state.fieldBuf for this moment. Both the frame
@@ -780,7 +809,7 @@ function drawFrame(now) {
   board.resize();
   board.clear();
 
-  if (state.drawMode) {
+  if (state.drawMode || state.eraeDraw) {
     // The plate is now a blank sheet, not the previous drum: draw a guide
     // showing where a stroke actually lands, so it's clear where to draw.
     board.drawDrawGuide();
@@ -1006,7 +1035,7 @@ function clearNotice() {
 
 function showPrompt() {
   els.prompt.hidden = false;
-  els.prompt.textContent = state.drawMode ? 'drag to trace' : 'tap the drum';
+  els.prompt.textContent = state.eraeDraw ? 'draw on the erae' : state.drawMode ? 'drag to trace' : 'tap the drum';
 }
 
 // ------------------------------------------------------------------- presets
@@ -1197,6 +1226,7 @@ function buildFormulaExamples() {
 }
 
 function setDrawMode(on) {
+  if (on) erae.cancelDraw();
   if (on && !els.formula.hidden) setFormulaMode(false);
   state.drawMode = on;
   state.stroke = [];
@@ -1224,6 +1254,7 @@ function setDrawMode(on) {
 
 els.board.addEventListener('pointerdown', (e) => {
   els.board.focus();
+  if (state.eraeDraw) return;
   if (state.drawMode) {
     state.drawing = true;
     state.stroke = [board.fromClientDraw(e.clientX, e.clientY)];

@@ -23,7 +23,7 @@
 <script>if (location.search.includes('docked')) document.body.classList.add('docked');</script>
 <div id="wrap"><canvas id="led" aria-label="Simulated Erae 2 LED surface, 42 by 24"></canvas></div>
 <div id="bar">
-  <label>Pressure <input id="press" type="range" min="0" max="1" step="0.01" value="0.5"> <output id="pv">0.50</output></label>
+  <label for="press">pressure (the real Erae measures this itself)</label> <input id="press" type="range" min="0" max="1" step="0.01" value="0.5" title="Hold a finger on the surface and scroll the mouse wheel to change this in steps of 0.05"> <output id="pv" for="press">0.50</output>
   <button id="room" type="button" aria-label="Toggle ambient light">Dark room</button>
   <span id="status" role="status"></span>
 </div>

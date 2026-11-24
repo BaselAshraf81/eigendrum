@@ -334,6 +334,16 @@ $('press').addEventListener('input', () => {
   $('pv').textContent = Number($('press').value).toFixed(2);
   for (const f of fingers.values()) touch(1, null, f, f);
 });
+// Dragging a slider while holding the mouse button on the surface is awkward, so the wheel does the same job.
+const WHEEL_STEP = 0.05;
+canvas.addEventListener('wheel', (e) => {
+  if (!fingers.size) return; // with no finger down the wheel scrolls the page as usual
+  e.preventDefault();
+  const slider = $('press');
+  const next = Number(slider.value) + (e.deltaY < 0 ? WHEEL_STEP : -WHEEL_STEP);
+  slider.value = String(Math.min(1, Math.max(0, next)));
+  slider.dispatchEvent(new Event('input'));
+}, { passive: false });
 function fingerMessage(action, f, x, y, z) {
   return encodeFinger(st.tag, action, 0, f.id, x, y, z);
 }
@@ -345,13 +355,22 @@ function local(e) {
   return { x: (px - ox) / pitch, y: H - (py - oy) / pitch };
 }
 const inside = (p) => p.x >= 0 && p.y >= 0 && p.x <= W && p.y <= H;
-function pressure(e) {
-  return e && e.pressure !== 0 && e.pressure !== 0.5 ? e.pressure : Number($('press').value);
+// Browsers report a fixed pressure for devices that cannot sense it: 0.5 for a mouse button, and often 1 or
+// another constant for a touch screen or a plain trackpad. Only a reading that moves during one touch is a real
+// sensor (a pen, a force trackpad). Everything else would pin z and leave the slider with no effect.
+const VARYING = 0.05;
+function pressure(e, f) {
+  const slider = Number($('press').value);
+  if (!e || !f || e.pressure === 0) return slider;
+  const seen = f.seen || (f.seen = { lo: e.pressure, hi: e.pressure });
+  seen.lo = Math.min(seen.lo, e.pressure);
+  seen.hi = Math.max(seen.hi, e.pressure);
+  return e.pointerType === 'pen' || seen.hi - seen.lo > VARYING ? e.pressure : slider;
 }
 function touch(action, e, f, p) {
   f.x = p.x;
   f.y = p.y;
-  f.z = pressure(e);
+  f.z = pressure(e, f);
   if (st.streaming) send(fingerMessage(action, f, f.x, f.y, f.z));
   draw();
 }

@@ -4,14 +4,16 @@
  * sound, the field, the solve) stays where it was. main.js only calls
  * setupErae() once, send() every frame and drumChanged() after each solve.
  *
- * Around the drum sit faders, preset buttons and a tension strip (layout.js).
- * A finger belongs to whatever it first touched until it lifts, so a fader can
- * be dragged across the drum without striking it.
+ * Around the drum sit faders, preset buttons, a draw button and a tension strip
+ * (layout.js). A finger belongs to whatever it first touched until it lifts, so
+ * a fader can be dragged across the drum without striking it. The draw button
+ * hands the whole surface to one finger tracing a new outline (pen.js).
  */
 import { EraeLink, ZONE, unavailableReason } from './link.js';
 import { EraeRaster } from './raster.js';
 import { layout, contains } from './layout.js';
 import { paintControls } from './controls.js';
+import { paintPen, toStrokeSpace } from './pen.js';
 import { freqToNote } from '../../audio/notes.js';
 import { startBackground, stopBackground } from './background.js';
 
@@ -30,6 +32,8 @@ const RELEASE_SMOOTH = 0.05;
 const ACTION_CLICK = 0;
 const ACTION_SLIDE = 1;
 const ACTION_RELEASE = 2;
+// How long the border stays red after an outline is refused.
+const REFUSED_MS = 700;
 
 const SIM_REQUESTED = /[?&]sim(=|&|$)/.test(location.search);
 let simShimLoaded = false;
@@ -57,9 +61,12 @@ function loadSimShim() {
  * isSolving() is true while a solve runs. setBend(factor, smoothing) retunes
  * everything ringing. advance(now) steps the strike clock and field without drawing,
  * for frames built while the page is hidden.
+ * drawing is how the page takes part in tracing an outline: enter() and leave()
+ * bracket the mode, preview(points) shows the stroke so far on the canvas, and
+ * submit(points) runs the same conversion and solve as a mouse stroke and returns
+ * { ok, error }. Points are in the stroke space of the on-screen draw mode.
  */
-export function setupErae({ state, els, strike, containsPoint, ensureAudio, sliders, presetIds, selectPreset, isSolving, setBend, advance }) {
-  const raster = new EraeRaster();
+export function setupErae({ state, els, strike, containsPoint, ensureAudio, sliders, presetIds, selectPreset, isSolving, setBend, advance, drawing }) {  const raster = new EraeRaster();
   let lastSend = 0;
   let lastFrame = 0;
   let lastImage = null;
@@ -69,7 +76,15 @@ export function setupErae({ state, els, strike, containsPoint, ensureAudio, slid
   // finger id -> the rectangle it landed on, until it lifts
   const owners = new Map();
   let tension = -1;
-
+  // Drawing on the surface: the finger that owns the stroke, its points in LED
+  // units and in stroke space, and the red border timer (0 = not stamped yet).
+  let penOn = false;
+  let penId = null;
+  let penZone = [];
+  let penStroke = [];
+  let refusedUntil = -1;
+  let lastStatus = '';
+  let penImage = null;
   function layoutFor(width, height) {
     const key = width + 'x' + height;
     if (key !== uiKey) {
@@ -101,9 +116,65 @@ export function setupErae({ state, els, strike, containsPoint, ensureAudio, slid
     setBend(1, RELEASE_SMOOTH);
   }
 
+  function enterPen() {
+    // Fingers already holding a fader or the strip lose their claim, so nothing keeps moving under the pen.
+    owners.clear();
+    if (tension >= 0) releaseTension();
+    penOn = true;
+    penId = null;
+    penZone = [];
+    penStroke = [];
+    refusedUntil = -1;
+    drawing.enter();
+    els.status.textContent = 'draw on the erae';
+  }
+  function leavePen() {
+    penOn = false;
+    penId = null;
+    drawing.leave();
+    els.status.textContent = lastStatus;
+  }
+  /** One finger draws; every other finger is ignored until it lifts. A tap on the lit button cancels. */
+  function onPenFinger(f, u) {
+    if (f.action === ACTION_CLICK && penId === null) {
+      if (u.draw && contains(u.draw, f.x, f.y)) {
+        leavePen();
+        return;
+      }
+      penId = f.id;
+      refusedUntil = -1;
+      penZone = [];
+      penStroke = [];
+      drawing.preview(penStroke);
+      els.status.textContent = 'draw on the erae';
+    }
+    if (f.id !== penId) return;
+    const last = penZone[penZone.length - 1];
+    if (!last || last.x !== f.x || last.y !== f.y) {
+      penZone.push({ x: f.x, y: f.y });
+      penStroke.push(toStrokeSpace(f.x, f.y, link.zone.width, link.zone.height));
+    }
+    if (f.action !== ACTION_RELEASE) return;
+    const result = drawing.submit(penStroke);
+    penId = null;
+    if (result.ok) {
+      leavePen();
+      return;
+    }
+    // Refused: stay in draw mode with a clean canvas, say why, and flash the border.
+    penZone = [];
+    penStroke = [];
+    drawing.preview(penStroke);
+    refusedUntil = 0;
+    els.status.textContent = result.error;
+  }
   function onFinger(f) {
     if (f.zone !== ZONE || !link.zone) return;
     const u = layoutFor(link.zone.width, link.zone.height);
+    if (penOn) {
+      onPenFinger(f, u);
+      return;
+    }
     if (f.action === ACTION_CLICK) {
       const t = target(u, f);
       if (t) owners.set(f.id, t);
@@ -118,6 +189,7 @@ export function setupErae({ state, els, strike, containsPoint, ensureAudio, slid
     if (own.kind === 'fader') setSlider(sliders[own.rect.name], f.y, own.rect);
     else if (own.kind === 'tension') bend(Math.min(1, Math.max(0, f.z)));
     else if (f.action === ACTION_CLICK && own.kind === 'preset' && !isSolving()) selectPreset(presetIds[own.rect.index]);
+    else if (f.action === ACTION_CLICK && own.kind === 'draw') enterPen();
     else if (f.action === ACTION_CLICK && own.kind === 'drum') strikeAt(f);
   }
 
@@ -126,6 +198,7 @@ export function setupErae({ state, els, strike, containsPoint, ensureAudio, slid
     if (r) return { kind: 'fader', rect: r };
     const p = u.presets.find((q) => contains(q, f.x, f.y));
     if (p) return { kind: 'preset', rect: p };
+    if (u.draw && contains(u.draw, f.x, f.y)) return { kind: 'draw', rect: u.draw };
     if (u.tension && contains(u.tension, f.x, f.y)) return { kind: 'tension', rect: u.tension };
     if (contains(u.drum, f.x, f.y)) return { kind: 'drum', rect: u.drum };
     return null;
@@ -153,6 +226,8 @@ export function setupErae({ state, els, strike, containsPoint, ensureAudio, slid
 
   const link = new EraeLink({
     onStatus: (text) => {
+      lastStatus = text;
+      if (penOn && !link.connected) leavePen();
       els.status.textContent = text;
       els.label.textContent = link.connected ? 'disconnect erae' : 'connect erae';
       if (link.connected) startBackground(hiddenFrame);
@@ -210,7 +285,14 @@ export function setupErae({ state, els, strike, containsPoint, ensureAudio, slid
     const { width, height } = link.zone;
     const u = layoutFor(width, height);
     let rgb;
-    if (state.drawMode || !state.drum) {
+    if (penOn) {
+      // The red border is timed from the first frame that shows it, like the strike clock in main.js.
+      if (refusedUntil === 0) refusedUntil = now + REFUSED_MS;
+      if (refusedUntil > 0 && now > refusedUntil) refusedUntil = -1;
+      if (!penImage || penImage.length !== width * height * 3) penImage = new Uint8Array(width * height * 3);
+      rgb = penImage;
+      paintPen(rgb, width, height, penZone, u.draw, refusedUntil >= 0);
+    } else if (state.drawMode || !state.drum) {
       if (!raster.ready) return;
       rgb = raster.blank();
     } else {
@@ -218,7 +300,7 @@ export function setupErae({ state, els, strike, containsPoint, ensureAudio, slid
       const struck = state.view === 'struck' && state.strike;
       rgb = raster.render(state.fieldBuf, struck ? state.strike.refAmp : 1);
     }
-    paint(rgb, width);
+    if (!penOn) paint(rgb, width);
     if (lastImage && lastImage.every((v, i) => v === rgb[i])) return;
     lastImage = rgb.slice();
     lastSend = now;
@@ -233,6 +315,10 @@ export function setupErae({ state, els, strike, containsPoint, ensureAudio, slid
       sendImage(now);
     },
     /** A new drum was solved: the old fit no longer describes it. */
+    /** The page started its own draw mode, which takes the surface back from the pen. */
+    cancelDraw() {
+      if (penOn) leavePen();
+    },
     drumChanged() {
       raster.reset();
       if (link.connected) raster.prepare(state.drum, link.zone.width, link.zone.height, layoutFor(link.zone.width, link.zone.height).drum);

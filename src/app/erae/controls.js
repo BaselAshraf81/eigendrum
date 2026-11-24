@@ -14,6 +14,9 @@ const FADER_COLOURS = {
 const NOTE = [190, 180, 160];
 const PRESET_IDLE = [26, 22, 6];
 const PRESET_ON = [235, 195, 25]; // chrome yellow marks the selection, as on screen
+// Violet is not used anywhere else on the surface, so the pen is never mistaken for a preset.
+const DRAW_IDLE = [22, 6, 32];
+const DRAW_TIP = [215, 110, 255];
 const TENSION_IDLE = [14, 14, 14];
 const TENSION_LIT = [230, 230, 230];
 
@@ -63,6 +66,12 @@ function fader(rgb, width, r, value, colours) {
   }
 }
 
+/** A 2 x 2 button holds a pen as a rising diagonal: the bright LED is the nib, bottom left. */
+export function drawButton(rgb, width, r, ground) {
+  fillRect(rgb, width, r, ground);
+  put(rgb, width, r.x, r.y, DRAW_TIP);
+  put(rgb, width, r.x + 1, r.y + 1, DRAW_TIP.map((v) => v >> 1));
+}
 function text(rgb, width, r, s) {
   // The octave goes first when space is short: the letter matters more than the digit.
   if (textWidth(s) > r.w) s = s.replace(/\d+$/, '');
@@ -89,6 +98,7 @@ export function paintControls(rgb, width, ui, values) {
   for (const r of ui.faders) fader(rgb, width, r, values.faders[r.name], FADER_COLOURS[r.name]);
   if (ui.note && values.note) text(rgb, width, ui.note, values.note);
   for (const r of ui.presets) fillRect(rgb, width, r, r.index === values.selected ? PRESET_ON : PRESET_IDLE);
+  if (ui.draw) drawButton(rgb, width, ui.draw, DRAW_IDLE);
   if (ui.tension) {
     const t = ui.tension;
     const lit = values.tension < 0 ? 0 : Math.max(1, Math.round(values.tension * t.h));
