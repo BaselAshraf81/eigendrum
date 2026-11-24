@@ -130,52 +130,68 @@ chan.onmessage = (e) => {
   draw();
 };
 
-// ---- drawing: round LEDs under a frosted diffuser ----
+// ---- drawing: crisp round LEDs under a frosted diffuser, in a charcoal frame ----
+// Layout in LED pitches (device is 402 x 277 mm, matrix fills nearly the whole body below a top strip).
+const FRAME = 1, STRIP = 3.4, BODY_W = W + 2 * FRAME, BODY_H = H + STRIP + 2 * FRAME;
 const fingers = new Map(); // pointerId -> { id: 8 bytes, x, y, z }
-let pitch = 1, ox = 0, oy = 0, queued = false, panel = null;
+let pitch = 1, ox = 0, oy = 0, bx = 0, by = 0, queued = false, panel = null, dark = true;
 const ledXY = (x, y) => [ox + (x + 0.5) * pitch, oy + (H - 1 - y + 0.5) * pitch]; // y = 0 is the bottom row
-// Static layer: bezel, diffuser with a soft sheen and fine grain, and the unlit LED dots beneath it.
+const SURFACE = { dark: ['#3b3b40', '#2f2f34'], room: ['#f1f1f2', '#e4e4e6'] }; // dim room (photo 2), room light (photo 1)
+// Decorative top strip: logo, 8 numbered round buttons, small LCD and wheel. Not wired to anything.
+function drawStrip(p) {
+  const top = by + FRAME * pitch, mid = top + STRIP * pitch / 2, ink = '#d8d8dc';
+  p.fillStyle = ink; p.textBaseline = 'alphabetic';
+  p.font = `600 ${pitch * 1.5}px system-ui, sans-serif`; p.fillText('erae', bx + 1.6 * pitch, mid + pitch * 0.35);
+  p.font = `${pitch * 0.42}px system-ui, sans-serif`; p.fillStyle = '#9a9aa2';
+  p.fillText('Expressive Controller & Looper', bx + 1.6 * pitch, mid + pitch * 1.05);
+  const disc = (cx, cy, r, fill, stroke) => { p.beginPath(); p.arc(cx, cy, r, 0, Math.PI * 2); p.fillStyle = fill; p.fill(); if (stroke) { p.strokeStyle = stroke; p.lineWidth = 1; p.stroke(); } };
+  p.textAlign = 'center'; p.textBaseline = 'middle'; p.font = `${pitch * 0.4}px system-ui, sans-serif`;
+  for (let i = 0; i < 8; i++) {
+    const cx = bx + (11 + (i % 4) * 1.7) * pitch, cy = mid + (i < 4 ? -0.8 : 0.8) * pitch;
+    disc(cx, cy, pitch * 0.5, '#33333a', '#55555e'); p.fillStyle = ink; p.fillText(String(i + 1), cx, cy);
+  }
+  for (let i = 0; i < 6; i++) disc(bx + (19.5 + i * 1.4) * pitch, mid, pitch * 0.32, '#33333a', '#55555e'); // looper, octave, scale
+  disc(bx + (BODY_W - 7.6) * pitch, mid, pitch * 0.62, '#0e0e12', '#55555e'); // LCD
+  disc(bx + (BODY_W - 3.3) * pitch, mid, pitch * 1.3, '#2c2c33', '#55555e'); // click wheel
+  disc(bx + (BODY_W - 3.3) * pitch, mid, pitch * 0.5, '#1d1d22', '#44444c');
+  p.save(); p.translate(bx + (BODY_W - FRAME / 2) * pitch, oy + H * pitch / 2); p.rotate(Math.PI / 2);
+  p.fillStyle = '#8a8a92'; p.font = `${pitch * 0.5}px system-ui, sans-serif`; p.fillText('embodme', 0, 0); p.restore();
+  p.textAlign = 'start';
+}
+// Static layer: frame, strip and a smooth frosted surface. Unlit LEDs are invisible.
 function buildPanel() {
   panel = document.createElement('canvas');
   panel.width = canvas.width; panel.height = canvas.height;
-  const p = panel.getContext('2d'), bz = pitch * 0.8;
-  const x0 = ox - bz, y0 = oy - bz, w = W * pitch + 2 * bz, h = H * pitch + 2 * bz;
+  const p = panel.getContext('2d'), c = SURFACE[dark ? 'dark' : 'room'];
   p.fillStyle = '#0b0b0e'; p.fillRect(0, 0, panel.width, panel.height);
-  p.fillStyle = '#26262d'; p.beginPath(); p.roundRect(x0, y0, w, h, pitch * 1.2); p.fill();
-  p.save(); p.beginPath(); p.roundRect(ox - bz * 0.35, oy - bz * 0.35, W * pitch + bz * 0.7, H * pitch + bz * 0.7, pitch * 0.8); p.clip();
-  const g = p.createLinearGradient(ox, oy, ox + W * pitch, oy + H * pitch);
-  g.addColorStop(0, '#c4c4c8'); g.addColorStop(0.5, '#b4b4b9'); g.addColorStop(1, '#a6a6ac');
-  p.fillStyle = g; p.fillRect(x0, y0, w, h);
-  for (let i = 0; i < 6000; i++) { // grain, so the cover reads as plastic and not flat paint
-    p.fillStyle = Math.random() < 0.5 ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.05)';
-    p.fillRect(ox + Math.random() * W * pitch, oy + Math.random() * H * pitch, 1, 1);
-  }
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-    const [cx, cy] = ledXY(x, y);
-    const d = p.createRadialGradient(cx, cy, 0, cx, cy, pitch * 0.32);
-    d.addColorStop(0, 'rgba(40,40,60,0.16)'); d.addColorStop(1, 'rgba(40,40,60,0)');
-    p.fillStyle = d; p.beginPath(); p.arc(cx, cy, pitch * 0.32, 0, Math.PI * 2); p.fill();
-  }
-  p.restore();
+  p.fillStyle = '#1f1f24'; p.beginPath(); p.roundRect(bx, by, BODY_W * pitch, BODY_H * pitch, pitch * 1.6); p.fill();
+  drawStrip(p);
+  const g = p.createLinearGradient(ox, oy, ox, oy + H * pitch);
+  g.addColorStop(0, c[0]); g.addColorStop(1, c[1]);
+  p.fillStyle = g; p.beginPath(); p.roundRect(ox, oy, W * pitch, H * pitch, pitch * 0.4); p.fill();
 }
 function drawLeds() {
   ctx.save();
-  ctx.beginPath(); ctx.roundRect(ox, oy, W * pitch, H * pitch, pitch * 0.5); ctx.clip();
-  const R = pitch * 0.85; // each LED is a distinct round disc with a soft edge and a faint halo
+  ctx.beginPath(); ctx.roundRect(ox, oy, W * pitch, H * pitch, pitch * 0.4); ctx.clip();
+  const lit = [];
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-    const i = (y * W + x) * 3, r = pixels[i], g = pixels[i + 1], b = pixels[i + 2];
-    if (!(r || g || b)) continue;
+    const i = (y * W + x) * 3;
+    if (pixels[i] || pixels[i + 1] || pixels[i + 2]) lit.push([x, y, pixels[i], pixels[i + 1], pixels[i + 2]]);
+  }
+  // Halos first (additive in a dark room), then every core on top so the cores stay sharp.
+  ctx.globalCompositeOperation = dark ? 'lighter' : 'source-over';
+  for (const [x, y, r, g, b] of lit) {
+    const [cx, cy] = ledXY(x, y), k = Math.max(r, g, b) / 255;
+    const gr = ctx.createRadialGradient(cx, cy, pitch * 0.2, cx, cy, pitch);
+    gr.addColorStop(0, `rgba(${r},${g},${b},${0.45 * k})`); gr.addColorStop(1, `rgba(${r},${g},${b},0)`);
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(cx, cy, pitch, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  for (const [x, y, r, g, b] of lit) {
     const [cx, cy] = ledXY(x, y);
-    const k = Math.max(r, g, b) / 255; // dim LEDs are fainter
-    const c = (a) => `rgba(${r},${g},${b},${a * (0.35 + 0.65 * k)})`;
-    const gr = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
-    gr.addColorStop(0, `rgba(${Math.min(255, r + 60)},${Math.min(255, g + 60)},${Math.min(255, b + 60)},${0.35 + 0.65 * k})`);
-    gr.addColorStop(0.25, c(1));
-    gr.addColorStop(0.45, c(0.9));
-    gr.addColorStop(0.58, c(0.3));
-    gr.addColorStop(1, c(0));
-    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
-  }  ctx.restore();
+    ctx.fillStyle = `rgb(${r},${g},${b})`; ctx.beginPath(); ctx.arc(cx, cy, pitch * 0.3, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
 }
 function drawFingers() {
   for (const f of fingers.values()) {
@@ -200,13 +216,19 @@ function resize() {
   const r = canvas.getBoundingClientRect(), d = window.devicePixelRatio || 1;
   canvas.width = Math.max(1, Math.round(r.width * d));
   canvas.height = Math.max(1, Math.round(r.height * d));
-  pitch = Math.min(canvas.width / (W + 2.6), canvas.height / (H + 2.6)); // equal pitch in X and Y, room for the bezel
-  ox = (canvas.width - W * pitch) / 2;
-  oy = (canvas.height - H * pitch) / 2;
+  pitch = Math.min(canvas.width / (BODY_W + 0.6), canvas.height / (BODY_H + 0.6)); // equal pitch in X and Y
+  bx = (canvas.width - BODY_W * pitch) / 2;
+  by = (canvas.height - BODY_H * pitch) / 2;
+  ox = bx + FRAME * pitch;
+  oy = by + (FRAME + STRIP) * pitch;
   buildPanel();
   draw();
 }
-new ResizeObserver(resize).observe(canvas);
+$('room').addEventListener('click', () => {
+  dark = !dark;
+  $('room').textContent = dark ? 'Dark room' : 'Room light';
+  buildPanel(); draw();
+});new ResizeObserver(resize).observe(canvas);
 // ---- touch ----
 $('press').addEventListener('input', () => { $('pv').textContent = Number($('press').value).toFixed(2); });
 function fingerMessage(action, f, x, y, z) {
