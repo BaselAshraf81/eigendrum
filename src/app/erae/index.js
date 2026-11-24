@@ -66,7 +66,8 @@ function loadSimShim() {
  * submit(points) runs the same conversion and solve as a mouse stroke and returns
  * { ok, error }. Points are in the stroke space of the on-screen draw mode.
  */
-export function setupErae({ state, els, strike, containsPoint, ensureAudio, sliders, presetIds, selectPreset, isSolving, setBend, advance, drawing }) {  const raster = new EraeRaster();
+export function setupErae({ state, els, strike, containsPoint, ensureAudio, sliders, presetIds, selectPreset, isSolving, setBend, advance, drawing }) {
+  const raster = new EraeRaster();
   let lastSend = 0;
   let lastFrame = 0;
   let lastImage = null;
