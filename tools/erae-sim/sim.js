@@ -78,9 +78,9 @@ function handle(m) {
       if (p.length !== 1) return false;
       if (st.streaming) send([0xf0, ...st.tag, 0x7f, 0x01, p[0], p[0] === 0 ? W : 0x7f, p[0] === 0 ? H : 0x7f, 0xf7]);
       break;
-    case 0x7f: // the Python reference appends the host tag here, so a payload is allowed
+    case 0x7f: // the request carries its own reply tag (Python reference), so it works before API mode is on
       if (p.length > 16) return false;
-      if (st.streaming) send([0xf0, ...st.tag, 0x7f, 0x02, 0x02, 0xf7]);
+      send([0xf0, ...(p.length ? p : st.tag), 0x7f, 0x02, 0x02, 0xf7]);
       break;
     case 0x20:
       if (p.length !== 1) return false;
