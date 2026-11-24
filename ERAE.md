@@ -42,7 +42,7 @@ You need Node 20 or newer and Chrome or Opera.
    - Tap the drum to strike it.
    - Drag a fader to change pitch, ring-out or the mallet.
    - Tap a preset to switch shape.
-   - Hold the tension strip and drag up to raise the pitch, or down to lower it. Let go and it springs back. The pressure slider only sets how hard a strike hits: a mouse has no pressure, so it stands in for the Erae's own pressure sensor, for strikes only.
+   - Hold the tension strip and drag up to raise the pitch, and back down to bring it down again. Let go and it springs back. The pressure slider only sets how hard a strike hits: a mouse has no pressure, so it stands in for the Erae's own pressure sensor, for strikes only.
 5. `hide` folds the panel to its title bar and `open in own window` moves it to its own tab. On a narrow screen it starts folded.
 
 ## Try it with your Erae 2
