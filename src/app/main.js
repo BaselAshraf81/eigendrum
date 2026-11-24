@@ -16,6 +16,8 @@ import { FORMULA_EXAMPLES, formulaLabel } from './formulas.js';
 import { formulaToPolygon } from '../geom/curve.js';
 import { readHash, shareUrl, writeHash } from './share.js';
 import { freqToNote, harmonicity } from '../audio/notes.js';
+import { EraeLink, unavailableReason } from './erae/link.js';
+import { EraeRaster } from './erae/raster.js';
 import {
   audibleAmps,
   decayTimes,
@@ -96,6 +98,9 @@ const els = {
   wav: el('btn-wav'),
   png: el('btn-png'),
   shareStatus: el('share-status'),
+  erae: el('btn-erae'),
+  eraeLabel: el('erae-label'),
+  eraeStatus: el('erae-status'),
   bench: el('bench'),
   promoToast: el('promo-toast'),
   promoToastDismiss: el('promo-toast-dismiss'),
@@ -600,7 +605,7 @@ function ring({ amps, taus, kind, x = 0, y = 0, gain = 1 }) {
 
 /** A mallet lands at (x, y). Every mode responds, in proportion to how much it
  *  moves at that point - which is why where you hit changes the timbre. */
-function strike(x, y) {
+function strike(x, y, vel = 1) {
   const { drum } = state;
   if (!drum) return;
   // iOS Safari only unlocks an AudioContext when resume() is called synchronously,
@@ -626,8 +631,11 @@ function strike(x, y) {
     kind: 'strike',
     x,
     y,
-    gain: TARGET_PEAK / headroom(),
+    // vel scales the one per-drum gain, never the modal amplitudes, so nodal
+    // zeros stay exact. The drawn field follows it so a soft hit looks soft.
+    gain: (vel * TARGET_PEAK) / headroom(),
   });
+  if (vel !== 1) state.strike.refAmp /= vel;
   // Say what is actually on screen. Leaving the readout on "Mode 8" while sixteen
   // modes ring together would be the interface lying about the physics.
   showStruckReadout(amps);
@@ -673,8 +681,96 @@ function frame(now) {
       console.error('frame failed, continuing', err);
     }
   }
+  try {
+    sendErae(now);
+  } catch (err) {
+    if (!sendErae.warned) {
+      sendErae.warned = true;
+      console.error('erae frame failed, continuing', err);
+    }
+  }
   requestAnimationFrame(frame);
 }
+
+// ------------------------------------------------------------------ erae 2
+
+const erae = {
+  raster: new EraeRaster(),
+  link: new EraeLink({
+    onStatus: (text) => {
+      els.eraeStatus.textContent = text;
+      const on = erae.link.connected;
+      els.eraeLabel.textContent = on ? 'disconnect erae' : 'connect erae';
+      els.erae.setAttribute('aria-pressed', String(on));
+    },
+    onFinger: (f) => {
+      // Click only; slides and releases do not strike.
+      if (f.action !== 0 || f.zone !== 0 || state.drawMode || !state.drum || !erae.raster.key) return;
+      const p = erae.raster.toDrum(f.x, f.y);
+      if (!board.containsShapePoint(p.x, p.y)) return;
+      const z = Number.isFinite(f.z) ? f.z : 1;
+      strike(p.x, p.y, Math.min(1, Math.max(0.2, 0.2 + 0.8 * z)));
+    },
+  }),
+  lastSend: 0,
+  lastImage: null,
+  busy: false,
+};
+
+/** After the canvas is drawn: the same field, as at most 25 LED images a second, only when it changed. */
+function sendErae(now) {
+  const { link, raster } = erae;
+  if (!link.connected || now - erae.lastSend < 40) return;
+  let rgb;
+  if (state.drawMode || !state.drum) {
+    if (!raster.key) return;
+    rgb = raster.blank();
+  } else {
+    raster.prepare(state.drum, link.zone.width, link.zone.height);
+    const struck = state.view === 'struck' && state.strike;
+    rgb = raster.render(state.fieldBuf, struck ? state.strike.refAmp : 1);
+  }
+  const prev = erae.lastImage;
+  if (prev && prev.length === rgb.length && prev.every((v, i) => v === rgb[i])) return;
+  erae.lastImage = rgb.slice();
+  erae.lastSend = now;
+  link.send(rgb);
+}
+
+function loadSimShim() {
+  return new Promise((resolve) => {
+    const s = document.createElement('script');
+    s.src = 'tools/erae-sim/midi-shim.js';
+    s.onload = s.onerror = resolve;
+    document.head.appendChild(s);
+  });
+}
+
+els.erae.addEventListener('click', async () => {
+  if (erae.busy) return;
+  if (erae.link.connected) {
+    erae.link.disconnect();
+    return;
+  }
+  // Erae touches are not user gestures, so unlock audio on this click.
+  if (!state.muted) ensureAudio();
+  erae.busy = true;
+  try {
+    if (/[?&]sim(=|&|$)/.test(location.search) && !loadSimShim.done) {
+      loadSimShim.done = true;
+      await loadSimShim();
+    }
+    const why = unavailableReason();
+    if (why) {
+      els.eraeStatus.textContent = why;
+      return;
+    }
+    erae.lastImage = null;
+    await erae.link.connect();
+  } finally {
+    erae.busy = false;
+  }
+});
 
 function drawFrame(now) {
   board.resize();

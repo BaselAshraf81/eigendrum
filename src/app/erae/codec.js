@@ -21,6 +21,17 @@ export function unbitize(w) {
 }
 
 export const xor = (a) => a.reduce((x, y) => x ^ y, 0);
+// Host to device: F0, Embodme + Erae 2 prefix, device ID 01, services group 01, API service 04, sub, payload, F7.
+const API = [0xf0, 0x00, 0x21, 0x50, 0x00, 0x01, 0x00, 0x02, 0x01, 0x01, 0x04];
+const api = (sub, payload = []) => [...API, sub, ...payload, 0xf7];
+export const apiEnable = (tag) => api(0x01, tag);
+export const apiDisable = () => api(0x02);
+export const zoneBoundaryRequest = (zone) => api(0x10, [zone]);
+// rgb is w*h*3 full 8-bit bytes, row 0 painted at zone row y (bottom-up).
+export function drawImage(zone, x, y, w, h, rgb) {
+  const wire = bitize(rgb);
+  return api(0x23, [zone, x, y, w, h, ...wire, xor(wire)]);
+}
 
 // Finger Stream message: F0 tag action zone fingerId(8 -> 10 bytes) xyz(3 float32 LE -> 14 bytes) checksum F7
 export function encodeFinger(tag, action, zone, id, x, y, z) {

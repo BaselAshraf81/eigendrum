@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { bitize, unbitize, bitizedSize, xor } from './codec.js';
+import { bitize, unbitize, bitizedSize, xor } from '../../src/app/erae/codec.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ctx = vm.createContext({ console });

@@ -15,3 +15,9 @@ The LED picture is written only by decoded SysEx (header, 7-bit unbitize, XOR ch
 
 Checks: run `node tools/erae-sim/check-codec.mjs` (codec vs Henry's JS and Embodme's Python, no server needed).
 Then serve with `node tools/serve.mjs`, open `http://localhost:8080/tools/erae-sim/check.html?sim` and press Run checks (it hosts the simulator in a frame, so close other sim.html tabs first).
+
+Using it with a real Erae 2:
+1. In Erae Lab, place one API Zone at index 0 in a layout and send it to the Erae.
+2. Connect the Erae over USB.
+3. Open eigendrum in Chrome or Opera over https or localhost (Web MIDI with SysEx needs a secure context).
+4. Press 'connect erae' and allow MIDI access. Touches in the zone strike the drum; pressure sets loudness.

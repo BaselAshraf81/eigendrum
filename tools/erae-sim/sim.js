@@ -1,5 +1,5 @@
 // Simulated Erae 2 surface. Byte layouts follow Embodme's Python reference (erae/utils.py).
-import { bitizedSize, unbitize, xor, encodeFinger } from './codec.js';
+import { bitizedSize, unbitize, xor, encodeFinger } from '../../src/app/erae/codec.js';
 const W = 42, H = 24, MAX_PIXELS = 1008;
 const HEADER = [0x00, 0x21, 0x50, 0x00, 0x01, 0x00, 0x02];
 const chan = new BroadcastChannel('erae-sim');
