@@ -1,8 +1,9 @@
 /**
- * One command for the Erae simulator and Eigendrum: `npm run erae`.
+ * One command for Eigendrum and the Erae simulator: `npm run erae`.
  *
  * Starts tools/serve.mjs on port 8080, waits until it answers, then opens the
- * simulator and Eigendrum in the default browser. Pass --no-open to skip opening.
+ * Eigendrum in the default browser. The simulator is docked inside that page.
+ * Pass --no-open to skip opening.
  * Ctrl+C stops the server.
  */
 import { spawn } from 'node:child_process';
@@ -67,9 +68,6 @@ if (await answers()) {
   if (!ready) fail(`The server did not answer on ${BASE} within 10 seconds.`);
 }
 
-console.log(`Erae simulator: ${SIM_URL}`);
-console.log(`Eigendrum: ${APP_URL}`);
-if (shouldOpen) {
-  openInBrowser(SIM_URL);
-  openInBrowser(APP_URL);
-}
+console.log(`Eigendrum with the simulator docked: ${APP_URL}`);
+console.log(`Simulator on its own, for reference: ${SIM_URL}`);
+if (shouldOpen) openInBrowser(APP_URL);

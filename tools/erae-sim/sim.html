@@ -15,9 +15,12 @@
   pre { margin: 4px 0; max-height: 18vh; overflow: auto; font-size: 11px; }
   .logs { display: flex; gap: 12px; }
   .logs > div { flex: 1; min-width: 0; }
+  /* Docked in the Eigendrum page: the grid and the pressure slider take the whole frame. */
+  .docked details { display: none; }
 </style>
 </head>
 <body>
+<script>if (location.search.includes('docked')) document.body.classList.add('docked');</script>
 <div id="wrap"><canvas id="led" aria-label="Simulated Erae 2 LED surface, 42 by 24"></canvas></div>
 <div id="bar">
   <label>Pressure <input id="press" type="range" min="0" max="1" step="0.01" value="0.5"> <output id="pv">0.50</output></label>

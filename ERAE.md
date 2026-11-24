@@ -34,13 +34,14 @@ You need Node 20 or newer and Chrome or Opera.
    git checkout feature/erae-midi
    ```
 
-2. Run `npm run erae`. It starts a local server and opens two tabs: the Erae simulator and Eigendrum. Leave the terminal open. Press Ctrl+C there to stop.
-3. In the Eigendrum tab, click "connect erae".
-4. In the simulator tab, use the mouse in place of your fingers:
+2. Run `npm run erae`. It starts a local server and opens one tab: Eigendrum, with a small `simulated erae` panel in the bottom-right corner. Leave the terminal open. Press Ctrl+C there to stop.
+3. Click "connect erae".
+4. In the simulated erae panel, use the mouse in place of your fingers:
    - Tap the drum to strike it.
    - Drag a fader to change pitch, ring-out or the mallet.
    - Tap a preset to switch shape.
    - Hold the tension strip and drag the pressure slider to bend the pitch. A mouse has no pressure, so the slider stands in for it.
+5. `hide` folds the panel to its title bar and `open in own window` moves it to its own tab. On a narrow screen it starts folded.
 
 ## Try it with your Erae 2
 
@@ -65,7 +66,7 @@ The simulator speaks the same SysEx bytes as the real device, and the picture on
 
 Pixels and rectangles take 0 to 127 per channel, images 0 to 255 (Embodme's API PDF). If colours look wrong, start with the note at the top of `tools/erae-sim/sim.js` and the palettes in `src/app/erae/raster.js` and `controls.js`.
 
-Checks: `npm test`, `node tools/erae-sim/check-codec.mjs`, and `http://localhost:8080/tools/erae-sim/check.html?sim` then "Run checks" (close other simulator tabs first).
+Checks: `npm test`, `node tools/erae-sim/check-codec.mjs`, and `http://localhost:8080/tools/erae-sim/check.html?sim` then "Run checks" (close any other simulator tab first).
 
 ## Where the code is
 

@@ -28,7 +28,10 @@ const ACTION_CLICK = 0;
 const ACTION_SLIDE = 1;
 const ACTION_RELEASE = 2;
 
+const SIM_REQUESTED = /[?&]sim(=|&|$)/.test(location.search);
 let simShimLoaded = false;
+// The simulator docks in this page so both stay visible; see dock.js for why.
+if (SIM_REQUESTED) import('./dock.js').then((dock) => dock.mountDock());
 
 /** The simulator replaces navigator.requestMIDIAccess, so it has to load before the first connect. */
 function loadSimShim() {
@@ -161,7 +164,7 @@ export function setupErae({ state, els, strike, containsPoint, ensureAudio, slid
     if (!state.muted) ensureAudio();
     busy = true;
     try {
-      if (/[?&]sim(=|&|$)/.test(location.search) && !simShimLoaded) {
+      if (SIM_REQUESTED && !simShimLoaded) {
         simShimLoaded = true;
         await loadSimShim();
       }

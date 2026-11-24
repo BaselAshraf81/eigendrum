@@ -2224,3 +2224,58 @@ dialog form {
     padding: 1.35rem 1rem 1.75rem;
   }
 }
+
+/* ---------------------------------------------------------- simulated erae */
+/* Docked simulator, only present with ?sim. Above the page, below the promo
+   toast and the About dialog (which sits in the top layer). The frame height is
+   the simulator body's 44 : 29.4 aspect plus its pressure bar. On a wide screen it\n   sits above the vermilion bench so it never covers the connect button or a slider. */
+.sim-dock {
+  --dock-w: calc(100vw - 1.5rem);
+  position: fixed;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 45;
+  width: var(--dock-w);
+  background: var(--plaster);
+  border: var(--rule) solid var(--ink);
+}
+.sim-dock-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+}
+.sim-dock-title {
+  flex: 1;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.sim-dock-bar .chip {
+  white-space: nowrap;
+}
+.sim-dock-frame {
+  display: block;
+  width: 100%;
+  height: calc(var(--dock-w) * 0.668 + 2.6rem);
+  border: 0;
+  border-top: var(--hair) solid var(--ink);
+}
+.sim-dock.is-collapsed .sim-dock-frame {
+  display: none;
+}
+/* Narrow screens scroll, so leave room under the last line for the title bar. */
+@media (max-width: 899px) {
+  body:has(.sim-dock) {
+    padding-bottom: 3.5rem;
+  }
+}
+@media (min-width: 900px) {
+  .sim-dock {
+    --dock-w: min(46vw, 560px);
+    right: 1.25rem;
+    bottom: 13.5rem;
+  }
+}
