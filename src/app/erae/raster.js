@@ -44,10 +44,15 @@ export class EraeRaster {
     this.key = null;
   }
 
-  /** Rebuilds the fit and point location only when the drum or zone changes. */
-  prepare(drum, width, height) {
-    if (this.key && this.key.drum === drum && this.key.width === width && this.key.height === height) return;
-    this.key = { drum, width, height };
+  /**
+   * Rebuilds the fit and point location only when the drum or zone changes.
+   * region { x, y, w, h } is the part of the zone the drum may use; the rest
+   * stays black for the controls drawn over it.
+   */
+  prepare(drum, width, height, region = { x: 0, y: 0, w: width, h: height }) {
+    const k0 = this.key;
+    if (k0 && k0.drum === drum && k0.width === width && k0.height === height && k0.region.x === region.x && k0.region.w === region.w) return;
+    this.key = { drum, width, height, region };
     const { nodes, triangles, triangleCount, polygon } = drum.mesh;
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const p of polygon) {
@@ -55,8 +60,8 @@ export class EraeRaster {
       minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
     }
     // Square LED pitch, aspect preserved, centred, half an LED clear at the tightest side.
-    const scale = Math.min((width - 1) / Math.max(1e-9, maxX - minX), (height - 1) / Math.max(1e-9, maxY - minY));
-    this.fit = { scale, cx: (minX + maxX) / 2, cy: (minY + maxY) / 2, width, height };
+    const scale = Math.min((region.w - 1) / Math.max(1e-9, maxX - minX), (region.h - 1) / Math.max(1e-9, maxY - minY));
+    this.fit = { scale, cx: (minX + maxX) / 2, cy: (minY + maxY) / 2, mx: region.x + region.w / 2, my: region.y + region.h / 2 };
 
     const n = width * height;
     this.kind = new Uint8Array(n);
@@ -67,6 +72,7 @@ export class EraeRaster {
       for (let i = 0; i < width; i++) {
         const { x, y } = this.toDrum(i + 0.5, j + 0.5);
         const k = j * width + i;
+        if (i < region.x || j < region.y || i >= region.x + region.w || j >= region.y + region.h) continue;
         if (!pointInPolygon(x, y, polygon)) continue;
         this.kind[k] = IN;
         // An LED inside the outline but between the mesh and the rim keeps weights
@@ -100,8 +106,8 @@ export class EraeRaster {
   }
 
   toDrum(zx, zy) {
-    const { scale, cx, cy, width, height } = this.fit;
-    return { x: cx + (zx - width / 2) / scale, y: cy + (zy - height / 2) / scale };
+    const { scale, cx, cy, mx, my } = this.fit;
+    return { x: cx + (zx - mx) / scale, y: cy + (zy - my) / scale };
   }
 
   /** values: one per mesh node; amplitude: the value drawn at full colour. Returns the shared buffer. */

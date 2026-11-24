@@ -329,7 +329,11 @@ $('room').addEventListener('click', () => {
 new ResizeObserver(resize).observe(canvas);
 
 // ---- touch ----
-$('press').addEventListener('input', () => { $('pv').textContent = Number($('press').value).toFixed(2); });
+// A mouse has no pressure, so the slider stands in for it: moving it while a finger is down is a Slide.
+$('press').addEventListener('input', () => {
+  $('pv').textContent = Number($('press').value).toFixed(2);
+  for (const f of fingers.values()) touch(1, null, f, f);
+});
 function fingerMessage(action, f, x, y, z) {
   return encodeFinger(st.tag, action, 0, f.id, x, y, z);
 }

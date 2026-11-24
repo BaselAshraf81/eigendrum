@@ -243,6 +243,11 @@ const state = {
   lastWav: null,
   requestId: 0,
   voices: [],
+  // Pitch bend from the Erae tension strip: the target factor, the one the
+  // animation has reached, and how fast it gets there (seconds).
+  bend: 1,
+  shownBend: 1,
+  bendSmooth: 0.05,
   // The other half of the isospectral pair, solved in the background so the comb
   // can draw its spectrum against this one and the match can be measured rather
   // than asserted.
@@ -582,6 +587,7 @@ function ring({ amps, taus, kind, x = 0, y = 0, gain = 1, vel = 1 }) {
   buffer.copyToChannel(samples, 0);
   const src = ctx.createBufferSource();
   src.buffer = buffer;
+  src.playbackRate.value = state.bend;
   const out = ctx.createGain();
   out.gain.value = 0.85;
   src.connect(out).connect(masterBus);
@@ -602,6 +608,20 @@ function ring({ amps, taus, kind, x = 0, y = 0, gain = 1, vel = 1 }) {
     }
   }
   src.start();
+}
+
+/**
+ * Retunes everything ringing, and every strike started while the bend holds, by
+ * one factor. playbackRate scales every frequency by the same factor, which is
+ * what a uniform change of tension does, and it also shortens the ring by that
+ * factor. So this approximates a tension change; it is not a new solve. The
+ * animation's clock runs at the same rate (drawFrame) so the field matches.
+ */
+function setBend(factor, smoothing) {
+  state.bend = factor;
+  state.bendSmooth = smoothing;
+  if (!audioCtx) return;
+  for (const src of state.voices) src.playbackRate.setTargetAtTime(factor, audioCtx.currentTime, smoothing);
 }
 
 /** A mallet lands at (x, y). Every mode responds, in proportion to how much it
@@ -692,6 +712,11 @@ const erae = setupErae({
   strike,
   containsPoint: (x, y) => board.containsShapePoint(x, y),
   ensureAudio,
+  sliders: { pitch: els.pitch, bright: els.bright, mallet: els.mallet },
+  presetIds: PRESETS.map((p) => p.id),
+  selectPreset: choosePreset,
+  isSolving: () => !els.solving.hidden,
+  setBend,
 });
 function drawFrame(now) {
   board.resize();
@@ -715,8 +740,19 @@ function drawFrame(now) {
       // The first frame to see this strike owns its zero. Math.max is belt and
       // braces: one clock, but never let a skew of any origin run time backwards
       // into exp(-t/tau).
-      if (state.strike.t0 === null) state.strike.t0 = now;
-      const elapsed = Math.max(0, (now - state.strike.t0) / 1000);
+      // Time is accumulated rather than read off t0 so a pitch bend can speed
+      // the clock up exactly as it speeds the sound up. shownBend eases toward
+      // the target with the same time constant as the audio ramp.
+      if (state.strike.t0 === null) {
+        state.strike.t0 = now;
+        state.strike.last = now;
+        state.strike.played = 0;
+      }
+      const dt = Math.max(0, (now - state.strike.last) / 1000);
+      state.strike.last = now;
+      state.shownBend += (state.bend - state.shownBend) * (1 - Math.exp(-dt / state.bendSmooth));
+      state.strike.played += dt * state.shownBend;
+      const elapsed = state.strike.played;
       age = elapsed;
       // Under prefers-reduced-motion, hold the peak displacement instead of
       // animating the ring-out. The information survives; the movement does not.
@@ -1007,16 +1043,19 @@ function buildPresetChips() {
     const label = document.createElement('span');
     label.textContent = preset.name.toLowerCase();
     chip.append(formGlyph(preset.polygon), label);
-    chip.addEventListener('click', () => {
-      setFormulaMode(false);
-      setDrawMode(false);
-      solve({ kind: 'preset', id: preset.id });
-    });
+    chip.addEventListener('click', () => choosePreset(preset.id));
     // Draw and equation lead the row (markup order); the break element after them
     // forces a line, and every preset is inserted before it so the gallery reads
     // as the alternative rather than the default.
     els.presets.insertBefore(chip, els.formsBreak);
   }
+}
+
+/** What a preset button does, on screen or on the Erae. */
+function choosePreset(id) {
+  setFormulaMode(false);
+  setDrawMode(false);
+  solve({ kind: 'preset', id });
 }
 
 function updatePresetChips() {
