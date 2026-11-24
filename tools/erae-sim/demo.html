@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Erae 2 simulator demo host</title>
+<style>body{font:14px system-ui,sans-serif;margin:16px}pre{background:#111;color:#cfc;padding:8px;min-height:10em;max-height:60vh;overflow:auto}</style>
+</head>
+<body>
+<h1>Erae demo host</h1>
+<p>Open with <code>?sim</code> and keep <code>sim.html</code> open in another tab.</p>
+<button id="go">Connect, enable API, draw test pattern</button>
+<pre id="out" role="log"></pre>
+<script src="midi-shim.js"></script>
+<script src="vendor/erae-api.js"></script>
+<script>
+// Henry's erae-api.js expects these globals from his hmidi.js. This wrapper supplies them
+// itself (his onMIDIFailure has a Python "None"), so the vendor file stays unchanged.
+var saved_out_port_id = 0, current_out_port = null;
+const bb = [64, 65, 66, 67];
+const out = document.getElementById('out');
+const log = (s) => { out.textContent += s + '\n'; out.scrollTop = out.scrollHeight; };
+
+document.getElementById('go').onclick = async () => {
+  try {
+    const acc = await navigator.requestMIDIAccess({ sysex: true });
+    const pick = (m) => [...m.values()].find((p) => /Erae 2 MIDI/.test(p.name));
+    const inp = pick(acc.inputs); current_out_port = pick(acc.outputs);
+    if (!inp || !current_out_port) return log('No Erae 2 MIDI port found (is the page opened with ?sim?)');
+    saved_out_port_id = 1;
+    inp.onmidimessage = (ev) => {
+      const t = new ETouch();
+      if (fingerstream(ev.data, bb, t)) {
+        log(`touch action=${t.action} finger=${t.finger_id} zone=${t.zone} x=${t.x.toFixed(2)} y=${t.y.toFixed(2)} z=${t.z.toFixed(2)}`);
+      } else {
+        log('reply: ' + Array.from(ev.data, (b) => b.toString(16).padStart(2, '0')).join(' '));
+      }
+    };
+    api_enable(bb);
+    query_zone_boundary(0);
+    api_version(bb);
+    const W = 42, H = 24, img = [];
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { // row 0 is the bottom row
+      const edge = x === 0 || y === 0 || x === W - 1 || y === H - 1;
+      img.push(edge ? 0xffffff : ((Math.round(255 * x / (W - 1)) << 16) | (Math.round(255 * y / (H - 1)) << 8) | 0x40));
+    }
+    draw_image(0, 0, 0, W, H, img);
+    log('sent: enable, zone boundary, version, 42x24 image');
+  } catch (e) { log('error: ' + e); }
+};
+</script>
+</body>
+</html>
