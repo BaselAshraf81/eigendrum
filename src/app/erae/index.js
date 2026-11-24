@@ -13,9 +13,12 @@ import { EraeRaster } from './raster.js';
 import { layout, contains } from './layout.js';
 import { paintControls } from './controls.js';
 import { freqToNote } from '../../audio/notes.js';
+import { startBackground, stopBackground } from './background.js';
 
 // The LEDs do not need the display's frame rate. 25 images a second looks smooth and keeps USB quiet.
 const LED_INTERVAL_MS = 40;
+// A page whose frame loop has been silent this long is hidden, minimised or covered, whatever document.hidden says.
+const FRAME_STALE_MS = 120;
 // Even a feather touch should be heard, so pressure scales loudness from this floor up to full.
 const PRESSURE_FLOOR = 0.2;
 const PRESSURE_SLOPE = 1 - PRESSURE_FLOOR;
@@ -31,7 +34,9 @@ const ACTION_RELEASE = 2;
 const SIM_REQUESTED = /[?&]sim(=|&|$)/.test(location.search);
 let simShimLoaded = false;
 // The simulator docks in this page so both stay visible; see dock.js for why.
-if (SIM_REQUESTED) import('./dock.js').then((dock) => dock.mountDock());
+// ?nodock keeps the simulator out of the page, for opening it in its own tab.
+const NODOCK = /[?&]nodock(=|&|$)/.test(location.search);
+if (SIM_REQUESTED && !NODOCK) import('./dock.js').then((dock) => dock.mountDock());
 
 /** The simulator replaces navigator.requestMIDIAccess, so it has to load before the first connect. */
 function loadSimShim() {
@@ -50,11 +55,13 @@ function loadSimShim() {
  * sliders: { pitch, bright, mallet } range inputs. presetIds lists the presets in
  * button order and selectPreset(id) is what an on-screen preset button does.
  * isSolving() is true while a solve runs. setBend(factor, smoothing) retunes
- * everything ringing.
+ * everything ringing. advance(now) steps the strike clock and field without drawing,
+ * for frames built while the page is hidden.
  */
-export function setupErae({ state, els, strike, containsPoint, ensureAudio, sliders, presetIds, selectPreset, isSolving, setBend }) {
+export function setupErae({ state, els, strike, containsPoint, ensureAudio, sliders, presetIds, selectPreset, isSolving, setBend, advance }) {
   const raster = new EraeRaster();
   let lastSend = 0;
+  let lastFrame = 0;
   let lastImage = null;
   let busy = false;
   let ui = null;
@@ -148,6 +155,8 @@ export function setupErae({ state, els, strike, containsPoint, ensureAudio, slid
     onStatus: (text) => {
       els.status.textContent = text;
       els.label.textContent = link.connected ? 'disconnect erae' : 'connect erae';
+      if (link.connected) startBackground(hiddenFrame);
+      else stopBackground();
     },
     onFinger,
   });
@@ -184,26 +193,44 @@ export function setupErae({ state, els, strike, containsPoint, ensureAudio, slid
     }
   });
 
+  /** One frame for a page the frame loop is not serving: the same steps, minus the canvas. */
+  function hiddenFrame(now) {
+    if (!document.hidden && now - lastFrame < FRAME_STALE_MS) return;
+    try {
+      advance(now);
+      sendImage(now);
+    } catch (err) {
+      console.error('hidden erae frame failed', err);
+    }
+  }
+
+  /** The field as an LED image, only when it changed and no more often than LED_INTERVAL_MS. */
+  function sendImage(now) {
+    if (!link.connected || now - lastSend < LED_INTERVAL_MS) return;
+    const { width, height } = link.zone;
+    const u = layoutFor(width, height);
+    let rgb;
+    if (state.drawMode || !state.drum) {
+      if (!raster.ready) return;
+      rgb = raster.blank();
+    } else {
+      raster.prepare(state.drum, width, height, u.drum);
+      const struck = state.view === 'struck' && state.strike;
+      rgb = raster.render(state.fieldBuf, struck ? state.strike.refAmp : 1);
+    }
+    paint(rgb, width);
+    if (lastImage && lastImage.every((v, i) => v === rgb[i])) return;
+    lastImage = rgb.slice();
+    lastSend = now;
+    link.send(rgb);
+  }
+
+
   return {
-    /** Called each frame after the canvas is drawn: the same field as an LED image, only when it changed. */
+    /** Called each frame after the canvas is drawn. */
     send(now) {
-      if (!link.connected || now - lastSend < LED_INTERVAL_MS) return;
-      const { width, height } = link.zone;
-      const u = layoutFor(width, height);
-      let rgb;
-      if (state.drawMode || !state.drum) {
-        if (!raster.ready) return;
-        rgb = raster.blank();
-      } else {
-        raster.prepare(state.drum, width, height, u.drum);
-        const struck = state.view === 'struck' && state.strike;
-        rgb = raster.render(state.fieldBuf, struck ? state.strike.refAmp : 1);
-      }
-      paint(rgb, width);
-      if (lastImage && lastImage.every((v, i) => v === rgb[i])) return;
-      lastImage = rgb.slice();
-      lastSend = now;
-      link.send(rgb);
+      lastFrame = now;
+      sendImage(now);
     },
     /** A new drum was solved: the old fit no longer describes it. */
     drumChanged() {

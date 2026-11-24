@@ -66,7 +66,7 @@ The simulator speaks the same SysEx bytes as the real device, and the picture on
 
 Pixels and rectangles take 0 to 127 per channel, images 0 to 255 (Embodme's API PDF). If colours look wrong, start with the note at the top of `tools/erae-sim/sim.js` and the palettes in `src/app/erae/raster.js` and `controls.js`.
 
-Checks: `npm test`, `node tools/erae-sim/check-codec.mjs`, and `http://localhost:8080/tools/erae-sim/check.html?sim` then "Run checks" (close any other simulator tab first).
+Checks: `npm test`, `node tools/erae-sim/check-codec.mjs`, and `http://localhost:8080/tools/erae-sim/check.html?sim` then "Run checks" (close any other simulator tab first). The LEDs keep updating when the browser window is minimised or hidden, because a small worker drives them then. Chrome can still freeze a background tab that has been silent for a long time (Memory Saver), so keep the tab open and, if the Erae stops updating after minutes in the background, switch Memory Saver off for localhost. This is untested on a real device.
 
 ## Where the code is
 

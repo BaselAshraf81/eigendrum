@@ -717,7 +717,65 @@ const erae = setupErae({
   selectPreset: choosePreset,
   isSolving: () => !els.solving.hidden,
   setBend,
+  advance: advanceHidden,
 });
+/**
+ * Steps the strike clock and fills state.fieldBuf for this moment. Both the frame
+ * loop and the hidden-page Erae tick call it, with timestamps from one time base
+ * (rAF timestamps and performance.now() share it), so dt is the time since
+ * whichever of them ran last and the clock never advances twice for one moment.
+ */
+function advanceField(now) {
+  const { drum } = state;
+  let refAmp = 1;
+  let ringing = false;
+  let age = 0;
+
+  if (state.view === 'struck' && state.strike) {
+    // The first frame to see this strike owns its zero. Math.max is belt and
+    // braces: one clock, but never let a skew of any origin run time backwards
+    // into exp(-t/tau).
+    // Time is accumulated rather than read off t0 so a pitch bend can speed
+    // the clock up exactly as it speeds the sound up. shownBend eases toward
+    // the target with the same time constant as the audio ramp.
+    if (state.strike.t0 === null) {
+      state.strike.t0 = now;
+      state.strike.last = now;
+      state.strike.played = 0;
+    }
+    const dt = Math.max(0, (now - state.strike.last) / 1000);
+    state.strike.last = now;
+    state.shownBend += (state.bend - state.shownBend) * (1 - Math.exp(-dt / state.bendSmooth));
+    state.strike.played += dt * state.shownBend;
+    const elapsed = state.strike.played;
+    age = elapsed;
+    // Under prefers-reduced-motion, hold the peak displacement instead of
+    // animating the ring-out. The information survives; the movement does not.
+    const t = reducedMotion ? Math.min(elapsed, 1 / (4 * state.freqs[0])) : elapsed;
+    fieldAtTime(drum.modes, state.strike.amps, state.freqs, state.strike.taus, t, state.fieldBuf);
+    refAmp = state.strike.refAmp;
+    ringing = true;
+  } else {
+    // At rest. Nothing is vibrating, so nothing may move or change colour: the
+    // resting view is the selected mode as a still figure.
+    state.fieldBuf.set(drum.modes[state.selectedMode] || drum.modes[0]);
+  }
+  return { refAmp, ringing, age };
+}
+
+/** A hidden page has no canvas to draw, but the Erae still needs the field. */
+function advanceHidden(now) {
+  if (state.drawMode || !state.drum) return;
+  const { ringing } = advanceField(now);
+  if (ringing && state.strike.played > state.strike.maxTau * 3.2) endRing();
+}
+
+/** The ring-out is over: back to the resting view of the selected mode. */
+function endRing() {
+  state.view = 'mode';
+  restoreModeView();
+  showPrompt();
+}
 function drawFrame(now) {
   board.resize();
   board.clear();
@@ -731,47 +789,9 @@ function drawFrame(now) {
   }
 
   if (state.drum) {
-    const { drum } = state;
-    let refAmp = 1;
-    let ringing = false;
-    let age = 0;
-
-    if (state.view === 'struck' && state.strike) {
-      // The first frame to see this strike owns its zero. Math.max is belt and
-      // braces: one clock, but never let a skew of any origin run time backwards
-      // into exp(-t/tau).
-      // Time is accumulated rather than read off t0 so a pitch bend can speed
-      // the clock up exactly as it speeds the sound up. shownBend eases toward
-      // the target with the same time constant as the audio ramp.
-      if (state.strike.t0 === null) {
-        state.strike.t0 = now;
-        state.strike.last = now;
-        state.strike.played = 0;
-      }
-      const dt = Math.max(0, (now - state.strike.last) / 1000);
-      state.strike.last = now;
-      state.shownBend += (state.bend - state.shownBend) * (1 - Math.exp(-dt / state.bendSmooth));
-      state.strike.played += dt * state.shownBend;
-      const elapsed = state.strike.played;
-      age = elapsed;
-      // Under prefers-reduced-motion, hold the peak displacement instead of
-      // animating the ring-out. The information survives; the movement does not.
-      const t = reducedMotion ? Math.min(elapsed, 1 / (4 * state.freqs[0])) : elapsed;
-      fieldAtTime(drum.modes, state.strike.amps, state.freqs, state.strike.taus, t, state.fieldBuf);
-      refAmp = state.strike.refAmp;
-      ringing = true;
-      if (!els.mesh.checked) board.drawField(state.fieldBuf, refAmp);
-      if (elapsed > state.strike.maxTau * 3.2) {
-        state.view = 'mode';
-        restoreModeView();
-        showPrompt();
-      }
-    } else {
-      // At rest. Nothing is vibrating, so nothing may move or change colour: the
-      // resting view is the selected mode as a still figure.
-      state.fieldBuf.set(drum.modes[state.selectedMode] || drum.modes[0]);
-      if (!els.mesh.checked) board.drawField(state.fieldBuf, 1);
-    }
+    const { refAmp, ringing, age } = advanceField(now);
+    if (!els.mesh.checked) board.drawField(state.fieldBuf, refAmp);
+    if (ringing && state.strike.played > state.strike.maxTau * 3.2) endRing();
 
     if (els.mesh.checked) {
       // The red/blue displacement field and the mesh compete for attention, and
