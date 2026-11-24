@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Erae 2 simulator checks</title>
+<style>
+  body { font: 13px/1.4 system-ui, sans-serif; margin: 12px; background: #fafafa; color: #111; }
+  table { border-collapse: collapse; margin-top: 8px; }
+  td, th { border: 1px solid #bbb; padding: 3px 8px; text-align: left; vertical-align: top; }
+  .PASS { color: #0a6b2a; font-weight: 600; }
+  .FAIL { color: #b00020; font-weight: 600; }
+  pre { background: #eee; padding: 6px; max-height: 240px; overflow: auto; }
+  iframe { width: 900px; height: 600px; border: 1px solid #888; display: block; margin-top: 8px; }
+</style>
+</head>
+<body>
+<h1>Erae 2 simulator checks</h1>
+<p>Open as <code>check.html?sim</code>. The simulator runs in the frame below (the only device on the channel, so close any other sim.html tab).</p>
+<button id="run" type="button">Run checks</button> <span id="state" role="status">idle</span>
+<table id="table"><thead><tr><th>#</th><th>Check</th><th>Result</th><th>Detail</th></tr></thead><tbody></tbody></table>
+<pre id="log"></pre>
+<iframe id="sim" src="sim.html" title="Simulator under test"></iframe>
+<script src="midi-shim.js"></script>
+<script src="vendor/erae-api.js"></script>
+<script src="check.js"></script>
+</body>
+</html>

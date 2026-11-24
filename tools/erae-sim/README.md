@@ -12,3 +12,6 @@ Transport is a fake `navigator.requestMIDIAccess` plus BroadcastChannel `erae-si
 
 Colour rule (Erae API V2 Rev 004 PDF, Python reference, Henry's JS): SetPixel and DrawRectangle carry 7-bit channels (0-127, shifted up by 1 bit); DrawImage is bitized and carries full 8-bit RGB (the PDF example sends 0xFF). No auto-detect. Unverified on hardware: this rule, reply tag placement, and how real pressure feels.
 The LED picture is written only by decoded SysEx (header, 7-bit unbitize, XOR checksum, size checks); touches leave only as encoded Finger Stream SysEx. Both are in the hex log.
+
+Checks: run `node tools/erae-sim/check-codec.mjs` (codec vs Henry's JS and Embodme's Python, no server needed).
+Then serve with `node tools/serve.mjs`, open `http://localhost:8080/tools/erae-sim/check.html?sim` and press Run checks (it hosts the simulator in a frame, so close other sim.html tabs first).

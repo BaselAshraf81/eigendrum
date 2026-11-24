@@ -1,4 +1,5 @@
 // Simulated Erae 2 surface. Byte layouts follow Embodme's Python reference (erae/utils.py).
+import { bitizedSize, unbitize, xor, encodeFinger } from './codec.js';
 const W = 42, H = 24, MAX_PIXELS = 1008;
 const HEADER = [0x00, 0x21, 0x50, 0x00, 0x01, 0x00, 0x02];
 const chan = new BroadcastChannel('erae-sim');
@@ -9,26 +10,6 @@ const pixels = new Uint8ClampedArray(W * H * 3); // index (y * W + x) * 3, y = 0
 
 const st = { streaming: false, tag: [], last: 'none', rx: 0, tx: 0, dropped: 0 };
 const logIn = [], logOut = [];
-
-// ---- 7-bit packing ----
-const bitizedSize = (n) => Math.floor(n / 7) * 8 + (n % 7 ? 1 + (n % 7) : 0);
-function bitize(data) {
-  const out = [];
-  for (let i = 0; i < data.length; i += 7) {
-    const grp = data.slice(i, i + 7);
-    out.push(grp.reduce((a, b, j) => a | ((b & 0x80) >> (j + 1)), 0));
-    for (const b of grp) out.push(b & 0x7f);
-  }
-  return out;
-}
-function unbitize(w) {
-  const out = [];
-  for (let i = 0; i < w.length; i += 8) {
-    for (let j = 0; j < 7 && i + j + 1 < w.length; j++) out.push(((w[i] << (j + 1)) & 0x80) | w[i + j + 1]);
-  }
-  return out;
-}
-const xor = (a) => a.reduce((x, y) => x ^ y, 0);
 
 // Colour rule, per command (Erae API V2 Rev 004 PDF, Embodme reference, Python and Henry's JS):
 // - SetPixel and DrawRectangle: "3 7-bits bytes", raw SysEx. The device shifts them up, so value << 1.
@@ -62,7 +43,7 @@ const NAMES = { 1: 'StartFingerDataStreaming', 2: 'EndFingerDataStreaming', 0x10
   0x21: 'SetPixel', 0x22: 'DrawRectangle', 0x23: 'DrawImage', 0x7f: 'VersionRequest' };
 
 function handle(m) {
-  if (m.length < 14 || m[0] !== 0xf0 || m[m.length - 1] !== 0xf7) return false;
+  if (m.length < 13 || m[0] !== 0xf0 || m[m.length - 1] !== 0xf7) return false;
   const b = m.slice(1, -1);
   if (b.some((v) => v > 0x7f)) return false;
   if (HEADER.some((v, i) => b[i] !== v)) return false;
@@ -120,14 +101,24 @@ function handle(m) {
   return true;
 }
 
+const perf = { handleMs: 0, frames: 0, renderMax: 0 };
 chan.onmessage = (e) => {
   if (!e.data || e.data.to !== 'device') return;
+  if (e.data.peek) {
+    if (e.data.resetPerf) { perf.handleMs = 0; perf.frames = 0; perf.renderMax = 0; }
+    // dev-only read-back for tools/erae-sim/check.js, never changes pixels
+    chan.postMessage({ to: 'host', peekReply: { pixels: Array.from(pixels), fingers: fingers.size, streaming: st.streaming,
+      tag: st.tag, dropped: st.dropped, rx: st.rx, perf } });
+    return;
+  }
+  const t0 = performance.now();
   const m = e.data.bytes;
   st.rx++;
   note(logIn, $('logIn'), m);
   if (!handle(m)) st.dropped++;
   status();
   draw();
+  perf.handleMs += performance.now() - t0; perf.frames++;
 };
 
 // ---- drawing: crisp round LEDs under a frosted diffuser, in a charcoal frame ----
@@ -206,10 +197,12 @@ function draw() { // redraws only when the framebuffer or a finger changed, at m
   if (queued) return;
   queued = true;
   requestAnimationFrame(() => {
+    const t0 = performance.now();
     queued = false;
     ctx.drawImage(panel, 0, 0);
     drawLeds();
     drawFingers();
+    perf.renderMax = Math.max(perf.renderMax, performance.now() - t0);
   });
 }
 function resize() {
@@ -232,8 +225,7 @@ $('room').addEventListener('click', () => {
 // ---- touch ----
 $('press').addEventListener('input', () => { $('pv').textContent = Number($('press').value).toFixed(2); });
 function fingerMessage(action, f, x, y, z) {
-  const xyz = bitize(Array.from(new Uint8Array(new Float32Array([x, y, z]).buffer)));
-  return [0xf0, ...st.tag, action, 0, ...bitize(f.id), ...xyz, xor(xyz), 0xf7];
+  return encodeFinger(st.tag, action, 0, f.id, x, y, z);
 }
 function local(e) {
   const r = canvas.getBoundingClientRect(), d = canvas.width / r.width;
