@@ -20,23 +20,33 @@ This branch draws the live drum on the Erae's 42 x 24 LEDs. Nodal lines and colo
 - Drum: tap to strike. Pressure sets loudness. Several fingers make separate, overlapping strikes.
 - Note: the lowest mode's nearest note. The octave is dropped when it does not fit.
 - Presets: tap one to switch shape. The bright one is selected. Taps are ignored while a shape is solving.
-- Tension: hold it and press harder to bend everything ringing up to 4 semitones. Lift and it eases back. This speeds the sound up rather than solving a new drum, so the ring also gets a little shorter.
+- Tension: hold it and press harder to bend everything ringing up to 4 semitones. Lift and it eases back. This speeds the sound up rather than solving a new drum, so the ring also gets a little shorter. A press on one spot of the head, like a hand on a frame drum, is not built yet.
 
 ## Try it without an Erae
 
 You need Node 20 or newer and Chrome or Opera.
 
-1. In the repo folder, run `node tools/serve.mjs`. It serves on port 8080.
-2. Open `http://localhost:8080/tools/erae-sim/sim.html`. This is a fake Erae. Leave the tab open.
-3. In a second tab of the same browser, open `http://localhost:8080/?sim` and click "connect erae".
-4. Click on the simulator's surface. A mouse has no pressure, so the pressure slider stands in for it: hold the mouse on the tension strip and drag the slider to bend.
+1. Get the code and switch to this branch:
+
+   ```
+   git clone https://github.com/BaselAshraf81/eigendrum.git
+   cd eigendrum
+   git checkout feature/erae-midi
+   ```
+
+2. Run `npm run erae`. It starts a local server and opens two tabs: the Erae simulator and Eigendrum. Leave the terminal open. Press Ctrl+C there to stop.
+3. In the Eigendrum tab, click "connect erae".
+4. In the simulator tab, use the mouse in place of your fingers:
+   - Tap the drum to strike it.
+   - Drag a fader to change pitch, ring-out or the mallet.
+   - Tap a preset to switch shape.
+   - Hold the tension strip and drag the pressure slider to bend the pitch. A mouse has no pressure, so the slider stands in for it.
 
 ## Try it with your Erae 2
 
-1. In Erae Lab, add one API Zone at index 0 that covers the whole surface, and send the layout to the Erae.
-2. Plug the Erae in over USB.
-3. Run `node tools/serve.mjs` and open `http://localhost:8080/` in Chrome or Opera. Not file://, and not Safari or Firefox, which have no Web MIDI with SysEx.
-4. Click "connect erae" and allow the MIDI permission.
+1. In Erae Lab, add one API Zone at index 0 that covers the whole surface, and send the layout to the Erae. Plug the Erae in over USB.
+2. Run `npm run erae -- --no-open`. It starts the server without opening any tabs. Then open `http://localhost:8080/` in Chrome or Opera. Not file://, and not Safari or Firefox, which have no Web MIDI with SysEx.
+3. Click "connect erae" and allow the MIDI permission.
 
 The line under the button tells you where you are:
 
@@ -59,12 +69,5 @@ Checks: `npm test`, `node tools/erae-sim/check-codec.mjs`, and `http://localhost
 
 ## Where the code is
 
-- `src/app/erae/index.js`: connect button, routing each finger to the drum or a control, LED frames 25 times a second.
-- `src/app/erae/layout.js` and `controls.js`: where the controls sit and how they are lit.
-- `src/app/erae/link.js`, `codec.js`: Web MIDI and the SysEx bytes.
-- `src/app/erae/raster.js`: the drum field as an LED image.
-- `tools/erae-sim/`: the simulator and its checks.
-
-## Next
-
-Pressing one spot of the head to change its sound, like a hand on a frame drum, is not built. That needs a new solve, not a speed change.
+- `src/app/erae/`: the connect button, finger routing and 25 Hz LED frames (`index.js`), layout and controls (`layout.js`, `controls.js`), Web MIDI and SysEx (`link.js`, `codec.js`), and the drum's LED image (`raster.js`).
+- `tools/erae-sim/`: the simulator and its checks. `start.mjs` is the `npm run erae` launcher.

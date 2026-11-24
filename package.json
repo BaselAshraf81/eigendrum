@@ -18,6 +18,7 @@
     "check-pages": "node tools/check-pages.mjs",
     "serve": "node tools/serve.mjs",
     "dev": "node tools/serve.mjs",
+    "erae": "node tools/erae-sim/start.mjs",
     "bench": "node tools/bench.mjs",
     "isospectral": "node tools/isospectral.mjs",
     "smoke": "node tools/smoke.mjs",
