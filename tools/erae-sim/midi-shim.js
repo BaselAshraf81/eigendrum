@@ -3,7 +3,7 @@
  * with a real Erae when ?sim is absent. Bytes sent to the output go to BroadcastChannel
  * 'erae-sim' (to the simulator page); bytes from the simulator arrive as midimessage. */
 (function () {
-  if (!/[?&]sim(=|&|$)/.test(location.search) || !navigator) return;
+  if (!/[?&]sim(=|&|$)/.test(location.search)) return;
   var NAME = 'Erae 2 MIDI (simulated)';
   var chan = new BroadcastChannel('erae-sim');
 

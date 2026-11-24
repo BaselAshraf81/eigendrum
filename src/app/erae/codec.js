@@ -40,7 +40,12 @@ export function encodeFinger(tag, action, zone, id, x, y, z) {
 }
 
 // Mirrors EraeAPISysex.receive_midi_message. `prefix` is the reply tag. Returns null when the
-// message is not for this prefix. Like the reference, the version branch is a second `if`, not an `else`.
+// message is not for this prefix or is too short to hold what it announces. Otherwise one of
+//   { kind: 'zone', zone, width, height }   answer to a zone boundary request
+//   { kind: 'version', version }             answer to a version request
+//   { kind: 'finger', id, zone, action, x, y, z, checksumOk }
+//   {}                                       a service reply nobody here asks for
+// Like the reference, the version branch is a second `if`, not an `else`.
 export function decodeReply(msg, prefix) {
   if (msg[0] !== 0xf0 || msg[msg.length - 1] !== 0xf7) return null;
   const s = Array.from(msg).slice(1, -1);
@@ -50,19 +55,38 @@ export function decodeReply(msg, prefix) {
     o++;
     const out = {};
     if (s[o] === 0x01) {
-      o++; out.kind = 'zone'; out.zone = s[o++]; out.width = s[o++]; out.height = s[o];
+      o++;
+      out.kind = 'zone';
+      out.zone = s[o++];
+      out.width = s[o++];
+      out.height = s[o];
     }
-    if (s[o] === 0x02) { o++; out.kind = 'version'; out.version = s[o]; }
+    if (s[o] === 0x02) {
+      o++;
+      out.kind = 'version';
+      out.version = s[o];
+    }
     return out;
   }
-  const action = s[o++] & 0x07, zone = s[o++];
-  const idLen = bitizedSize(8), xyzLen = bitizedSize(12);
-  const idData = s.slice(o, o + idLen); o += idLen;
-  const xyzData = s.slice(o, o + xyzLen); o += xyzLen;
-  const sum = s[o];
-  const idBytes = new Uint8Array(unbitize(idData));
-  const id = new DataView(idBytes.buffer).getBigUint64(0, true);
+  const idLen = bitizedSize(8);
+  const xyzLen = bitizedSize(12);
+  if (s.length < o + 2 + idLen + xyzLen + 1) return null;
+  const action = s[o++] & 0x07;
+  const zone = s[o++];
+  const idData = s.slice(o, o + idLen);
+  o += idLen;
+  const xyzData = s.slice(o, o + xyzLen);
+  o += xyzLen;
+  const id = new DataView(new Uint8Array(unbitize(idData)).buffer).getBigUint64(0, true);
   const f = new DataView(new Uint8Array(unbitize(xyzData)).buffer);
-  return { kind: 'finger', id, zone, action, x: f.getFloat32(0, true), y: f.getFloat32(4, true), z: f.getFloat32(8, true),
-    checksumOk: sum === xor(xyzData) };
+  return {
+    kind: 'finger',
+    id,
+    zone,
+    action,
+    x: f.getFloat32(0, true),
+    y: f.getFloat32(4, true),
+    z: f.getFloat32(8, true),
+    checksumOk: s[o] === xor(xyzData),
+  };
 }

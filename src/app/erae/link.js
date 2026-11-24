@@ -5,7 +5,13 @@
 import { apiDisable, apiEnable, decodeReply, drawImage, zoneBoundaryRequest } from './codec.js';
 
 const TAG = [0x45, 0x44, 0x52, 0x4d]; // "EDRM", echoed back at the start of every reply
-const FALLBACK = { width: 42, height: 24 };
+// The one API Zone we draw into and listen to. Erae Lab numbers zones from 0.
+export const ZONE = 0;
+// A plugged-in Erae answers in a few milliseconds, so a second of silence means
+// it is not running the API.
+const REPLY_TIMEOUT_MS = 1000;
+// The device answers a zone boundary request for a zone that is not in the layout with 0x7F.
+const NO_ZONE = 0x7f;
 
 /** Why Web MIDI cannot work here, or null if it might. */
 export function unavailableReason() {
@@ -14,9 +20,11 @@ export function unavailableReason() {
   return null;
 }
 
-const isErae = (p) => /erae/i.test(p.name || '');
-// The main "Erae 2 MIDI" port carries the API; an MPE port does not.
-const pick = (ports) => [...ports.values()].filter(isErae).sort((a, b) => /mpe/i.test(a.name) - /mpe/i.test(b.name))[0];
+// The main "Erae 2 MIDI" port carries the API; the MPE port does not.
+function pick(ports) {
+  const eraes = [...ports.values()].filter((p) => /erae/i.test(p.name || ''));
+  return eraes.find((p) => !/mpe/i.test(p.name)) ?? eraes[0];
+}
 
 export class EraeLink {
   constructor({ onFinger, onStatus }) {
@@ -26,11 +34,9 @@ export class EraeLink {
     this.output = null;
     this.zone = null; // { width, height } once connected
   }
-
   get connected() {
     return !!this.zone;
   }
-
   async connect() {
     this.onStatus('looking for erae');
     let access;
@@ -49,12 +55,15 @@ export class EraeLink {
     this.access = access;
     this.input = input;
     this.output = output;
-    let gotZone;
-    const zoneReply = new Promise((resolve) => (gotZone = resolve));
+    let timer;
+    const answer = new Promise((resolve) => {
+      this.gotZone = resolve;
+      timer = setTimeout(resolve, REPLY_TIMEOUT_MS, null);
+    });
     input.onmidimessage = (e) => {
       const m = decodeReply(e.data, TAG);
       if (!m) return;
-      if (m.kind === 'zone' && m.zone === 0) gotZone(m);
+      if (m.kind === 'zone' && m.zone === ZONE) this.gotZone(m);
       else if (m.kind === 'finger' && m.checksumOk && this.zone) this.onFinger(m);
     };
     this.onState = (e) => {
@@ -64,36 +73,46 @@ export class EraeLink {
       }
     };
     access.addEventListener('statechange', this.onState);
-    output.send(apiEnable(TAG));
-    output.send(zoneBoundaryRequest(0));
-    const m = await Promise.race([zoneReply, new Promise((r) => setTimeout(() => r(null), 1000))]);
-    // 0x7F means the zone does not exist; a real zone is at most 42 x 24.
-    const ok = m && m.width > 0 && m.width < 0x7f && m.height > 0 && m.height < 0x7f;
-    if (!this.output) return false; // unplugged while waiting
-    this.zone = ok ? { width: m.width, height: m.height } : { ...FALLBACK };
-    this.onStatus(`erae connected, ${this.zone.width} x ${this.zone.height}`);
+    try {
+      output.send(apiEnable(TAG));
+      output.send(zoneBoundaryRequest(ZONE));
+    } catch {
+      clearTimeout(timer);
+      this.teardown();
+      this.onStatus('could not talk to erae');
+      return false;
+    }
+    const m = await answer;
+    clearTimeout(timer);
+    if (!this.output) return false; // unplugged while waiting; statechange has said so
+    if (!m) {
+      this.release();
+      this.onStatus('erae did not answer');
+      return false;
+    }
+    if (m.width === NO_ZONE) {
+      this.release();
+      this.onStatus('no api zone: add one in erae lab');
+      return false;
+    }
+    this.zone = { width: m.width, height: m.height };
+    this.onStatus(`erae connected, ${m.width} x ${m.height}`);
     return true;
   }
-
   send(rgb) {
     if (!this.zone) return;
-    try {
-      this.output.send(drawImage(0, 0, 0, this.zone.width, this.zone.height, rgb));
-    } catch {
-      /* port went away; statechange reports it */
-    }
+    this.output.send(drawImage(ZONE, 0, 0, this.zone.width, this.zone.height, rgb));
   }
-
   disconnect() {
-    try {
-      this.output?.send(apiDisable());
-    } catch {
-      /* already gone */
-    }
-    this.teardown();
+    this.release();
     this.onStatus('erae disconnected');
   }
-
+  /** Leaves API mode so the Erae goes back to its own layout, then lets go of the ports. */
+  release() {
+    const { output } = this;
+    this.teardown();
+    output?.send(apiDisable());
+  }
   teardown() {
     if (this.input) this.input.onmidimessage = null;
     this.access?.removeEventListener('statechange', this.onState);

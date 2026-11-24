@@ -35,6 +35,14 @@ export class EraeRaster {
   constructor() {
     this.key = null;
   }
+  /** True once prepare() has fitted a drum, so toDrum() and blank() have something to use. */
+  get ready() {
+    return this.key !== null;
+  }
+  /** Forgets the fit, so nothing maps against a drum or zone size that is gone. */
+  reset() {
+    this.key = null;
+  }
 
   /** Rebuilds the fit and point location only when the drum or zone changes. */
   prepare(drum, width, height) {
@@ -61,6 +69,8 @@ export class EraeRaster {
         const k = j * width + i;
         if (!pointInPolygon(x, y, polygon)) continue;
         this.kind[k] = IN;
+        // An LED inside the outline but between the mesh and the rim keeps weights
+        // of 0, so it reads u = 0.
         for (let t = 0; t < triangleCount; t++) {
           const a = triangles[t * 3], b = triangles[t * 3 + 1], c = triangles[t * 3 + 2];
           const ax = nodes[a * 2], ay = nodes[a * 2 + 1];
@@ -75,7 +85,7 @@ export class EraeRaster {
           this.idx.set([a, b, c], k * 3);
           this.wts.set([l0, l1, 1 - l0 - l1], k * 3);
           break;
-        } // inside the outline but between the mesh and the rim: weights stay 0, u = 0
+        }
       }
     }
     // Inside LEDs touching the outside (or the zone edge) are the rim.
@@ -89,7 +99,6 @@ export class EraeRaster {
     }
   }
 
-  /** Zone coordinates -> drum coordinates. */
   toDrum(zx, zy) {
     const { scale, cx, cy, width, height } = this.fit;
     return { x: cx + (zx - width / 2) / scale, y: cy + (zy - height / 2) / scale };

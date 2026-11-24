@@ -1,6 +1,6 @@
-// Cross-checks codec.js against Henry's vendor/erae-api.js and, when Python 3 exists, Embodme's utils.py.
+// Cross-checks codec.js against the vendor example in vendor/erae-api.js and, when Python 3 exists, Embodme's utils.py.
 // Run: node tools/erae-sim/check-codec.mjs
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
@@ -33,15 +33,21 @@ for (const v of vectors) {
   check('every wire byte is 7-bit', mine.every((b) => b <= 0x7f), `len ${v.length}`);
 }
 
+const utils = join(here, '..', '..', '..', '..', '.erae-ref', 'erae_api_sysex', 'erae', 'utils.py');
 let pyCmd = null;
 for (const c of ['python', 'py']) {
   const r = spawnSync(c, ['--version'], { encoding: 'utf8' });
-  if (r.status === 0) { pyCmd = c; break; }
+  if (r.status === 0) {
+    pyCmd = c;
+    break;
+  }
 }
 let pyNote;
-if (!pyCmd) pyNote = 'Python 3 not found, Python comparison skipped';
-else {
-  const utils = join(here, '..', '..', '..', '..', '.erae-ref', 'erae_api_sysex', 'erae', 'utils.py');
+if (!pyCmd) {
+  pyNote = 'Python 3 not found, Python comparison skipped';
+} else if (!existsSync(utils)) {
+  pyNote = `Embodme's utils.py not found at ${utils}, Python comparison skipped`;
+} else {
   const code = [
     'import sys, json, importlib.util',
     `sp = importlib.util.spec_from_file_location('u', ${JSON.stringify(utils)})`,
@@ -54,8 +60,10 @@ else {
     'print(json.dumps(out))',
   ].join('\n');
   const r = spawnSync(pyCmd, ['-c', code], { input: JSON.stringify(vectors), encoding: 'utf8', maxBuffer: 1 << 28 });
-  if (r.status !== 0) { pyNote = `Python failed: ${r.stderr.trim().slice(0, 300)}`; check('Python utils.py ran', false, pyNote); }
-  else {
+  if (r.status !== 0) {
+    pyNote = `Python failed: ${r.stderr.trim().slice(0, 300)}`;
+    check('Python utils.py ran', false, pyNote);
+  } else {
     const out = JSON.parse(r.stdout);
     pyNote = `Python ran via "${pyCmd}" on ${out.filter(Boolean).length} non-empty vectors`;
     vectors.forEach((v, i) => {
@@ -66,9 +74,7 @@ else {
       check('bitizedSize equals Python bitized7size', bitizedSize(v.length) === p.size, `len ${v.length}`);
     });
   }
-}
-
-let failed = 0;
+}let failed = 0;
 for (const [name, list] of Object.entries(results)) {
   const bad = list.filter(([ok]) => !ok);
   if (bad.length) failed++;

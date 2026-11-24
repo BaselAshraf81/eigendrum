@@ -13,8 +13,8 @@
 <script src="midi-shim.js"></script>
 <script src="vendor/erae-api.js"></script>
 <script>
-// Henry's erae-api.js expects these globals from his hmidi.js. This wrapper supplies them
-// itself (his onMIDIFailure has a Python "None"), so the vendor file stays unchanged.
+// The vendor erae-api.js expects these globals from its own hmidi.js. This wrapper supplies them
+// itself (its onMIDIFailure has a Python "None"), so the vendor file stays unchanged.
 var saved_out_port_id = 0, current_out_port = null;
 const bb = [64, 65, 66, 67];
 const out = document.getElementById('out');

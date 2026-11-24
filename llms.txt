@@ -101,6 +101,9 @@ the sweep, self-crossing (no interior to solve on), or too thin to mesh honestly
 - `K` is reordered with reverse Cuthill-McKee and factorised once with a banded
   Cholesky, so each of the few hundred solves is two triangular sweeps.
 - Keyboard operable throughout, WCAG AA contrast, honours `prefers-reduced-motion`.
+- Optional Erae 2 support: in Chromium based browsers over https or localhost, the drum is
+  drawn on the controller's LEDs and a tap on its surface strikes the drum. It needs an API
+  Zone placed in Erae Lab.
 - Free, no ads, no accounts, no sign-up. The shape stays in your browser.
 
 ## Links

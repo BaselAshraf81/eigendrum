@@ -360,7 +360,7 @@
     send(enable(TAG)); await barrier();
     return [!p.streaming && fingersSince(n).length === 0 && p2.fingers === 0, `streaming ${p.streaming}, finger messages ${fingersSince(n).length}`];
   });
-  add(21, "Henry's fingerstream() parses the same action, x, y, z and a stable id per touch", async () => {
+  add(21, "the vendor example fingerstream() parses the same action, x, y, z and a stable id per touch", async () => {
     if (typeof fingerstream !== 'function' || !touchLog.length) return [false, 'no parser or no messages'];
     const bad = [], idsByTouch = [];
     let cur = [];
@@ -371,12 +371,12 @@
       if (t.action !== d.action || t.zone !== d.zone || Math.abs(t.x - d.x) > 1e-6 || Math.abs(t.y - d.y) > 1e-6 || Math.abs(t.z - d.z) > 1e-6) bad.push(`action ${t.action}/${d.action} x ${t.x}/${d.x} y ${t.y}/${d.y} z ${t.z}/${d.z}`);
       cur.push([d.id, String(t.finger_id), d.action]);
     }
-    // group by our decoded id: his id must be constant inside a group and differ between groups
+    // group by our decoded id: the example id must be constant inside a group and differ between groups
     const map = new Map();
     for (const [id, his] of cur) { if (!map.has(id)) map.set(id, new Set()); map.get(id).add(his); }
     for (const [id, set] of map) if (set.size !== 1) bad.push(`id ${id} maps to ${set.size} values`);
     const all = [...map.values()].map((s) => [...s][0]);
-    if (new Set(all).size !== all.length) bad.push('two touches share his id');
+    if (new Set(all).size !== all.length) bad.push('two touches share an id');
     return [!bad.length, bad.slice(0, 3).join(' | ') || `${touchLog.length} messages, ${map.size} touches`];
   });
 
