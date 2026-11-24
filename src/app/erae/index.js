@@ -24,7 +24,7 @@ const FRAME_STALE_MS = 120;
 // Even a feather touch should be heard, so pressure scales loudness from this floor up to full.
 const PRESSURE_FLOOR = 0.2;
 const PRESSURE_SLOPE = 1 - PRESSURE_FLOOR;
-// Four semitones at full pressure is about what pushing on a frame drum's head gives.
+// The top of the tension strip bends up this many semitones, about what pushing on a frame drum's head gives.
 const MAX_BEND = 4;
 // setTargetAtTime settles in about three time constants: 20 ms onto a bend, 150 ms back off it.
 const BEND_SMOOTH = 0.007;
@@ -187,8 +187,9 @@ export function setupErae({ state, els, strike, containsPoint, ensureAudio, slid
       return;
     }
     if (!own) return;
+    // The strip is a spring-loaded ribbon: the finger's height sets the bend, so pressure is left to the strike.
     if (own.kind === 'fader') setSlider(sliders[own.rect.name], f.y, own.rect);
-    else if (own.kind === 'tension') bend(Math.min(1, Math.max(0, f.z)));
+    else if (own.kind === 'tension') bend(Math.min(1, Math.max(0, (f.y - own.rect.y) / own.rect.h)));
     else if (f.action === ACTION_CLICK && own.kind === 'preset' && !isSolving()) selectPreset(presetIds[own.rect.index]);
     else if (f.action === ACTION_CLICK && own.kind === 'draw') enterPen();
     else if (f.action === ACTION_CLICK && own.kind === 'drum') strikeAt(f);

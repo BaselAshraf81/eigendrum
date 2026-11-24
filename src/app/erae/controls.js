@@ -18,7 +18,8 @@ const PRESET_ON = [235, 195, 25]; // chrome yellow marks the selection, as on sc
 const DRAW_IDLE = [22, 6, 32];
 const DRAW_TIP = [215, 110, 255];
 const TENSION_IDLE = [14, 14, 14];
-const TENSION_LIT = [230, 230, 230];
+const TENSION_LIT = [96, 96, 96];
+const TENSION_TIP = [255, 255, 255];
 
 // A 3 x 5 LED font, top row first, only the characters a note name needs.
 const GLYPHS = Object.assign(Object.create(null), {
@@ -101,8 +102,12 @@ export function paintControls(rgb, width, ui, values) {
   if (ui.draw) drawButton(rgb, width, ui.draw, DRAW_IDLE);
   if (ui.tension) {
     const t = ui.tension;
-    const lit = values.tension < 0 ? 0 : Math.max(1, Math.round(values.tension * t.h));
     fillRect(rgb, width, t, TENSION_IDLE);
-    fillRect(rgb, width, { x: t.x, y: t.y, w: t.w, h: lit }, TENSION_LIT);
+    if (values.tension >= 0) {
+      // Row 0 is the bottom. Lit from there up to the finger, whose own LED is the brightest.
+      const at = t.y + Math.round(values.tension * (t.h - 1));
+      fillRect(rgb, width, { x: t.x, y: t.y, w: t.w, h: at - t.y }, TENSION_LIT);
+      fillRect(rgb, width, { x: t.x, y: at, w: t.w, h: 1 }, TENSION_TIP);
+    }
   }
 }

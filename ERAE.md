@@ -22,7 +22,7 @@ This branch draws the live drum on the Erae's 42 x 24 LEDs. Nodal lines and colo
 - Note: the lowest mode's nearest note. The octave is dropped when it does not fit.
 - Presets: tap one to switch shape. The bright one is selected. Taps are ignored while a shape is solving.
 - Draw (the violet pen, last in the preset grid): tap it, then draw a closed outline with one finger anywhere on the surface. The whole surface becomes the canvas and the controls hide. Lift to turn the outline into a drum, same as drawing on the page. If it is too short or crosses itself, the border flashes red, the reason shows under the connect button, and you can try again. Tap the lit pen to cancel.
-- Tension: hold it and press harder to bend everything ringing up to 4 semitones. Lift and it eases back. This speeds the sound up rather than solving a new drum, so the ring also gets a little shorter. A press on one spot of the head, like a hand on a frame drum, is not built yet.
+- Tension: hold a finger on the tension strip and slide it up to raise the pitch of everything ringing, up to 4 semitones. Let go and it springs back. This speeds the sound up rather than solving a new drum, so the ring also gets a little shorter. A press on one spot of the head, like a hand on a frame drum, is not built yet.
 
 ## Try it without an Erae
 
@@ -42,7 +42,7 @@ You need Node 20 or newer and Chrome or Opera.
    - Tap the drum to strike it.
    - Drag a fader to change pitch, ring-out or the mallet.
    - Tap a preset to switch shape.
-   - Hold the tension strip and drag the pressure slider to bend the pitch. A mouse has no pressure, so the pressure slider stands in for it (the real Erae measures this itself). While you hold a finger down, the mouse wheel moves it in steps of 0.05.
+   - Hold the tension strip and drag up to raise the pitch, or down to lower it. Let go and it springs back. The pressure slider only sets how hard a strike hits: a mouse has no pressure, so it stands in for the Erae's own pressure sensor, for strikes only.
 5. `hide` folds the panel to its title bar and `open in own window` moves it to its own tab. On a narrow screen it starts folded.
 
 ## Try it with your Erae 2
