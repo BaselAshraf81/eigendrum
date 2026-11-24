@@ -10,4 +10,5 @@ Run:
 
 Transport is a fake `navigator.requestMIDIAccess` plus BroadcastChannel `erae-sim`, so both tabs must be on the same origin.
 
-Unverified (no hardware checked): colour scaling (7-bit scaled up by 2, anything above 0x7F taken as 8-bit), reply header placement (tag right after F0, as the Python reference), and how real pressure feels (slider here, or pen/force-touch pressure).
+Colour rule (Erae API V2 Rev 004 PDF, Python reference, Henry's JS): SetPixel and DrawRectangle carry 7-bit channels (0-127, shifted up by 1 bit); DrawImage is bitized and carries full 8-bit RGB (the PDF example sends 0xFF). No auto-detect. Unverified on hardware: this rule, reply tag placement, and how real pressure feels.
+The LED picture is written only by decoded SysEx (header, 7-bit unbitize, XOR checksum, size checks); touches leave only as encoded Finger Stream SysEx. Both are in the hex log.
