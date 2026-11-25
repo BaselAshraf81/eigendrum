@@ -8,10 +8,10 @@
          with no working reject-all, reported live on Hacker News. -->
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Can one hear the shape of a drum? No, and you can hear why</title>
+    <title>Can one hear the shape of a drum? No - hear the proof</title>
     <meta
       name="description"
-      content="Mark Kac asked in 1966 whether a drum's spectrum determines its shape. Gordon, Webb and Wolpert answered no in 1992. Both of their drums are built into Eigendrum, solved and compared."
+      content="No. Two different drum shapes can have identical frequencies. Gordon, Webb and Wolpert showed it in 1992, and you can hear both drums here."
     />
     <link rel="canonical" href="https://eigendrum.com/hearing-the-shape-of-a-drum" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
@@ -23,13 +23,15 @@
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="Eigendrum" />
     <meta property="og:url" content="https://eigendrum.com/hearing-the-shape-of-a-drum" />
-    <meta property="og:title" content="Can one hear the shape of a drum? The answer is no, and you can hear it" />
+    <meta property="og:title" content="Can one hear the shape of a drum? No - hear the proof" />
+    <meta name="twitter:title" content="Can one hear the shape of a drum? No - hear the proof" />
     <meta
       property="og:description"
-      content="Two visibly different shapes with identical spectra, both solved in your browser so you can switch between them and listen."
+      content="No. Two different drum shapes can have identical frequencies. Gordon, Webb and Wolpert showed it in 1992, and you can hear both drums here."
     />
     <meta property="og:image" content="https://eigendrum.com/docs/kac-pair.png" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:description" content="No. Two different drum shapes can have identical frequencies. Gordon, Webb and Wolpert showed it in 1992, and you can hear both drums here." />
     <meta name="twitter:image" content="https://eigendrum.com/docs/kac-pair.png" />
 
     <script type="application/ld+json">
@@ -37,7 +39,7 @@
         "@context": "https://schema.org",
         "@type": "Article",
         "headline": "Can one hear the shape of a drum?",
-        "description": "Kac's 1966 question, the 1992 negative answer by Gordon, Webb and Wolpert, and an interactive demonstration of two isospectral drums.",
+        "description": "Kac's 1966 question, the 1992 negative answer by Gordon, Webb and Wolpert, and two isospectral drums (Kac drum I and II) you can hear in your browser.",
         "author": { "@type": "Person", "name": "Basel Ashraf" },
         "publisher": { "@type": "Person", "name": "Basel Ashraf" },
         "datePublished": "2026-08-03",
@@ -99,10 +101,10 @@
         <p class="doc-kicker">the famous question</p>
         <h1>Can one hear the shape of a drum?</h1>
         <p class="doc-standfirst">
-          If you knew every frequency a drumhead could produce, could you work out its
-          outline? Mark Kac asked exactly that in 1966. The answer turned out to be no -
-          and both of the shapes that prove it are built into this site, so you can
-          switch between them and listen.
+          No. Mark Kac asked in 1966 whether the frequencies of a drum fix its shape. In 1992
+          Carolyn Gordon, David Webb and Scott Wolpert showed that two different shapes can
+          have exactly the same frequencies. Both are built into Eigendrum as Kac drum I and
+          Kac drum II, so you can switch between them and listen.
         </p>
 
         <p>
@@ -122,7 +124,7 @@
           Shape of a Drum?</a>, made the full question feel within reach.
         </p>
 
-        <h2>The answer, in 1992: no</h2>
+        <h2>The answer, in 1992: no, and the Kac drums show it</h2>
         <p>
           Carolyn Gordon, David Webb and Scott Wolpert settled it by construction. They
           built two polygons that are <strong>isospectral</strong> - they have precisely
@@ -217,6 +219,15 @@
           answer Kac's question.
         </p>
 
+        <h2>The maths in one paragraph</h2>
+        <p>
+          A drumhead clamped at its rim can only vibrate at certain frequencies, and that list
+          is its spectrum. The frequencies are set by the eigenvalues of the Laplacian on the
+          drum's shape. Two shapes with the same eigenvalues are called isospectral, and the
+          Kac drums are such a pair. Eigendrum computes the eigenvalues of each with a finite
+          element solver, so the match is measured and not assumed. <a
+          href="/how-it-works">How Eigendrum works</a> covers the method.
+        </p>
         <h2>Hearing a theorem</h2>
         <p>
           Reading that two shapes have identical spectra is one thing. Switching between
